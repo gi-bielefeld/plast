@@ -1740,7 +1740,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 						//Testing
 						// cout << "2" << endl;
 						// cout << "10 Option 2" << endl;
-						cout << "uniSeqPos: " << uniSeqPos << endl;
+						// cout << "uniSeqPos: " << uniSeqPos << endl;
 
 						break;
 					}
