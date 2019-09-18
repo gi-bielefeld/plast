@@ -7,7 +7,7 @@ class seedlist : public CCDBG_Data_t<seedlist> {
 
 	public:
 
-		seedlist(): nextSeedRef(NULL), nextSeedRcomp(NULL), frstSeedRcomp(NULL) {}
+		seedlist(): nextSeedRef(NULL), nextSeedRcomp(NULL), frstSeedRcomp(NULL), lBrd(0), rBrd(0) {}
 
 		//NOTE: Actually, methods join, serialize and sub should be overloaded here. Since the seedlist will only come into play after the graph has already been created and is not used anymore before the graph is written into a file it should be not necessary to overload them.
 
@@ -56,12 +56,27 @@ class seedlist : public CCDBG_Data_t<seedlist> {
 
 		//void setLastProcSeed(struct seed* newSeed){ nextProcSeed = newSeed; }//insert new element at the seed list's end
 
+		int32_t getlBrd() const { return lBrd; }
+
+		int32_t getrBrd() const { return rBrd; }
+
+		void setlBrd(int32_t offset){ lBrd = offset; }
+
+		void setrBrd(int32_t offset){ rBrd = offset; }
+
+		bool srchCritChckd() const { return lBrd != rBrd; }
+
 	private:
 
 		struct seed *nextSeedRef;
 		struct seed *nextSeedRcomp;
 		struct seed *frstSeedRcomp;
 		//struct seed *nextProcSeed;
+
+		//The lowest offset position in the unitig at which search criteria are not fulfilled anymore
+		int32_t lBrd;
+		//The highest offset position in the unitig at which search criteria are not fulfilled anymore
+		int32_t rBrd;
 };
 
 //This function removes a seed from a seed list, i.e. excluding it from the list and deleting it. Returns true if the seed was not the head of its seed list

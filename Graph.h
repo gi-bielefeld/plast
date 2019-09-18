@@ -9,7 +9,7 @@
 #define DEFAULT_NB_THREADS 1
 
 //This function builds a graph
-void genGraph(ColoredCDBG<seedlist> &cdbg, vector<string> &seqs);
+void genGraph(ColoredCDBG<seedlist> &cdbg, CCDBG_Build_opt &cdbgOpt);
 
 //This function assigns color ids from the graph to color names in the color set
 void mapColorIds(list<pair<string, size_t>>& colorSet, const ColoredCDBG<seedlist>& g);

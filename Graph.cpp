@@ -1,9 +1,7 @@
 #include "Graph.h"
 
 //This function builds a graph
-void genGraph(ColoredCDBG<seedlist> &cdbg, vector<string> &seqs){
-	CCDBG_Build_opt cdbgOpt;
-
+void genGraph(ColoredCDBG<seedlist> &cdbg, CCDBG_Build_opt &cdbgOpt){
 	//Setting build options
 	//cdbgOpt.outputColors = true;//Boolean indicating if color sets must be written to disk (true) or not (false). Default is true.
 
@@ -24,7 +22,7 @@ void genGraph(ColoredCDBG<seedlist> &cdbg, vector<string> &seqs){
 
 	cdbgOpt.prefixFilenameOut = "";//Prefix for the name of the file to which the graph must be written. Mandatory parameter.
 	
-	cdbgOpt.filename_seq_in = seqs;//vector of strings, each string is the name of a FASTA/FASTQ/GFA to file use for the graph construction. Mandatory parameter.
+	// cdbgOpt.filename_seq_in = seqs;//vector of strings, each string is the name of a FASTA/FASTQ/GFA to file use for the graph construction. Mandatory parameter.
 	//cdbgOpt.filename_seq_in.push_back("ERR431464_1.fasta");
 	//cdbgOpt.filename_seq_in.push_back("ERR431464_2.fasta");
 	//cdbgOpt.filename_seq_in.push_back("Test11_color2.fa");

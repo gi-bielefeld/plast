@@ -14,7 +14,7 @@
 #include "Seed.h"
 //#include "Seedlist.h"
 //#include "Seedlist.cpp"
-#include "Index.h"
+// #include "Index.h"
 #include "Index.cpp"
 #include "Smer.h"
 //#include "Smer.cpp"
@@ -23,6 +23,7 @@
 //#include "Hit.h"
 //#include "GappedAlignment.h"
 //#include "GappedAlignment.cpp"
+// #include "Hit.cpp"
 #include "IO.cpp"
 //#include "Search.h"
 #include "Search.cpp"
@@ -86,8 +87,8 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	string graphFilePref;
 	//File name of search color set
 	string sColFile;
-	//A vector to store potential input sequence files to build a graph from
-	vector<string> graphSeqs;
+	//Building options for graph building
+	CCDBG_Build_opt bOpt;
 
 	//Check whether input is valid
 	/*if(argc < 2){
@@ -102,17 +103,19 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	//cout << "Next we are going to parse the arguments" << endl;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, graphSeqs, nb_threads, qFile, sColFile, quorum, strand, calcRT, X, nRes)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, calcRT, X, nRes)){
 		//Display help message
 		dispHelp();
 		return 1;
 	}
 
-	//Check whether we are using the correct number of parameters
-	// if(argc < 8){
-	// 	cerr << "Required parameters are 1. search mode, 2. seed length, 3. query sequence, 4. color set file, 5. run time measurement flag, 6. preprocessing flag and 7. graph, color and index file prefix." << endl;
-	// 	return 1;
-	// }
+	//Testing
+	// cout << "Arguments parsed" << "Values are: preprocessing flag: " << prep << " graph file prefix: " << graphFilePref << " minimum seed length: " << minSeedLength << " k: " << kMerLength << " g: " << miniLength << " reference input files: " << endl;
+	// for(vector<string>::iterator v = bOpt.filename_ref_in.begin(); v != bOpt.filename_ref_in.end(); ++v) cout << *v << endl;
+	// cout << "raw input files:" << endl;
+	// for(vector<string>::iterator v = bOpt.filename_seq_in.begin(); v != bOpt.filename_seq_in.end(); ++v) cout << *v << endl;
+	// cout << "number of threads: " << nb_threads << " query file: " << qFile << " search color file name: " << sColFile << " quorum: " << quorum << " strand: " << strand << " calcRT: " << (calcRT ? "Yes" : "No") << " X: " << X << " number of results: " << nRes << endl;
+	// return 0;
 
 	const uint32_t profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
 
@@ -132,7 +135,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	//Check whether a graph has to be built
 	if(prep > 0){
 		//Build the graph
-		genGraph(cdbg, graphSeqs);
+		genGraph(cdbg, bOpt);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){
@@ -163,7 +166,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		// startTime = std::chrono::system_clock::now();
 
 		//Load graph
-		if(!cdbg.read((graphFilePref + GFA_FILE_ENDING).c_str(), (graphFilePref + COLOR_FILE_ENDING).c_str(), true)){//TODO: We need to be able to read sequences in ref mode!
+		if(!cdbg.read((graphFilePref + GFA_FILE_ENDING).c_str(), (graphFilePref + COLOR_FILE_ENDING).c_str(), true)){
 			cerr << "ERROR: Graph could not be loaded" << endl;
 			exit(EXIT_FAILURE);
 		}
@@ -245,14 +248,6 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		}
 	}
 
-	//Testing
-	//cout << "Index ist parsed" << endl;
-	/*for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
-		UnitigColorMap<seedlist> u = *i;
-
-		cout << u.referenceUnitigToString() << endl;
-	}*/
-
 	//Check whether set quorum exceeds the number of colors in graph
 	if(quorum > cdbg.getNbColors()){
 		cerr << "WARNING: Quorum exceeds number of colors in the graph. Set to that number instead." << endl;
@@ -282,34 +277,16 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
 		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes);//TODO The memory should not increase for each new query we are searching for. Currently, it does slightly though. This has to be changed!
-
-		//Testing
-		// struct rusage buf;
-		// getrusage(RUSAGE_SELF, &buf);
-		// cerr << "Maximum resident set size: " << buf.ru_maxrss << endl << "Integral shared memory size: " << buf.ru_ixrss << endl << "Integral unshared data size: " << buf.ru_idrss << endl;
 	}
 
-	//Testing
-	// for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
-	// 	struct seed *next = i->getData()->getData(*i)->getSeed(true);
-
 	// 	while(next != NULL){
 	// 		cout << "Seedlist is not NULL" << endl;
 
 	// 		next = next->nextSeed;
 	// 	}
 
-	// 	UnitigColorMap<seedlist> u = *i;
-
-	// 	u.strand = false;
-	// 	next = u.getData()->getData(u)->getSeed(u.strand);
-
 	// 	while(next != NULL){
 	// 		cout << "Seedlist is not NULL" << endl;
-
-	// 		next = next->nextSeed;
-	// 	}
-	// }
 
 	// //Detect seeds on the reverse complementary query
 	// detectSeeds(kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, q, uArr, posArray, hitArr, true);

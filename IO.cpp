@@ -2,8 +2,8 @@
 #include <getopt.h>
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, vector<string>& seqs, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes){
-	int option_index = 0, a; 
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes){
+	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
 	if(nb_args < MIN_PARAM_NB) return false;
@@ -13,7 +13,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"seed-length",    optional_argument,  0, 's'},
         {"kmer-length",    optional_argument,  0, 'k'},
         {"min-length",     optional_argument,  0, 'g'},
-        {"fasta",          optional_argument,  0, 'f'},
+        {"raw-input",      optional_argument,  0, 'S'},
+        {"ref-input",      optional_argument,  0, 'R'},
         {"threads",        optional_argument,  0, 't'},
         {"query",          optional_argument,  0, 'q'},
         {"colors",         optional_argument,  0, 'c'},
@@ -60,17 +61,25 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				filePref = optarg;
 				break;
-			case 'f':
+			case 'S':
 				//Testing
 				/*cout << "Why do we not go here?" << endl;*/
 				//cout << "optind:" << optind << endl;
 
 				for(--optind; (optind < nb_args) && (*argList[optind] != '-'); ++optind){
-					seqs.push_back(argList[optind]);
+					// seqs.push_back(argList[optind]);
+
+					gOpt.filename_seq_in.push_back(argList[optind]);
 				}
 
-				//Note that we have to build a graph
-				++prepros;
+				break;
+			case 'R':
+				for(--optind; (optind < nb_args) && (*argList[optind] != '-'); ++optind){
+					// seqs.push_back(argList[optind]);
+
+					gOpt.filename_ref_in.push_back(argList[optind]);
+				}
+
 				break;
 			case 's':
 				//Testing
@@ -186,12 +195,12 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 	//Testing
 	// cout << "a: " << a << endl;
 
+	//If we have received any input sequences we need to build a graph
+	if(!gOpt.filename_seq_in.empty() || !gOpt.filename_ref_in.empty()) ++prepros;
+
 	//Without a file prefix none command can be executed
 	if(!strcmp(filePref.c_str(), "")) return false;
 
-	//Testing
-	//cout << "!strcmp(filePref.c_str(), ""):" << !strcmp(filePref.c_str(), "") << endl;
-	
 	//The search command additionally needs a query sequence
 	if(prepros < 0 && !strcmp(qFile.c_str(), "")) return false;
 
@@ -248,4 +257,249 @@ void loadQueries(const string &filename, vector<string> &qList){
 	while(getline(fStr, line)) qList.push_back(line);
 	//Close file
 	fStr.close();
+}
+
+//This function outputs a hit's alignment
+void repAlgn(const hit *res){
+	bool largeNb = false;
+	uint32_t i = 0, algnCols, gaps = 0, posQ, posAlgn = 0;
+
+	//Output some general info
+	cout << "Score: " << res->score << "\tLength: " << res->gAlgn.aSeqQ.length() << "\tE-value: " << endl;//TODO: E-value should be included here!
+	//Initial position in query (we start count from 1 here)
+	posQ = res->offQ + 1;
+
+	//Go through the alignment
+	while(posAlgn < res->gAlgn.aSeqQ.length()){
+		//Check if there is enough alignment to fill another full line
+		if(posAlgn + BASES_PER_LINE < res->gAlgn.aSeqQ.length()){
+			//We output the maximum amount of bases
+			algnCols = BASES_PER_LINE;
+		} else{
+			//We output only what is left
+			algnCols = res->gAlgn.aSeqQ.length() - posAlgn;
+		}
+
+		//Upper sequence is the query
+		cout << "Query:    ";
+		//Output position in query
+		cout << posQ << "\t";//We want to start counting from 1 here so we add +1
+
+		if(posQ > 9999999) largeNb = true;
+
+		//Output next query section
+		for(i = posAlgn; i < posAlgn + algnCols; ++i){
+			//Count non-gap characters
+			if(res->gAlgn.aSeqQ[i] == GAP) ++gaps;
+
+			//Output character
+			cout << res->gAlgn.aSeqQ[i];
+		}
+
+		//Output position in q at the end of this line
+		cout << "\t" << (posQ += algnCols - gaps) - 1 << endl;
+		//Output match line
+		cout << "          " << (largeNb ? "\t\t" : "\t");
+		//Reset counter
+		i = posAlgn;
+
+		do{
+			cout << (res->gAlgn.aSeqQ[i] == res->gAlgn.aSeqG[i] ? "|" : " ");
+		} while(++i != posAlgn + algnCols);
+
+		//End the match line
+		cout << endl;
+		//Lower sequence is the graph
+		cout << "Graph:    " << 0 << (largeNb ? "\t\t" : "\t");
+		//Output next graph section
+		cout << res->gAlgn.aSeqG.substr(posAlgn, algnCols) << "\t0" << endl << endl;//"\t" << res->lSeedUoff + i + algnCols - 1 << endl << endl;
+		//Increment position in alignment
+		posAlgn += algnCols;
+		gaps = 0;
+	}
+}
+
+//This function outputs the color sets of given result
+void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
+	bool identical = false;
+	//char *kmerSeq = (char*) malloc(res->origUni.getGraph()->getK());
+	string kmerSeq = string(res->origUni.getGraph()->getK(), 'A');
+	int32_t kmerSeqPos = 0;
+	string color;
+	vector<string> colors;
+	vector<string>::iterator colIt;
+	Kmer currK;
+	UnitigColors uniCols;
+	UnitigColorMap<seedlist> uni;
+	ColSet curColSet = ColSet(0, colors);
+
+	//Testing
+	// cout << "gAlgn.aSeqG: " << res->gAlgn.aSeqG << endl;
+	// cout << "Seed was length: " << res->length << " offset u: " << res->offU << " q: " << res->offQ << " unitig: " << res->origUni.mappedSequenceToString() << endl;
+
+	//Go through graph alignment sequence
+	for(uint32_t i = 0; i < res->gAlgn.aSeqG.length(); ++i){
+		//Check if current character in alignment is not a gap
+		if(res->gAlgn.aSeqG[i] != GAP){
+			//Add base to current k-mer sequence
+			kmerSeq[kmerSeqPos] = res->gAlgn.aSeqG[i];
+			//Update position in kmer sequence
+			++kmerSeqPos;
+		}
+
+		//Testing
+		// cout << "i: " << i << endl;
+		// cout << "kmerSeq: " << kmerSeq << endl;
+
+		//Check if our k-mer sequence is full
+		if(kmerSeqPos == res->origUni.getGraph()->getK()){
+			//Testing
+			// cout << "We have just found a new k-mer to check" << endl;
+			// cout << "kmerSeq: " << kmerSeq << endl;
+
+			//Initialize k-mer
+			currK = Kmer(kmerSeq.c_str());
+			//Look up color set
+			uni = res->origUni.getGraph()->find(currK);
+
+			//Testing
+			// cout << "Unitig is " << (uni.isEmpty ? "" : "not ") << "empty" << endl;
+			// UnitigColorMap<seedlist> bla = uni.getGraph()->find(Kmer("TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"));
+			// cout << "This unitig can " << (bla.isEmpty ? "not " : "") << "be found in the graph" << endl;
+
+			uniCols = *uni.getData()->getUnitigColors(uni);
+			colors = vector<string>();
+
+			//Testing
+			// cout << "Extract colors" << endl;
+
+			for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
+				color = cdbg.getColorName(c.getColorID());
+
+				if(colors.empty()){
+					colors.push_back(color);
+				} else if(colors.back() != color){
+					colors.push_back(color);
+				}
+			}
+
+			//Testing
+			// cout << "We have extracted the color set" << endl;
+
+			if(!curColSet.colNames.empty()){
+				colIt = curColSet.colNames.begin();
+
+				for(vector<string>::iterator j = colors.begin(); j != colors.end(); ++j){
+					if(curColSet.colNames.size() != colors.size()){
+						identical = false;
+						break;
+					}
+
+					if(*colIt == *j){
+						identical = true;
+					} else{
+						identical = false;
+						break;
+					}
+
+					++colIt;
+				}
+			}
+
+			// //Get k-mer's color set
+			// colIDs = vector<size_t>();
+			// for(UnitigColors::iterator colIt = uni.getData()->getUnitigColors(uni)->begin(uni); colIt != uni.getData()->getUnitigColors(uni)->end(); ++colIt){
+			// 	if(colIDs.empty()){
+			// 		colIDs.push_back();
+			// 	} else if(*j != colIDs.back()){
+			// 		colIDs.push_back();
+			// 	}
+			// }
+
+			// //Compare color sets
+			// l = 0;
+
+			// for(vector<size_t>::iterator j = colIDs.begin(); j != colIDs.end(); ++j){
+			// 	if(l < curColSet.)
+			// }
+
+			// if(*j == colIt->getColorID()){
+			// 		identical = true;
+			// 	} else{
+			// 		identical = false;
+			// 		break;
+			// 	}
+
+			//Testing
+			// cout << "Color set comparison done" << endl;
+
+			//Check outcome of comparison
+			if(!identical && !curColSet.colNames.empty()){
+				//Output color set
+				cout << "Color set ending at alignment position " << curColSet.endPos;
+
+				for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){
+					cout << " " << *name;
+				}
+
+				cout << endl;
+			}
+
+			//Testing
+			// cout << "kmerSeq:" << kmerSeq << endl;
+			// cout << "We have outputted a color set and get here" << endl;
+
+			//Update color set (doesn't do anything if color sets are identical anyways)
+			curColSet.colNames = colors;
+			//Decrease k-mer sequence length
+			--kmerSeqPos;
+			//Shift kmer sequence
+			for(int32_t j = 0; j < kmerSeqPos; ++j){
+				kmerSeq[j] = kmerSeq[j + 1];
+			}
+
+			// kmerSeq[kmerSeqPos] <<= sizeof(char);
+
+			//Testing
+			// cout << "kmerSeq after shift:" << kmerSeq << endl;
+		}
+
+		//Update color set end position
+		++curColSet.endPos;
+	}
+
+	// //Free sequence
+	// free(kmerSeq);
+	
+	//Output color set
+	cout << "Color set ending at alignment position " << curColSet.endPos;
+
+	//Check if color set to be outputted is empty which happens if the graph sequence of our alignment is shorter than k
+	if(curColSet.colNames.empty()){
+		//Get the unitig the alignment lies on
+		uni = res->origUni;
+		//Resize unitig so that its color set represents the alignments color set
+		uni.dist = min(res->offU, (uint32_t) uni.len - 1);
+		//Get color set
+		uniCols = *uni.getData()->getUnitigColors(uni);//TODO Put this into a function!
+		colors = vector<string>();
+
+		for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
+			color = cdbg.getColorName(c.getColorID());
+
+			if(colors.empty()){
+				colors.push_back(color);
+			} else if(colors.back() != color){
+				colors.push_back(color);
+			}
+		}
+
+		curColSet.colNames = colors;
+	}
+
+	for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){
+		cout << " " << *name;
+	}
+
+	cout << endl;
 }

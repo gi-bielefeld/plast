@@ -69,7 +69,7 @@ void saveIndexBin(const char *filename, const uint32_t &profSize, uint32_t* qPro
 	saveProfile(destFile, profSize, qProfile);
 
 	//Calculate the number of bytes needed to store a k-mer
-	const uint16_t nBytes = (k / BASESPERBYTE) + (k % BASESPERBYTE == 0 ? 0 : 1);/*NOTE: Doing it this way means that we migth waste a certain part of a byte per k-mer when storing them!*/
+	const uint16_t nBytes = (k / BASES_PER_BYTE) + (k % BASES_PER_BYTE == 0 ? 0 : 1);/*NOTE: Doing it this way means that we migth waste a certain part of a byte per k-mer when storing them!*/
 	//Iterate over the graph
 	for(i = 0; i < numUni; ++i){
 		//Write the compacted representation of current unitig's starting k-mer to file
@@ -95,7 +95,7 @@ void loadIndexesBin(const char* fName, const uint32_t &qProfSize, uint32_t *qPro
 	char *memBlock;
 	const int32_t kMerSize = graph.getK();
 	//The number of bytes needed to store a k-mer
-	const uint16_t nBytes = (kMerSize / BASESPERBYTE) + (kMerSize % BASESPERBYTE == 0 ? 0 : 1);
+	const uint16_t nBytes = (kMerSize / BASES_PER_BYTE) + (kMerSize % BASES_PER_BYTE == 0 ? 0 : 1);
 	uint32_t i, shift;
 	//Open file
 	ifstream idxFile(fName, ios::in|ios::binary|ios::ate);

@@ -19,9 +19,22 @@
 #define CMPL_BASE_G 'C'
 #define CMPL_BASE_T 'A'
 //The number of DNA base pairs which can be encoded using 1 byte
-#define BASESPERBYTE 4
+#define BASES_PER_BYTE 4
 //The number of bits needed to store 1 DNA base pair
-#define BITSPERBASE 2
+#define BITS_PER_BASE 2
+
+class ColSet {
+
+	public:
+
+		//Default constructor
+		ColSet (uint32_t pos, vector<string> cols) { endPos = pos; colNames = cols; }
+
+		//Alignment position where color set ends
+		uint32_t endPos;
+		vector<string> colNames;
+
+};
 
 //Ranking function on nucleotides
 inline uint16_t r(char c){
@@ -57,9 +70,9 @@ inline const char* cmprSeq(const string seq, const uint8_t &size){
 	//Iterate over memory allocated for the compressed sequence
 	for(int16_t i = 0; i  < size; ++i){
 		//Compress next four bases into a char
-		for(uint16_t j = 0; j < BASESPERBYTE; ++j, ++pos){
+		for(uint16_t j = 0; j < BASES_PER_BYTE; ++j, ++pos){
 			//Shift previously stored base
-			c = c << BITSPERBASE;
+			c = c << BITS_PER_BASE;
 
 			//Check whether we have reached seq's end
 			if(!seq[pos]){
@@ -90,9 +103,9 @@ inline const char* decmprSeq(const char* cSeq, const uint8_t seqLen){
 		j = 0;
 
 		//Consider each compressed character separately
-		while(j < BASESPERBYTE){
+		while(j < BASES_PER_BYTE){
 			//Get rid of information in front of current character to decompress
-			c = *cSeq << j * BITSPERBASE;
+			c = *cSeq << j * BITS_PER_BASE;
 			//Shift character to end of memory section
 			c = c >> 6;
 			//Recalculate actual base pair
