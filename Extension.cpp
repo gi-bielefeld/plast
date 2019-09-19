@@ -706,7 +706,24 @@ void startRightX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_
 	// 	hit->offQ += hit->length - 1;
 	// }
 
+	//Testing
+	// if(uSeq == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
+	// 	cout << "Inside startRightX_Drop: Final extension path:" << endl;
+	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i) cout << *i << " ";
+	// 	cout << endl;
+	// }
+
 	hit->rExt = cmprExtPth(extPth);
+
+	//Testing
+	// if(uSeq == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
+	// 	extPth = list<uint16_t>();
+	// 	extPth = decmprExtPth(hit->rExt);
+	// 	cout << "Inside startRightX_Drop: Decompressed extension path:" << endl;
+	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i) cout << *i << " ";
+	// 	cout << endl;
+	// 	exit(0);
+	// }
 }
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set. Returns an extension pointer storing the extension path through the graph/*NOTE: For now the seed extension is a little bit redundant. Would be cool if this can be changed in the future! - Is the seed extension still redundant?*/

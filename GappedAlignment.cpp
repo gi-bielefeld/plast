@@ -2,6 +2,8 @@
 #include "Hit.h"
 #include "Search.h"
 
+bool report = false;
+
 //This function calculates a semi-global (actually its rather half-global) alignment of a unitig and the query sequence considering a quorum. Returns true if calculations on unitig could be finished (i.e. the unitig sequence was not too long to be stored inside the edit matrix).
 bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &X, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum){//TODO: So far we do not adjust the maximal number of gaps. This has to be changed as soon as we calculate real alignments!//TODO: This function does more than it should!
 	bool termCalcs, matShriked = false;
@@ -345,13 +347,9 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	}
 
 	//Testing
-	// if(uni.mappedSequenceToString() == "AATTTGTCGCATATTATTTTTTGTATTTTTGGC"){
+	// if(report){
 	// 	cout << "Inside calcSemiGlobAlignment:  posU: " << posU << " endBuf: " << endBuf << " unitig size: " << uni.size << " uCmpSeqLen: " << uCmpSeqLen << endl;
 	// }
-
-	//Testing
-	//cout << "Martixdimension:" << dim << endl;
-	// cout << "Matrix borders done" << endl;
 
 	//Initialize dynamic programming matrix
 	int32_t **mat = (int32_t**) malloc(matHgth * sizeof(int32_t*));//TOOD: Is this the most efficient way to handle this?
@@ -362,13 +360,13 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	//Initialize upper left cell
 	mat[0][0] = maxScore;
 
-	//If one of the two compared sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
-	if(matBrth == 1){
-		//Testing
-		// cout << "11 Option 1" << endl;
+	// //If one of the two compared sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
+	// if(matBrth == 1){
+	// 	//Testing
+	// 	// cout << "11 Option 1" << endl;
 
-		eMax = mat[0][0];
-	}// else{
+	// 	eMax = mat[0][0];
+	// }// else{
 	// 	//Testing
 	// 	cout << "11 Option 2" << endl;
 	// }
@@ -478,8 +476,8 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	// 		}
 	// 		cout << endl;
 	// 	}
-	// 	cout << "maxMatPosI: " << maxMatPosI << " maxMatPosJ: " << maxMatPosJ << " maxPosU: " << maxPosU << " maxPosQ: " << maxPosQ << endl;
-	// 	cout << "edgeMaxPosI: " << edgeMaxPosI << " edgeMaxPosJ: " << edgeMaxPosJ << " eMaxPosU: " << eMaxPosU << " eMaxPosQ: " << eMaxPosQ << endl;
+	// // 	cout << "maxMatPosI: " << maxMatPosI << " maxMatPosJ: " << maxMatPosJ << " maxPosU: " << maxPosU << " maxPosQ: " << maxPosQ << endl;
+	// // 	cout << "edgeMaxPosI: " << edgeMaxPosI << " edgeMaxPosJ: " << edgeMaxPosJ << " eMaxPosU: " << eMaxPosU << " eMaxPosQ: " << eMaxPosQ << endl;
  // 	}
 
 	//Do backtracing to get the alignment maximum scoring alignment
@@ -831,13 +829,15 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	//Initialize upper left cell
 	mat[0][0] = maxScore;
 
-	//If one of the to compare sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
-	if(matBrth == 1){
-		eMax = mat[0][0];
-	} else{
-		//Initialize edge maximum
-		eMax = -X;
-	}
+	// //If one of the to compare sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
+	// if(matBrth == 1){
+	// 	eMax = mat[0][0];
+	// } else{
+
+	//Initialize edge maximum
+	eMax = -X;
+
+	// }
 
 	//Initialize first column
 	for(i = 1; i < matHgth; ++i){
@@ -892,7 +892,7 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 			// cout << "Do we get here?" << endl;
 			// cout << "i: " << i << " j: " << j << endl;
 			// cout << "posQ: " << posQ << " posU: " << posU << endl;
-			// cout << "Bases to compare unitig: " << uSeq[posU - j + 1] << " query: " << q[posQ - i + 1] << endl;
+			// if(i == j) cout << "Bases to compare unitig: " << uSeq[posU - j + 1] << " query: " << q[posQ - i + 1] << endl;
 
 			//Calculate current cells value and check we don't drop
 			if((mat[i][j] = max(mat[i - 1][j - 1] + compUScore(q[posQ - i + 1], uSeq[posU - j + 1]), max(mat[i][j - 1] + GAP_SCORE, mat[i - 1][j] + GAP_SCORE))) > -X){//TODO: This has to be changed as soon as we are not using unit score anymore!
@@ -1041,6 +1041,7 @@ void contRightGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &ext
 	// cout << "Finished calculations on this unitig" << endl;
 	// if(report){
 	// 	cout << "Inside contRightGappedAlignment after calculations on this unitig: algn:" << "aSeqG: " << algn.aSeqG << endl << "aSeqQ: " << algn.aSeqQ << endl << "globAlgn:" << "aSeqG: " << globAlgn.aSeqG << endl << "aSeqQ: " << globAlgn.aSeqQ << endl;
+	// 	// cout << "maxBorderScore: " << maxBorderScore << " unitigDone: " << unitigDone << endl;
 	// }
 
 	//Testing
@@ -1072,7 +1073,7 @@ void contRightGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &ext
 		posU = maxPosU;
 		posQ = maxPosQ;
 		//Reset the unitig on which the maximum has been found
-		uni = maxUni;
+		uni = maxUni;//TODO I guess this is not needed anymore because we do not store it in the end anymore anyways!
 	}
 }
 
@@ -1400,9 +1401,18 @@ bool contGappedOnSuccUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 
 	//Testing
 	// cout << "4 Option 2" << endl;
+	// if(report){
+	// 	cout << "Inside contGappedOnSuccUni: Maximum recursion depth has not yet been reached" << endl;
+	// }
 
 	//Check whether there are successors to continue
 	if(sucIter.hasSuccessors()){
+		//Testing
+		// if(report){
+		// 	cout << "Inside contGappedOnSuccUni: There are successors to visit" << endl;
+		// 	cout << "Inside contGappedOnSuccUni: Extension path is " << (extPth.empty() ? "" : "not ") << "empty" << endl;
+		// }
+
 		maxScore = score;
 		//Set counter
 		sucCount = 1;
@@ -1429,6 +1439,11 @@ bool contGappedOnSuccUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 		//Explore each neighbor
 		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI, ++sucCount){
 			struct Algn tmpAlgn;
+
+			//Testing
+			// if(report){
+			// 	cout << "Inside contGappedOnSuccUni: nextSuc: " << nextSuc << " sucCount: " << sucCount << endl;
+			// }
 
 			//Check if we still have to wait for the correct successor to go on with
 			if(sucCount < nextSuc){
@@ -1457,7 +1472,7 @@ bool contGappedOnSuccUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 			//Testing
 			// cout << "Do we get out there as well?" << endl;
 			// if(report){
-			// 	cout << "We came back. Alignment is:" << "aSeqG: " << tmpAlgn.aSeqG << endl << "aSeqQ: " << tmpAlgn.aSeqQ << endl;
+			// 	cout << "We came back." << endl; //" Alignment is:" << "aSeqG: " << tmpAlgn.aSeqG << endl << "aSeqQ: " << tmpAlgn.aSeqQ << endl;
 			// }
 
 			//Check for new maximum
@@ -1841,9 +1856,12 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 
 	//Testing
 	// cout << "Inside startRightGappedAlignment after calculation of gapped alignment on the first unitig:\nunitigDone: " << unitigDone << "\nmaxBorderScore: " << maxBorderScore << "\nposU: " << posU << "\nposQ: " << posQ << "\nmaxPosQ: " << maxPosQ << "\nmaxPosU: " << maxPosU << "\nmaxScore: " << maxScore << endl;
-	// if(h->origUni.mappedSequenceToString() == "AATTTGTCGCATATTATTTTTTGTATTTTTGGC"){
+	// if(h->origUni.mappedSequenceToString() == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
 	// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
 	// 	cout << "Inside startRightGappedAlignment after calculations on this unitig: gAlgn:" << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << endl << "globAlgn: aSeqG: " << globAlgn.aSeqG << endl << "globAlgn: aSeqQ: " << globAlgn.aSeqQ << endl;
+	// 	cout << "Inside startRightGappedAlignment after calculations on this unitig: Extension path:" << endl;
+	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i) cout << *i << " ";
+	// 	cout << endl;
 	// }
 
 	//Check whether we have reached the end of the current unitig

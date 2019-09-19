@@ -699,9 +699,9 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 		}
 
 		//Testing
-		if(currUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"){
-			exit(0);
-		}
+		// if(currUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"){
+		// 	exit(0);
+		// }
 	}
 }
 
@@ -749,10 +749,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 				2. If s < k s-mers in the beginning of two unitigs that are both successors of a third one are the same. If an extension is already pretty bad when theses unitigs are explored s.t. it drops while comparing base pairs of the identical s-mers it is sufficient to do this once and not for each unitig separately. (But the X-drop never drops while exploring a reached seed does it?)*/			
 
 			//Testing	
-			// if(currUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC" && currSeed->offsetU == 0 && currSeed->offsetQ == 19){
-			// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
+			// if(currUni.mappedSequenceToString() == "TTCCTCACAGAATTCAATTCGATATGGTTACACACGGCGTTTGCTCTGAGTTATC"){
+			// 	cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
 			// 	cout << "extendRevCompSeeds: After right extension: offU: " << newHit.offU << " offQ: " << newHit.offQ << " score: " << newHit.score << " length: " << newHit.length << endl;
-			// 	exit(0);
+			// 	// exit(0);
 			// }
 			// curLen = currSeed->len;
 			// curOffU = currSeed->offsetU;
@@ -792,6 +792,15 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 				// }
 				// cout << "Left extension done" << endl;
 
+				//For now we skip seeds ending within the overlap at the end of a unitig sequence
+				if(currUni.size - newHit.offU < (uint32_t) cdbg.getK()){
+					//Delete the extended seed
+					free(currSeed);
+					//Move on to the next seed
+					currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
+					continue;
+				}
+
 				//Check whether we have created a hit for this query position already
 				if(hitArr[newHit.offQ].length != 0){
 					//Testing
@@ -824,7 +833,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 						// cout << "Make valid borders" << endl;
 
 						//Adjust hit borders if necessary//TODO This should be done not before we select the best extended hits for the gapped alignment, but for the moment this is good enough. Apart from that we can just assume that a gapped extension will not be possible to extend our hits much further so that we can just take it out here and consider it later!
-						makeValidBorders(&newHit, q);
+						//makeValidBorders(&newHit, q);
 
 						//Testing
 						// cout << "Valid borders made" << endl;
@@ -844,7 +853,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 					// cout << "Make valid borders" << endl;
 
 					//Adjust hit borders if necessary//TODO This should be done not before we select the best extended hits for the gapped alignment, but for the moment this is good enough. Apart from that we can just assume that a gapped extension will not be possible to extend our hits much further so that we can just take it out here and consider it later!
-					makeValidBorders(&newHit, q);
+					//makeValidBorders(&newHit, q);
 
 					//Copy hit into the array
 					hitArr[newHit.offQ] = newHit;
@@ -978,18 +987,20 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 		bandRadius = (*it)->length / GAP_RATIO;
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "ATATTTGGCAAATATTATTTTTTATCTTTGCGGAAGTTCAGCGCCCTCATAGCCGTATTTTT"){
-		// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
+		// if((*it)->origUni.mappedSequenceToString() == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
 		// 	cout << "Before right GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
+		// 	report = true;
 		// }
 
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"){
-		// 	cout << "Seed of the unitig:" << endl << "offsetU: " << (*it)->offU << " offsetQ: " << (*it)->offQ << " score: " << (*it)->score << " length: " << (*it)->length << endl;
-		// }                                           TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC
+		// if((*it)->origUni.mappedSequenceToString() == "GATTTTGGCTTCACGTTTAAAAAGCAGCGAAA"){
+		// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << (*it)->offU << " offsetQ: " << (*it)->offQ << " score: " << (*it)->score << " length: " << (*it)->length << endl;
+		// 	cout << "After right gapped extension: aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
+		// 	report = false;
+		// }
 		// if((*it)->origUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"){
 		// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
 		// 	cout << "After right GappedAlignment: offU: " << (*it)->offU << " offQ: " << (*it)->offQ << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
@@ -1029,11 +1040,11 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 		//}
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC" && (*it)->offU == 0 && (*it)->offQ == 19){
+		// if((*it)->origUni.mappedSequenceToString() == "TTCCTCACAGAATTCAATTCGATATGGTTACACACGGCGTTTGCTCTGAGTTATC" && (*it)->offU == 19 && (*it)->offQ == 555){
 		// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
 		// 	cout << "After left GappedAlignment: score: " << (*it)->score << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
 		// 	// cout << "After right GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
-		// 	exit(0);
+		// 	// exit(0);
 		// }
 
 		//Testing

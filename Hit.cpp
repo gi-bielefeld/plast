@@ -135,22 +135,37 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){//TODO: Check whether it 
 	nbBytes = (ePath.nbElem / SUCCESSORS_PER_BYTE) + ((ePath.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);
 	//Allocate space for compressed path
 	ePath.path = (unsigned char*) malloc(nbBytes);
+	//Make all bits in the first byte zero
+	*ePath.path = 0;
 
 	//Walk through extension path
 	for(list<uint16_t>::const_iterator j = extPth.begin(); j != extPth.end(); ++j){
 		//Check if current byte is full
 		if(shifts == SUCCESSORS_PER_BYTE){
+			//Testing
+			// cout << "We get here" << endl;
+
 			//Move to next byte
 			++i;
 			//Reset shifts
 			shifts = 0;
+			//Make all bits zero
+			ePath.path[i] = 0;
 		} else{
 			//Shift all information by 2 bits to the left
 			ePath.path[i] <<= BITS_PER_SUCCESSOR;	
 		}
 
+		//Testing
+		// cout << "ePath.path[i] before next add: " << (uint16_t) ePath.path[i] << endl;
+
 		//Add next successor to byte (we have to subtract one to shift to the correct scale 1-4 -> 0-3)
 		ePath.path[i] |= ((*j) - 1);
+
+		//Testing
+		// cout << "((*j) - 1):" << ((*j) - 1) << endl;
+		// cout << "ePath.path[i]: " << (uint16_t) ePath.path[i] << endl;
+
 		++shifts;
 	}
 
