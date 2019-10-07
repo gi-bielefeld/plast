@@ -25,9 +25,6 @@ struct Ext_ptr{
 //This function simply calculates the unity score for two bases ((mis)match = (-)1)
 inline int32_t compUScore(const char &q, const char &u){ return (q == u ? USCORE_MATCH : USCORE_MISMATCH); }
 
-// //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum/*NOTE: For now the seed extension is a little bit redundant. Would be cool if this can be changed in the future! - Is the seed extension still redundant?*/
-// void startRightX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum);//TODO This function still needs to be tested!
-
 // //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum/*NOTE: For now the seed extension is a little bit redundant. Would be cool if this can be changed in the future! - Is the seed extension still redundant?*/
 // void startRightX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum);//TODO This function still needs to be tested!
 
@@ -98,18 +95,21 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, D
 void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function starts the left extension for seeds lying on the query's reverse complement considering a quorum and a search color set
-void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);//TODO: Tests for this function need to be adjusted!
 
 // //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and returns the achieved score
 // int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum);//TODO This function still needs to be tested!
-
-// //This function continues a left extension on a predecessive unitig of a seed lying on the query's reverse complement considering a quorum and returns the achieved score
-// int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum);//TODO This function still needs to be tested!
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and a search color set and returns the achieved score
 int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reverse complement considering a quorum and a search color set and returns the achieved score
 int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t uPos, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+
+//This function checks if a hit's start offset for the gapped extension lies inside the overlap of a unitig sequence's end. If so it tries to move the start position on a unitig where it is not inside the overlap anymore. If this is not possible the hit is marked as invalid by setting its score to 0.
+void mvStartToValUni(hit* h, list<uint16_t>&);
+
+//This function moves an offset from a given unitig to its successor if there is any while keeping left and right extension paths updated. If the offset at the successive unitig lies inside the overlap at the unitig sequence's end the function calls itself recursively rExtPth must not be empty
+void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t> &lExtPth, list<uint16_t> &rExtPth);
 
 #endif

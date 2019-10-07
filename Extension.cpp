@@ -2707,19 +2707,14 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
-	uint32_t tmpExtLen = 1, progress, posU = hit->offU, posQ = hit->offQ, overlap = 0;
+	uint32_t tmpExtLen = 1, progress, overlap = 0;
 	//Counter to count tries to explore a further unitig
 	uint32_t explCount;
-	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(posU - tmpExtLen, 1, hit->origUni.size, false), true);// - (compOffset(hit->offU, 1, hit->origUni.size, false) + 1);
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU - tmpExtLen, 1, hit->origUni.size, false), true);
 	uint32_t k = hit->origUni.getGraph()->getK();
-
-	// size_t offset;
-
 	list<uint16_t> extPth;
 	string uSeq = hit->origUni.mappedSequenceToString();
 	struct seed *nearestSeed, *prevSeed = NULL;
-
-	// struct Ext_ptr *extPtr = NULL;
 
 	//Testing
 	// cout << "Start startLeftX_Drop_OnRevComp" << endl;
@@ -2745,18 +2740,18 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 	// }
 
 	//Go through the query up to the beginning
-	while(posQ >= tmpExtLen){
+	while(hit->offQ >= tmpExtLen){
 		//Testing
 		// cout << "We are not at the query's beginning" << endl;
 
 		//Check whether we have reached the next seed
-		if(nearestSeed != NULL && posQ - tmpExtLen < nearestSeed->offsetQ + nearestSeed->len){
+		if(nearestSeed != NULL && hit->offQ - tmpExtLen < nearestSeed->offsetQ + nearestSeed->len){
 			//Testing
 			// cout << "2 Option 1" << endl;
 			// cout << "Seed reached" << endl;
 
 			//Calculate the progress we have incorporating the reached seed
-			progress = posQ - tmpExtLen - nearestSeed->offsetQ + 1;//+1, because tmpExtLen is always 1 ahead
+			progress = hit->offQ - tmpExtLen - nearestSeed->offsetQ + 1;//+1, because tmpExtLen is always 1 ahead
 			//Temporary extension length
 			tmpExtLen += progress;
 
@@ -2779,8 +2774,8 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 				//Update hit's score
 				hit->score += tmpScore;
 				//Update hit's left border
-				posU -= (tmpExtLen - 1);
-				posQ -= (tmpExtLen - 1);
+				hit->offU -= (tmpExtLen - 1);
+				hit->offQ -= (tmpExtLen - 1);
 				//Reset temporary hit length
 				tmpExtLen = 1;
 				//Reset temporary score
@@ -2810,8 +2805,8 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 			//Reset prevSeed
 			prevSeed = NULL;
 			//Search for the next neighbor
-			nearestSeed = searchLeftNeighbor(hit->origUni.getData()->getData(hit->origUni)->getSeed(hit->origUni.strand), posQ,  posU, prevSeed);
-		} else if(posU >= overlap + tmpExtLen){//Check whether we have reached the unitig sequence's beginning
+			nearestSeed = searchLeftNeighbor(hit->origUni.getData()->getData(hit->origUni)->getSeed(hit->origUni.strand), hit->offQ,  hit->offU, prevSeed);
+		} else if(hit->offU >= overlap + tmpExtLen){//Check whether we have reached the unitig sequence's beginning
 			//Testing
 			// cout << "2 Option 2" << endl;
 			// cout << "6 Option 2" << endl;
@@ -2849,7 +2844,7 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 			// }
 
 			//Compare the next two bases and check whether this changes temporary score's sign
-			if((tmpScore += compUScore(uSeq[posU - tmpExtLen], q[posQ - tmpExtLen])) > 0){
+			if((tmpScore += compUScore(uSeq[hit->offU - tmpExtLen], q[hit->offQ - tmpExtLen])) > 0){
 				//Testing
 				// cout << "8 Option 1" << endl;
 
@@ -2858,8 +2853,8 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 				//Update hit's score
 				hit->score += tmpScore;
 				//Update hit's left border
-				posU -= tmpExtLen;
-				posQ -= tmpExtLen;
+				hit->offU -= tmpExtLen;
+				hit->offQ -= tmpExtLen;
 				//Reset temporary hit length
 				tmpExtLen = 0;
 				//Reset temporary score
@@ -2889,11 +2884,12 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 			if(overlap != 0){
 				//Testing
 				// cout << "9 Option 1" << endl;
+				// cout << "startLeftX_Drop_OnRevComp: Continue on predecessive unitig" << endl;
 
 				//Initialize explCount
 				explCount = 0;
 				//Continue the extension on the predecessive unitig
-				hit->score += extendAtPrevUnitigOnRevComp(hit->origUni.getPredecessors(), posQ - tmpExtLen, hit->length, tmpExtLen, q, X, tmpScore, extPth, overlap - (posU - tmpExtLen), explCount, quorum, searchSet);
+				hit->score += extendAtPrevUnitigOnRevComp(hit->origUni.getPredecessors(), hit->offQ - tmpExtLen, hit->length, tmpExtLen, q, X, tmpScore, extPth, overlap - (hit->offU - tmpExtLen), explCount, quorum, searchSet);
 			}// else{
 			// 	//Testing
 			// 	// cout << "9 Option 2" << endl;
@@ -2924,10 +2920,29 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 	// 	// cout << "10 Option 2" << endl;
 	// }
 
-	hit->lExt = cmprExtPth(extPth);
+	//A hit's start offset must never be inside the overlap at a unitig sequence's end
+	if(hit->offU > hit->origUni.size - k){
+		//Testing
+		// cout << "startLeftX_Drop_OnRevComp: Moving start" << endl;
+
+		mvStartToValUni(hit, extPth);
+	}
+
+	//Testing
+	// cout << "startLeftX_Drop_OnRevComp: Checked start offset" << endl;
+	
+	//If hit is invalid we do not need to compress its left extension path
+	if(hit->score > 0){
+		//Testing
+		// cout << "startLeftX_Drop_OnRevComp: Compressing extension path" << endl;
+
+		hit->lExt = cmprExtPth(extPth);
+	}
+
 
 	//Testing
 	// cout << "Hit set" << endl;
+	// cout << "startLeftX_Drop_OnRevComp: End of function" << endl;
 }
 
 // //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and returns the achieved score
@@ -3875,4 +3890,115 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 
 	return score;
 
+}
+
+//This function checks if a hit's start offset for the gapped extension lies inside the overlap of a unitig sequence's end. If so it tries to move the start position on a unitig where it is not inside the overlap anymore. If this is not possible the hit is marked as invalid by setting its score to 0.
+void mvStartToValUni(hit* h, list<uint16_t>& lExtPth){
+	//Testing
+	// cout << "mvStartToValUni: Start of function" << endl;
+
+	//If we want to switch unitigs the right extension path must not be empty
+	if(h->rExt.nbElem > 0){
+		//Testing
+		// cout << "1 Option 2" << endl;
+
+		//Decompress right extension path
+		list<uint16_t> rExtPth = decmprExtPth(h->rExt);
+
+		//Switch unitigs
+		switUni(h->offU, h->origUni, lExtPth, rExtPth);
+
+		//Check if unitig switching was successful
+		if(h->offU <= h->origUni.size - h->origUni.getGraph()->getK()){
+			//Testing
+			// cout << "2 Option 1" << endl;
+
+			//Compress right extension path again
+			h->rExt = cmprExtPth(rExtPth);
+			return;
+		}// else{
+		// 	//Testing
+		// 	cout << "2 Option 2" << endl;
+		// }
+	}// else{
+	// 	//Testing
+	// cout << "1 Option 1" << endl;
+	// }
+
+	//Mark hit as invalid
+	h->score = 0;
+}
+
+//This function moves an offset from a given unitig to its successor if there is any while keeping left and right extension paths updated. If the offset at the successive unitig lies inside the overlap at the unitig sequence's end the function calls itself recursively rExtPth must not be empty
+void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t> &lExtPth, list<uint16_t> &rExtPth){
+	uint16_t sucCount = 1, predCount = 1;
+
+	//Testing
+	// cout << "switUni: Start of function" << endl; 
+
+	//Traverse successors of the current unitig
+	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> suc = currUni.getSuccessors().begin(); suc != currUni.getSuccessors().end(); ++suc, ++sucCount){
+		//Check if we have found the required successor
+		if(sucCount < rExtPth.front()){
+			//Testing
+			// cout << "1 Option 2" << endl;
+
+			continue;
+		}
+
+		//Testing
+		// cout << "1 Option 1" << endl;
+
+		//Iterate over predecessors of found successor
+		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> pred = suc->getPredecessors().begin(); pred != suc->getPredecessors().end(); ++pred, ++predCount){
+			//Check if we have found the unitig we came from
+			if(*pred == currUni){
+				//Testing
+				// cout << "2 Option 1" << endl;
+
+				break;
+			}// else{
+			// 	//Testing
+			// 	// cout << "2 Option 2" << endl;
+			// }
+		}
+
+		//Testing
+		// cout << "switUni: Predecessor found" << endl;
+		// cout << "switUni: rExtPth is " << (rExtPth.empty() ? "" : "not " ) << "empty" << endl;
+
+		//Save count in left extension path
+		lExtPth.push_front(predCount);
+		//Delete successor from right extension path
+		rExtPth.pop_front();
+
+		//Testing
+		// cout << "switUni: Extension paths modified" << endl;
+
+		//Update offset
+		offset -= currUni.len;
+		//Update current unitig
+		currUni = *suc;
+		//End iteration
+		break;
+
+		//Testing
+		// cout << "switUni: end of for loop" << endl;
+	}
+
+	//Check if it is necessary and possible to go on
+	if(rExtPth.empty() || offset <= currUni.size - currUni.getGraph()->getK()){
+		//Testing
+		// if(rExtPth.empty()) cout << "3 Option 2" << endl;
+		// if(offset <= currUni.size - currUni.getGraph()->getK()) cout << "3 Option 3" << endl;
+		// cout << "switUni: Recursion terminated" << endl;
+
+		return;
+	}
+
+	//Testing
+	// cout << "3 Option 1" << endl;
+
+	//Move to next unitig
+	switUni(offset, currUni, lExtPth, rExtPth);
 }

@@ -631,6 +631,9 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 	hit newHit;
 	UnitigColorMap<seedlist> currUni;
 
+	//Testing
+	// cout << "Extension on reference strand" << endl;
+
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
 		//Get current unitig
@@ -664,6 +667,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			// 	exit(0);
 			// }
 			// cout << "We do get here" << endl;
+			// cout << "extendRefSeeds: Processing seed offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " on unitig " << currUni.mappedSequenceToString() << endl; 
 
 			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
@@ -757,7 +761,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			// curLen = currSeed->len;
 			// curOffU = currSeed->offsetU;
 			// curOffQ = currSeed->offsetQ;
-			// cout << "Seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << endl;
+			// cout << "Seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " on unitig " << currUni.mappedSequenceToString() << endl;
 			// cout << "Seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << endl;
 			// if(currSeed->offsetU == 0 && currSeed->offsetQ == 19){
 			// 	cout << "Seed of interest extended" << endl << " score: " << newHit.score << " length: " << newHit.length << " on unitig " << newHit.origUni.mappedSequenceToString() << endl;
@@ -792,14 +796,14 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 				// }
 				// cout << "Left extension done" << endl;
 
-				//For now we skip seeds ending within the overlap at the end of a unitig sequence
-				if(currUni.size - newHit.offU < (uint32_t) cdbg.getK()){
-					//Delete the extended seed
-					free(currSeed);
-					//Move on to the next seed
-					currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
-					continue;
-				}
+				// //For now we skip seeds ending within the overlap at the end of a unitig sequence
+				// if(currUni.size - newHit.offU < (uint32_t) cdbg.getK()){
+				// 	//Delete the extended seed
+				// 	free(currSeed);
+				// 	//Move on to the next seed
+				// 	currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
+				// 	continue;
+				// }
 
 				//Check whether we have created a hit for this query position already
 				if(hitArr[newHit.offQ].length != 0){
@@ -893,79 +897,79 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 	}
 }
 
-//This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and outputs the result if demanded
-void calcGappedAlignment(const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum){
-	bool isDupl = false;
-	uint32_t bandRadius;
-	list<hit*>::const_iterator iter;
+// //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and outputs the result if demanded
+// void calcGappedAlignment(const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum){
+// 	bool isDupl = false;
+// 	uint32_t bandRadius;
+// 	list<hit*>::const_iterator iter;
 
-	//Testing
-	// uint32_t reslistSize = 0;
-	// uint32_t nb_duplicates = 0;
+// 	//Testing
+// 	// uint32_t reslistSize = 0;
+// 	// uint32_t nb_duplicates = 0;
 
-	//Go through result list
-	for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
-		//Calculate the band width to be used during the gapped extension
-		bandRadius = (*it)->length / GAP_RATIO;
+// 	//Go through result list
+// 	for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
+// 		//Calculate the band width to be used during the gapped extension
+// 		bandRadius = (*it)->length / GAP_RATIO;
 
-		//Calculate gapped extension to the right
-		startRightGappedAlignment(*it, q, X, bandRadius, quorum);
+// 		//Calculate gapped extension to the right
+// 		startRightGappedAlignment(*it, q, X, bandRadius, quorum);
 
-		//Testing
-		// if(counter < 100){
-		// 	cout << "Result of right extension: rSeed uoff:" << (*it)->rSeedUoff << " rSeed qoff:" << (*it)->rSeedQoff << " rUnitig:" << (*it)->rUnitig.mappedSequenceToString() << endl;
-		// 	++counter;
-		// }
+// 		//Testing
+// 		// if(counter < 100){
+// 		// 	cout << "Result of right extension: rSeed uoff:" << (*it)->rSeedUoff << " rSeed qoff:" << (*it)->rSeedQoff << " rUnitig:" << (*it)->rUnitig.mappedSequenceToString() << endl;
+// 		// 	++counter;
+// 		// }
 
-		//Check whether this is not the first hit in the result list
-		if(it != resList.begin()){
-			iter = resList.begin();
+// 		//Check whether this is not the first hit in the result list
+// 		if(it != resList.begin()){
+// 			iter = resList.begin();
 
-			//Check for duplicates //TODO: If we filter for duplicates we could keep a statistic on how many duplicates of a specific result have been filtered out which could then be made a part of the result to inform the user about it!
-			while(it != iter){
-				//Testing
-				//if(counter < 100) cout << "it != iter" << endl;
+// 			//Check for duplicates //TODO: If we filter for duplicates we could keep a statistic on how many duplicates of a specific result have been filtered out which could then be made a part of the result to inform the user about it!
+// 			while(it != iter){
+// 				//Testing
+// 				//if(counter < 100) cout << "it != iter" << endl;
 
-				//We assume to have a duplicate if right border offsets and unitigs are identical
-				if((*it)->offU == (*iter)->offU && (*it)->offQ == (*iter)->offQ && (*it)->origUni == (*it)->origUni && (*iter)->score == (*it)->score && (*iter)->length == (*it)->length){
-					//cerr << "It seems that the hit going spanning from q=" << (*iter)->lSeedQoff << " to q=" << (*iter)->rSeedQoff << " is a duplicate" << endl;
-					isDupl = true;
-					//++nb_duplicates;
-					break;
-				}
+// 				//We assume to have a duplicate if right border offsets and unitigs are identical
+// 				if((*it)->offU == (*iter)->offU && (*it)->offQ == (*iter)->offQ && (*it)->origUni == (*it)->origUni && (*iter)->score == (*it)->score && (*iter)->length == (*it)->length){
+// 					//cerr << "It seems that the hit going spanning from q=" << (*iter)->lSeedQoff << " to q=" << (*iter)->rSeedQoff << " is a duplicate" << endl;
+// 					isDupl = true;
+// 					//++nb_duplicates;
+// 					break;
+// 				}
 
-				++iter;
-			}
-		}
+// 				++iter;
+// 			}
+// 		}
 
-		//Testing
-		// cout << "After right gapped alignment: Alignment: query: " << (*it)->gAlgn.aSeqQ << " graph: " << (*it)->gAlgn.aSeqG << endl;
-		// cout << "Starting left gapped extension" << endl;
+// 		//Testing
+// 		// cout << "After right gapped alignment: Alignment: query: " << (*it)->gAlgn.aSeqQ << " graph: " << (*it)->gAlgn.aSeqG << endl;
+// 		// cout << "Starting left gapped extension" << endl;
 
-		//We want to avoid doing left extensions for duplicates
-		if(!isDupl){
-			startLeftGappedAlignment(*it, q, X, bandRadius, quorum);
-		}
+// 		//We want to avoid doing left extensions for duplicates
+// 		if(!isDupl){
+// 			startLeftGappedAlignment(*it, q, X, bandRadius, quorum);
+// 		}
 
-		//Testing
-		// cout << "After left gapped alignment: Alignment: query: " << (*it)->gAlgn.aSeqQ << " graph: " << (*it)->gAlgn.aSeqG << endl;
+// 		//Testing
+// 		// cout << "After left gapped alignment: Alignment: query: " << (*it)->gAlgn.aSeqQ << " graph: " << (*it)->gAlgn.aSeqG << endl;
 
-		//Output result
-		if(!noOutput && !isDupl){
+// 		//Output result
+// 		if(!noOutput && !isDupl){
 
-			// cout << "Result info: score: " << (*it)->score << " left seed: offset q: " << (*it)->lSeedQoff << " offset u: " << (*it)->lSeedUoff << " unitig: " << (*it)->lUnitig.mappedSequenceToString() << " right seed: offset q: " << (*it)->rSeedQoff << " offset u: " << (*it)->rSeedUoff << " unitig: " << (*it)->rUnitig.mappedSequenceToString() << endl;
+// 			// cout << "Result info: score: " << (*it)->score << " left seed: offset q: " << (*it)->lSeedQoff << " offset u: " << (*it)->lSeedUoff << " unitig: " << (*it)->lUnitig.mappedSequenceToString() << " right seed: offset q: " << (*it)->rSeedQoff << " offset u: " << (*it)->rSeedUoff << " unitig: " << (*it)->rUnitig.mappedSequenceToString() << endl;
 
-			//Output alignment
-			repAlgn(*it);
-		}
+// 			//Output alignment
+// 			repAlgn(*it);
+// 		}
 
-		//Reset duplicate flag
-		isDupl = false;
-	}
+// 		//Reset duplicate flag
+// 		isDupl = false;
+// 	}
 
-	//Testing
-	//cerr << "Result list length:" << reslistSize << endl << "Number of duplicates:" << nb_duplicates << endl;
-}
+// 	//Testing
+// 	//cerr << "Result list length:" << reslistSize << endl << "Number of duplicates:" << nb_duplicates << endl;
+// }
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
 void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
@@ -1018,7 +1022,11 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 			while(it != iter){
 				//We assume to have a duplicate if right border offsets and unitigs are identical
 				if((*it)->offU == (*iter)->offU && (*it)->offQ == (*iter)->offQ && (*it)->origUni == (*it)->origUni && (*iter)->score == (*it)->score && (*iter)->length == (*it)->length){
-					//cerr << "It seems that the hit going spanning from q=" << (*iter)->lSeedQoff << " to q=" << (*iter)->rSeedQoff << " is a duplicate" << endl;
+					// cerr << "It seems that the hit going spanning from q=" << (*iter)->lSeedQoff << " to q=" << (*iter)->rSeedQoff << " is a duplicate" << endl;
+
+					//Testing
+					// cout << "Duplicate detected" << endl;
+					
 					isDupl = true;
 					break;
 				}
@@ -1171,8 +1179,14 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//Extend seeds lying on the reference strand if demanded
 	if(strand != Minus) extendRefSeeds(cdbg, q, X, hitArr, quorum, searchColors);
 
+	//Testing
+	// cout << "Reference strand done" << endl;
+
 	//Extend seeds lying on the reverse complementary strand if demanded
 	if(strand != Plus) extendRevCompSeeds(cdbg, q, X, hitArr, quorum, searchColors);
+
+	//Testing
+	// cout << "Reverse complementary strand done" << endl;
 
 	// }
 

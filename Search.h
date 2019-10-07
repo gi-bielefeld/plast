@@ -656,8 +656,8 @@ void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const in
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
 void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
-//This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and outputs the result if demanded
-void calcGappedAlignment(const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum);//TODO This function still needs to be tested!
+// //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and outputs the result if demanded
+// void calcGappedAlignment(const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum);//TODO This function still needs to be tested!
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
 void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
