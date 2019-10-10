@@ -510,7 +510,7 @@ inline int32_t getSrchCritCov(UnitigColorMap<seedlist> uni, const uint32_t &quor
 	int32_t brd;
 
 	//Testing
-	//cout << "Search criteria already checked? " << uni.getData()->getData(uni)->srchCritChckd() << endl;
+	// cout << "Search criteria already checked? " << uni.getData()->getData(uni)->srchCritChckd() << endl;
 	// cout << "Inside getSrchCritCov" << endl;
 
 	//Check if search criteria have already been checked for this unitig and check if necessary

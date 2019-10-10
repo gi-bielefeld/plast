@@ -269,6 +269,17 @@ void repAlgn(const hit *res){
 	//Initial position in query (we start count from 1 here)
 	posQ = res->offQ + 1;
 
+	//Testing
+	// if(posQ == 2879){
+	// 	cout << "Start outputting alignment starting at position 2879" << endl;
+	// 	cout << "origUni: " << res->origUni.mappedSequenceToString() << endl;
+	// 	if(res->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
+	// 		cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
+	// 		exit(0);
+	// 	}
+	// 	//exit(0);
+	// }
+
 	//Go through the alignment
 	while(posAlgn < res->gAlgn.aSeqQ.length()){
 		//Check if there is enough alignment to fill another full line

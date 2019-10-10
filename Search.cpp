@@ -733,6 +733,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 		//Testing
 		// uint32_t curLen = 0, curOffU = 0, curOffQ = 0;
 		// cout << "Process the first unitig" << endl;
+		// cout << "Hit array: " << endl;
+		// for(uint16_t j = 0; j < q.length(); ++j){
+		// 	cout << hitArr[j].length << endl;
+		// }
 
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
@@ -746,6 +750,9 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
+
+			//Testing
+			// cout << ""
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
 			/*TODO Ideas to make the seed extension faster:
@@ -768,6 +775,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			// 	exit(0);
 			// }
 			// cout << "Right extension done" << endl;
+			// cout << "Hit array: " << endl;
+			// for(uint16_t j = 0; j < q.length(); ++j){
+			// 	cout << hitArr[j].length << endl;
+			// }
 
 			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query and the third that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
 			if(newHit.length - currSeed->len > 0 || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
@@ -788,11 +799,12 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 
 				//Testing
 				// cout << "Left extension done" << endl;TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC
-				// if(currUni.mappedSequenceToString() == "TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC" && currSeed->offsetU == 20 && currSeed->offsetQ == 47){
+				// if(newHit.origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
 				// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
-				// 	cout << "After left extension: offU: " << newHit.offU << " offQ: " << newHit.offQ << " score: " << newHit.score << " length: " << newHit.length << endl;
-				// 	cout << "origUni: " << newHit.origUni.mappedSequenceToString() << endl;
-				// 	// exit(0);
+				// 	// cout << "After left extension: offU: " << newHit.offU << " offQ: " << newHit.offQ << " score: " << newHit.score << " length: " << newHit.length << endl;
+				// 	// cout << "origUni: " << currUni.mappedSequenceToString() << endl;
+				// 	cout << "extendRevCompSeeds: Unitig found" << endl;
+				// 	exit(0);
 				// }
 				// cout << "Left extension done" << endl;
 
@@ -854,6 +866,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 				} else{
 					//Testing
 					// cout << "4 Option 2" << endl;
+					// cout << "Hit array: " << endl;
+					// for(uint16_t j = 0; j < q.length(); ++j){
+					// 	cout << hitArr[j].length << endl;
+					// }
 					// cout << "Make valid borders" << endl;
 
 					//Adjust hit borders if necessary//TODO This should be done not before we select the best extended hits for the gapped alignment, but for the moment this is good enough. Apart from that we can just assume that a gapped extension will not be possible to extend our hits much further so that we can just take it out here and consider it later!
@@ -894,6 +910,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 		// }
 		// if(i->getData()->getData(*i)->getLastProcSeed() != NULL) cerr << "There is a list of processed seeds which is not empty!" << endl;
 		// cout << "This is the end of the current iteration" << endl;
+		// cout << "Hit array: " << endl;
+		// for(uint16_t j = 0; j < q.length(); ++j){
+		// 	cout << hitArr[j].length << endl;
+		// }
 	}
 }
 
@@ -1035,6 +1055,9 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 			}
 		}
 
+		//Testing
+		// cout << "origUni: " << (*it)->origUni.mappedSequenceToString() << endl;
+
 		//We want to avoid doing left extensions for duplicates
 		if(!isDupl){
 			//Testing
@@ -1048,11 +1071,16 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 		//}
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "TTCCTCACAGAATTCAATTCGATATGGTTACACACGGCGTTTGCTCTGAGTTATC" && (*it)->offU == 19 && (*it)->offQ == 555){
+		// if((*it)->offQ == 2878){
+		// 	cout << "Initial unitig was " << (*it)->origUni.mappedSequenceToString() << endl;
 		// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
-		// 	cout << "After left GappedAlignment: score: " << (*it)->score << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
+		// 	// cout << "After left GappedAlignment: score: " << (*it)->score << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
 		// 	// cout << "After right GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
 		// 	// exit(0);
+		// }
+		// if((*it)->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
+		// 	cout << "We have found the interesting unitig" << endl;
+		// 	exit(0);
 		// }
 
 		//Testing
@@ -1094,6 +1122,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	std::chrono::duration<double> tDiff;
 
 
+	// bool frst;
 	//The query's reverse complement
 	string revQ;
 	
@@ -1103,6 +1132,8 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//Output which query we are working on
 	//cout << "Query " << ++qCounter << endl;
 
+	//Pointer needed to free hit array
+	// hit *h, *delHit;
 	//Variables needed for the seed extension
 	hit hitArr[q.length()];
 	//Variables needed for the gapped extension
@@ -1187,6 +1218,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	//Testing
 	// cout << "Reverse complementary strand done" << endl;
+	// exit(0);
 
 	// }
 
@@ -1281,6 +1313,44 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	calcGappedAlignment(cdbg, resList, q, X, calcRT, quorum, searchColors);
 
+	// //Free memory in hit array
+	// for(uint32_t i = 0; i < q.length() - minSeedLength + 1; ++i){
+	// 	//Check if hit array at current position is empty
+	// 	if(hitArr[i].length == 0){
+	// 		h = NULL;
+	// 	} else{
+	// 		//Get pointer of hit at current position
+	// 		h = &hitArr[i];
+	// 		//Mark hit as being the first in the hit array
+	// 		frst = true;
+	// 	}
+
+	// 	//Iterate over all hits of a certain array position
+	// 	while(h != NULL){
+	// 		//Check if we are dealing with the first hit at this position
+	// 		if(frst){
+	// 			//Next hit won't be the first anymore
+	// 			frst = false;
+	// 			//Move to the next hit
+	// 			h = h->nextHit;
+	// 		} else{
+	// 			//Save hit to delete
+	// 			delHit = h;
+	// 			//Get pointer to next hit
+	// 			h = h->nextHit;
+	// 			//Free current hit
+	// 			free(delHit);
+	// 		}
+	// 	}
+	// }
+
+	// //Testing
+	// struct seed *s;
+	// for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
+	// 	s = i->getData()->getData(*i)->getSeed(true);
+	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
+	// 	s = i->getData()->getData(*i)->getSeed(false);
+	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
 	// }
 
 	//Measure and output current runtime if demanded

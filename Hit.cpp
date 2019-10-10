@@ -207,5 +207,8 @@ const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
 		++cmpSucs;
 	}
 
+	//Free memory of compressed path
+	free(cmpPth.path);
+
 	return path;
 }

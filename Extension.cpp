@@ -3,7 +3,7 @@
 #include "Search.h"
 #include "Seedlist.cpp"
 
-// bool report = false;
+bool report = false;
 
 // //This function searches for the closest seed to reach during an extension and returns it if it exists (otherwise NULL)
 // //TODO Each time a seed is searched the seed list is gone through from the beginning again. If the last closest seed was not the first one that was found it might be possible not to start from the beginning again!
@@ -2556,6 +2556,11 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 	// uint32_t k = hit->origUni.getGraph()->getK();
 	// size_t offset;
 
+	//Testing
+	// if(hit->origUni.mappedSequenceToString() == "CTCAGTTTACTCATACCCCATTCATCAGCAATTGAAAACAAA"){
+	// 	cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
+	// }
+
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
 	struct seed *nearestSeed, *prevSeed = NULL;
@@ -2718,6 +2723,9 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 
 	//Testing
 	// cout << "Start startLeftX_Drop_OnRevComp" << endl;
+	// if(hit->origUni.mappedSequenceToString() == "AACTTTTATATTTGTTTTCAATTGCTGATGAATGGGGTAT"){
+	// 	report = true;
+	// }
 
 	// //Make a copy of our unitig
 	// UnitigColorMap<seedlist> cpyUnitig = hit->lUnitig;
@@ -2901,6 +2909,9 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 
 	//Testing
 	// cout << "Calculations finished" << endl;
+	// if(hit->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
+	// 	cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
+	// }
 
 	// //Check whether we could successfully extend our seed on the predecessive unitig
 	// if(extPtr != NULL){
@@ -2920,6 +2931,9 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 	// 	// cout << "10 Option 2" << endl;
 	// }
 
+	//Testing
+	// cout << "startLeftX_Drop_OnRevComp: origUni: " << hit->origUni.mappedSequenceToString() << endl;
+
 	//A hit's start offset must never be inside the overlap at a unitig sequence's end
 	if(hit->offU > hit->origUni.size - k){
 		//Testing
@@ -2930,6 +2944,10 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 
 	//Testing
 	// cout << "startLeftX_Drop_OnRevComp: Checked start offset" << endl;
+	// if(hit->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
+	// 	cout << "We have found the interesting unitig" << endl;
+	// 	// exit(0);
+	// }
 	
 	//If hit is invalid we do not need to compress its left extension path
 	if(hit->score > 0){
@@ -3385,6 +3403,11 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 
 	//Testing
 	// cout << "checkedPos: " << checkedPos << endl;
+	// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT"){
+	// 	cout << "contLeftX_DropOnRevComp: We are on unitig CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT" << endl;
+	// 	cout << "checkedPos: " << checkedPos << endl;
+	// 	return 0;
+	// }
 
 	// uint32_t k = prevUni->getGraph()->getK();
 	// size_t offset;
@@ -3655,6 +3678,12 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 	//Testing
 	// if(nearestSeed == NULL) cout << "2 Option 2" << endl;
 	// cout << "uPos: " << uPos << endl;
+	// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT"){
+	// 	cout << "contLeftX_DropOnRevComp: We are on unitig CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT" << endl;
+	// 	cout << "checkedPos: " << checkedPos << endl;
+	// 	cout << "nearestSeed is " << (nearestSeed == NULL ? "" : "not ") << "NULL" << endl;
+	// 	// exit(0);
+	// }
 
 	//Check how far we should explore the unitig's sequence
 	if(prevUni->getPredecessors().hasPredecessors()){
@@ -3683,6 +3712,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 			//Testing
 			// cout << "tmpScore: " << tmpScore << endl;
 			// cout << "progress: " << progress << endl;
+			// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT") cout << "We should not go in here" << endl;
 
 			//Update the temporary score
 			tmpScore += progress;//TODO Change this as soon as we want to allow more than only unit score!
@@ -3743,11 +3773,13 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 		} else if(uPos >= tmpExtLen + overlap){//Check whether we have already reached the beginning of the unitig sequence
 			//Testing
 			// cout << "8 Option 2" << endl;
+			// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT") cout << "Let's compare the next bases" << endl;
 
 			//Check whether quorum has to be checked
 			if(checkedPos <= 0){
 				//Testing
 				// cout << "9 Option 1" << endl;
+				// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT") cout << "checkedPos is there so we cannot do anything" << endl;
 
 				// //Calculate offset and make sure there is no overflow
 				// offset = (tmpExtLen + k - 1 > uPos ? 0 : uPos - (tmpExtLen + k - 1));//TODO Theoretically, this is not necessary!
@@ -3887,6 +3919,9 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 			break;
 		}
 	}
+
+	//Testing
+	// if(prevUni->mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT") exit(0);
 
 	return score;
 

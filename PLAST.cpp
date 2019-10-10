@@ -268,6 +268,17 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		}
 	}
 
+	//Testing
+	// UnitigColorMap<seedlist> sUni = cdbg.find(Kmer("CTCACCTTGGTTGAAAAATGCTAAAAGTGCC"));
+	// cout << "Unitig: " << sUni.mappedSequenceToString() << endl;
+	// for(UnitigColors::const_iterator i = sUni.getData()->getUnitigColors(sUni)->begin(sUni); i != sUni.getData()->getUnitigColors(sUni)->end(); ++i){
+	// 	cout << "Position:" << (*i).first << " Color:";
+	// 	for(list<pair<string, size_t>>::const_iterator cname = searchColors.begin(); cname != searchColors.end(); ++cname){
+	// 		if(cname->second == (*i).second) cout << cname->first << endl;
+	// 	}
+	// }
+	// return 0;
+
 	//Load query sequences
 	loadQueries(qFile, qList);
 
@@ -276,7 +287,23 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes);//TODO The memory should not increase for each new query we are searching for. Currently, it does slightly though. This has to be changed!
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes);
+
+		//Testing
+		// UnitigColorMap<seedlist> sUni = cdbg.find(Kmer("CTCACCTTGGTTGAAAAATGCTAAAAGTGCC"));
+		// cout << "Unitig: " << sUni.referenceUnitigToString() << endl;
+		// cout << "lBrd: " << sUni.getData()->getData(sUni)->getlBrd() << " rBrd: " << sUni.getData()->getData(sUni)->getrBrd() << endl;
+		// return 0;
+
+		//Measure and output current runtime if demanded
+		if(calcRT){
+			//Get current time
+			endTime = std::chrono::system_clock::now();
+			//Calculate the time difference
+			std::chrono::duration<double> tDiff = endTime - startTime;
+			//Output the measured time
+			cout << "Gapped extension took " << tDiff.count() << " s" << endl;
+		}
 	}
 
 	// 	while(next != NULL){
