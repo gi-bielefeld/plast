@@ -655,6 +655,11 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
 
+			//Testing
+			// if(currUni.mappedSequenceToString() == "CGCCTGAGCAATCTCTGGCTTACGCCGCTGC" && currSeed->offsetU == 0 && currSeed->offsetQ == 358){
+			// 	report = true;
+			// }
+
 			//Extend hit to the right
 			startRightX_Drop(&newHit, q, X, quorum, searchSet);
 			/*TODO Ideas to make the seed extension faster:
@@ -702,6 +707,12 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
 				}
 			}
+
+			//Testing
+			// if(report){
+			// 	cout << "offU: " << newHit.offU << " offQ: " << newHit.offQ << " length: " << newHit.length << " score: " << newHit.score << endl;
+			// 	exit(0);
+			// }
 
 			//Delete the extended seed
 			free(currSeed);
@@ -759,10 +770,10 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			newHit.nextHit = NULL;
 
 			//Testing
-			if(newHit.origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
-				cerr << "Initial seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " len: " << currSeed->len << endl;
-				// exit(0);
-			}
+			// if(newHit.origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+			// 	cerr << "Initial seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " len: " << currSeed->len << endl;
+			// 	// exit(0);
+			// }
 
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
@@ -1012,6 +1023,7 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 	// uint16_t hitCount = 0;
 	// bool duplFound = false;
 	// cout << "Do we get here?" << endl;
+	// uint32_t befscore;
 
 	//Go through result list
 	for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
@@ -1022,10 +1034,12 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 		bandRadius = (*it)->length / GAP_RATIO;
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
+		// if((*it)->origUni.mappedSequenceToString() == "CGCCTGAGCAATCTCTGGCTTACGCCGCTGC" && (*it)->score == 19){
 		// 	cout << "Before right GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
-		// 	report = true;
+		// 	// report = true;
+		// 	exit(0);
 		// }
+		// befscore = (*it)->score;
 
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
@@ -1084,9 +1098,14 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 
 			//Testing
 			// cout << "E-value calculation done" << endl;
+			// if((*it)->gAlgn.aSeqQ == "ATAGCGCCTGAGCAACCGCTGG"){
+			// 	cout << "Suspicious results found" << endl << "Score: " << (*it)->score << " was before " << befscore << endl;
+			// 	cout << "origUni: " << (*it)->origUni.mappedSequenceToString() << " offU: " << (*it)->offU << " offQ: " << (*it)->offQ << endl;
+			// 	exit(0);
+			// }
 		} else{
 			//Testing
-			cout << "2 Option 1" << endl;
+			// cout << "2 Option 1" << endl;
 			// duplFound = true;
 
 			//Delete result
@@ -1290,9 +1309,6 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 			hitList = NULL;
 		} else{
-			//Testing
-			// cout << "2 Option 1" << endl;
-
 			hitList	= &hitArr[i];
 		}
 
@@ -1310,11 +1326,19 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 			//Testing
 			// cout << "hitList->score: " << hitList->score << endl;
+			// cout << "E-value: " << hitList->eval << endl;
+			// if(hitList->offQ == 358 && hitList->score == 16){
+			// 	cout << "Hit: Score: " << hitList->score << " length: " << hitList->length << " eval: " << hitList->eval << endl;
+			// }
 
 			//Make sure the hit should still be considered
 			if(hitList->score != 0 && hitList->eval <= eLim){
 				//Testing
 				// cout << "4 Option 2" << endl << "5 Option 2" << endl;
+				// if(hitList->offQ == 358){
+				// 	cout << "Hit: Score: " << hitList->score << " length: " << hitList->length << " eval: " << hitList->eval << endl;
+				// 	exit(0);
+				// }
 
 				//Check if we can still just add new results to the result list or need to replace worse existing ones
 				if(nRes == 0){
@@ -1343,6 +1367,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	//Testing
 	// cout << "Result list has been made" << endl;
+	// exit(0);
 
 	//Calculate gapped alignments
 	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambda, C);
@@ -1370,10 +1395,16 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 			//Testing
 			// cout << "Ready to output alignments" << endl;
 
-			//Output alignment
-			repAlgn(*it);
-			//Output color sets
-			outpColSets(cdbg, *it);
+			//Check e-value once again//TODO This should be obsolete as soon as the imperfect alignment issue is fixed
+			if((*it)->eval <= eLim){
+				//Output alignment
+				repAlgn(*it);
+				//Output color sets
+				outpColSets(cdbg, *it);
+			}
+
+			//Testing
+			// if((*it)->eval > 10) exit(0);
 		}
 	}
 

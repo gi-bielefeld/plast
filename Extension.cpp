@@ -218,10 +218,13 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<seedlist>, DataStorage
 		++sucID;
 
 		//Testing
-		// cout << "Unitig is " << nI->mappedSequenceToString() << endl;
+		// if(report) cout << "Unitig is " << nI->mappedSequenceToString() << endl;
 
 		//Calculate the score of an extension of a successor
 		currScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, X, lastExtSeedTmpScore, uniPos, tmpPth, explCount, quorum, searchSet);
+
+		//Testing
+		// if(report) cout << "We have returned" << endl;
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -646,7 +649,7 @@ void startRightX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_
 			}
 
 			//Testing
-			// cout << "Bases to compare:" << uSeq[hit->offU + tmpSeedLen] << " " << q[hit->offQ + tmpSeedLen] << endl;
+			// if(report) cout << "Bases to compare:" << uSeq[hit->offU + tmpSeedLen] << " " << q[hit->offQ + tmpSeedLen] << endl;
 			// cout << "Base comparisons leads to a";
 
 			//Check whether the score of our extension is positive
@@ -1451,7 +1454,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 				}
 
 				//Testing
-				// cout << "Compare bases unitig: " << sucUniSeq[uniSeqPos] << " query: " << q[iniQoff + extLen + tmpSLen] << endl;
+				// if(report) cout << "Compare bases unitig: " << sucUniSeq[uniSeqPos] << " query: " << q[iniQoff + extLen + tmpSLen] << endl;
 
 				//Check whether the score of our extension is positive
 				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen])) > 0){
@@ -2056,12 +2059,14 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<seedlist>, DataStorag
 
 		//Testing
 		// cout << "tmpHitLen: " << tmpHitLen << endl;
+		// if(report) cout << "Explore " << nI->mappedSequenceToString() << endl;
 
 		//Calculate the score of an extension of a successor
 		currScore = contLeftX_Drop(nI, qPos, tmpHitLen, q, X, lastExtSeedTmpScore, tmpPth, explCount, quorum, searchSet);
 
 		//Testing
 		// cout << "tmpHitLen: " << tmpHitLen << endl;
+		// if(report) cout << "Return" << endl;
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -2564,8 +2569,8 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 	// size_t offset;
 
 	//Testing
-	// if(hit->origUni.mappedSequenceToString() == "CTCAGTTTACTCATACCCCATTCATCAGCAATTGAAAACAAA"){
-	// 	cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
+	// if(report){
+	// 	cout << "Starting left extension" << endl;
 	// }
 
 	string uSeq = hit->origUni.mappedSequenceToString();
@@ -2648,6 +2653,9 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 				// //Check whether quorum is still fulfilled
 				// if((checkedPos = checkSearchCrit(hit->origUni, quorum, offset, searchSet)) == 0) break;//TODO If we want to allow to check more than k positions at once we need a new function here!
 			}
+
+			//Testing
+			// if(report) cout << "Bases to compare u: " << uSeq[posU - tmpExtLen] << " q: " << q[posQ - tmpExtLen] << endl;
 
 			//Compare the next two bases and check whether this changes temporary score's sign
 			if((tmpScore += compUScore(uSeq[posU - tmpExtLen], q[posQ - tmpExtLen])) > 0){
@@ -3589,6 +3597,7 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 
 			//Testing
 			//cout << "uPos - tmpExtLen: " << uPos - tmpExtLen << " qPos - tmpExtLen: " << qPos - tmpExtLen << endl;
+			// if(report) cout << "Bases to compare u: " << prevUniSeq[uPos - tmpExtLen] << " q: " << q[qPos - tmpExtLen] << endl;
 
 			//Compare the next two bases and check whether our temporary score is becoming > 0 by this
 			if((tmpScore += compUScore(prevUniSeq[uPos - tmpExtLen], q[qPos - tmpExtLen])) > 0){
