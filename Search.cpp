@@ -1358,7 +1358,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 			//Output alignment
 			repAlgn(*it);
 			//Output color sets
-			// outpColSets(cdbg, *it);
+			outpColSets(cdbg, *it);
 		}
 	}
 
