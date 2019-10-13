@@ -1075,17 +1075,25 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 			// cout << "Calculate left gapped alignment" << endl;
 
 			startLeftGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
+
+			//Testing
+			// cout << "Left gapped extension done" << endl;
+
+			//Recalculate e-value
+			(*it)->eval = calcEVal((*it)->score, lambda, C, q.length());
+
+			//Testing
+			// cout << "E-value calculation done" << endl;
 		} else{
 			//Testing
-			// cout << "2 Option 1" << endl;
+			cout << "2 Option 1" << endl;
 			// duplFound = true;
 
 			//Delete result
-			resList.erase(it);
+			it = resList.erase(it);
+			//Make sure we do not miss a result
+			--it;
 		}
-
-		//Recalculate e-value
-		(*it)->eval = calcEVal((*it)->score, lambda, C, q.length());
 
 		//Testing
 		// if((*it)->offQ == 2878){
@@ -1333,16 +1341,20 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 		}
 	}
 
-	//Check which function we have to use
-	// if(searchColors.empty()){//TODO It is not nice to copy all is! Is it maybe possible to circumvent this by giving a function as parameter or does it actually not even save time?
-	// 	calcGappedAlignment(resList, q, X, calcRT, quorum);
-	// } else{
+	//Testing
+	// cout << "Result list has been made" << endl;
 
 	//Calculate gapped alignments
 	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambda, C);
 
+	//Testing
+	// cout << "Gapped alignments have been calculated" << endl;
+
 	//Sort results
 	resList.sort(compEvals);
+
+	//Testing
+	// cout << "Results have been sorted" << endl;
 
 	//Measure and output current runtime if demanded
 	if(calcRT){
@@ -1355,6 +1367,9 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	} else{
 		//Iterate over alignments
 		for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
+			//Testing
+			// cout << "Ready to output alignments" << endl;
+
 			//Output alignment
 			repAlgn(*it);
 			//Output color sets

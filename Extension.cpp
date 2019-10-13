@@ -2940,14 +2940,14 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 
 	//Testing
 	// cerr << "startLeftX_Drop_OnRevComp: origUni: " << hit->origUni.mappedSequenceToString() << endl;
-	if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
-		cerr << "After left extension: length: " << hit->length << " score: " << hit->score << " left extension path: " << endl;
-		for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
-			cerr << *i << " ";
-		}
-		cerr << endl;
-		report = true;
-	}
+	// if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+	// 	cerr << "After left extension: length: " << hit->length << " score: " << hit->score << " left extension path: " << endl;
+	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
+	// 		cerr << *i << " ";
+	// 	}
+	// 	cerr << endl;
+	// 	report = true;
+	// }
 
 	//A hit's start offset must never be inside the overlap at a unitig sequence's end
 	if(hit->offU > hit->origUni.size - k){
