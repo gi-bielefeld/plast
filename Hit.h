@@ -37,6 +37,7 @@ class hit {
 			score = h.score;
 			offU = h.offU;
 			offQ = h.offQ;
+			eval = h.eval;
 			origUni = h.origUni;
 			lExt = h.lExt;
 			rExt = h.rExt;
@@ -50,6 +51,8 @@ class hit {
 		uint32_t score;
 		//The initial seed's offsets
 		uint32_t offU, offQ;
+		//The hit's e-value
+		double eval;
 		//Initial unitig the extension was started
 		UnitigColorMap<seedlist> origUni;
 		//Left-side extension path of extended seed
@@ -70,6 +73,9 @@ void replWorseRes(list<hit*> &hList, hit* hit);
 
 //This function scans through a hit list and inserts the given hit right in front of the first entry which score is smaller or equal to the given hit's score
 void insRes(list<hit*> &hList, hit* hit);
+
+//This function retreats an ungapped extension of a seed on the reverse complementary strand if its right border ends within the k-1 overlap in a unitig sequence's end
+void makeValidBorders(hit *hit, const string &q);
 
 //This function compresses the extension paths of left and right extension and returns a merged extension path object
 struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
@@ -102,7 +108,7 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
 //This function decompresses an extension path object
 const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);
 
-//This function retreats an ungapped extension of a seed on the reverse complementary strand if its right border ends within the k-1 overlap in a unitig sequence's end
-void makeValidBorders(hit *hit, const string &q);
+//This function compares two hits based on their e-values. Returns true if fh is smaller than sh.
+inline bool compEvals(const hit *fh, const hit *sh){ return (fh->eval < sh->eval); };
 
 #endif

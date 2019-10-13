@@ -4,6 +4,7 @@
 #include "GappedAlignment.cpp"
 #include "Sequence.cpp"
 #include "Hit.cpp"
+#include "Statistics.h"
 
 // //This function performs the seed detection if no search color set is given
 // void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, hit *hitArr, const bool isRefSeq){
@@ -678,6 +679,12 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, X, quorum, searchSet);
 
+				//Testing
+				// if(newHit.origUni.mappedSequenceToString() == "TTTCACCGCATCGGCAATGGCGGGCAGGGCG"){
+				// 	cerr << "extendRefSeeds: We have found the interesting unitig" << endl;
+				// 	exit(0);
+				// }
+
 				//Check whether we have created a hit for this query position already
 				if(hitArr[newHit.offQ].length == 0){
 					//Copy hit into the array
@@ -752,7 +759,11 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			newHit.nextHit = NULL;
 
 			//Testing
-			// cout << ""
+			if(newHit.origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+				cerr << "Initial seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " len: " << currSeed->len << endl;
+				// exit(0);
+			}
+
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
 			/*TODO Ideas to make the seed extension faster:
@@ -992,7 +1003,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 // }
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList, const string &q, const int16_t &X, const bool &noOutput, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C){
 	bool isDupl = false;
 	uint32_t bandRadius;
 	list<hit*>::const_iterator iter;
@@ -1064,11 +1075,17 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 			// cout << "Calculate left gapped alignment" << endl;
 
 			startLeftGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
-		}// else{
+		} else{
 			//Testing
 			// cout << "2 Option 1" << endl;
 			// duplFound = true;
-		//}
+
+			//Delete result
+			resList.erase(it);
+		}
+
+		//Recalculate e-value
+		(*it)->eval = calcEVal((*it)->score, lambda, C, q.length());
 
 		//Testing
 		// if((*it)->offQ == 2878){
@@ -1087,24 +1104,24 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 		// cout << "Inside calcGappedAlignment: Calculations done" << endl;
 
 		//Output result
-		if(!noOutput && !isDupl){
-			// cout << "Result info: score: " << (*it)->score << " left seed: offset q: " << (*it)->offQ << " offset u: " << (*it)->offU << " unitig: " << (*it)->origUni.mappedSequenceToString() << " right seed: offset q: " << (*it)->offQ << " offset u: " << (*it)->offU << " unitig: " << (*it)->origUni.mappedSequenceToString() << endl;
+		// if(!noOutput && !isDupl){
+		// 	// cout << "Result info: score: " << (*it)->score << " left seed: offset q: " << (*it)->offQ << " offset u: " << (*it)->offU << " unitig: " << (*it)->origUni.mappedSequenceToString() << " right seed: offset q: " << (*it)->offQ << " offset u: " << (*it)->offU << " unitig: " << (*it)->origUni.mappedSequenceToString() << endl;
 
-			//Testing
-			// cout << "Before repAlgn: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
+		// 	//Testing
+		// 	// cout << "Before repAlgn: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
 
-			//Output alignment
-			repAlgn(*it);
+		// 	//Output alignment
+		// 	repAlgn(*it);
 
-			//Testing
-			// cout << "We get here" << endl;
-			// cout << "Before outpColSets: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
+		// 	//Testing
+		// 	// cout << "We get here" << endl;
+		// 	// cout << "Before outpColSets: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
 
-			//Output color sets
-			outpColSets(cdbg, *it);
+		// 	//Output color sets
+		// 	// outpColSets(cdbg, *it);
 
-			// cout << "We get even out again" << endl;
-		}
+		// 	// cout << "We get even out again" << endl;
+		// }
 
 		//Reset duplicate flag
 		isDupl = false;
@@ -1115,14 +1132,14 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, const list<hit*> &resList,
 }
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes){
+void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &C, const double &eLim){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
 	auto endTime = std::chrono::system_clock::now();
 	std::chrono::duration<double> tDiff;
 
-
-	// bool frst;
+	//No hit can start behind this point
+	uint32_t hitArrSize = q.length() - minSeedLength + 1;
 	//The query's reverse complement
 	string revQ;
 	
@@ -1135,7 +1152,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//Pointer needed to free hit array
 	// hit *h, *delHit;
 	//Variables needed for the seed extension
-	hit hitArr[q.length()];
+	hit hitArr[hitArrSize];
 	//Variables needed for the gapped extension
 	list<hit*> resList;
 	list<hit*>::iterator iter;
@@ -1197,10 +1214,10 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	/*Seed Extension*/
 	cout << "Extending seeds" << endl;
 
-	//Initialize rest of hit array
-	for(uint32_t i = q.length() - minSeedLength + 1; i < q.length(); ++i){
-		hitArr[i].length = 0;
-	}
+	// //Initialize rest of hit array
+	// for(uint32_t i = hitArrSize - minSeedLength + 1; i < hitArrSize; ++i){
+	// 	hitArr[i].length = 0;
+	// }
 
 	//Check which function we have to use
 	// if(searchColors.empty()){//TODO It is not nice to copy all is! Is it maybe possible to circumvent this by giving a function as parameter or does it actually not even save time?
@@ -1256,7 +1273,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	cout << "Performing gapped extension" << endl;
 
 	//Find best results
-	for(uint32_t i = 0; i < q.length() - minSeedLength + 1; ++i){//TODO: Here, we should scan for duplicates already!//TODO This may be put into a function!
+	for(uint32_t i = 0; i < hitArrSize; ++i){//TODO: Here, we should scan for duplicates already!//TODO This may be put into a function!
 		hit *hitList;
 
 		if(hitArr[i].length == 0){
@@ -1280,18 +1297,24 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 			// //Adjust right hit border if necessary
 			// makeValidBorders(hitList, q);
 
+			//Calculate e-value
+			hitList->eval = calcEVal(hitList->score, lambda, C, q.length());
+
 			//Testing
 			// cout << "hitList->score: " << hitList->score << endl;
 
 			//Make sure the hit should still be considered
-			if(hitList->score != 0){
+			if(hitList->score != 0 && hitList->eval <= eLim){
+				//Testing
+				// cout << "4 Option 2" << endl << "5 Option 2" << endl;
+
 				//Check if we can still just add new results to the result list or need to replace worse existing ones
 				if(nRes == 0){
 					//Testing
 					// cout << "3 Option 1" << endl;
 
 					//Try to replace a worse result
-					replWorseRes(resList, hitList);//TODO: Here, we should start to free the memory of all hits not needed anymore!
+					replWorseRes(resList, hitList);//TODO: Here, we should start to free the memory of all hits not needed anymore!<-Why not doing this in the very end? This would avoid unnecessary pointer juggling
 				} else{
 					//Testing
 					// cout << "3 Option 2" << endl;
@@ -1302,6 +1325,10 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 				}
 			}
 
+			//Testing
+			// if(hitList->score == 0) cout << "4 Option 1" << endl;
+			// if(hitList->eval > eLim) cout << "5 Option 1" << endl;
+
 			hitList = hitList->nextHit;
 		}
 	}
@@ -1311,47 +1338,11 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	// 	calcGappedAlignment(resList, q, X, calcRT, quorum);
 	// } else{
 
-	calcGappedAlignment(cdbg, resList, q, X, calcRT, quorum, searchColors);
+	//Calculate gapped alignments
+	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambda, C);
 
-	// //Free memory in hit array
-	// for(uint32_t i = 0; i < q.length() - minSeedLength + 1; ++i){
-	// 	//Check if hit array at current position is empty
-	// 	if(hitArr[i].length == 0){
-	// 		h = NULL;
-	// 	} else{
-	// 		//Get pointer of hit at current position
-	// 		h = &hitArr[i];
-	// 		//Mark hit as being the first in the hit array
-	// 		frst = true;
-	// 	}
-
-	// 	//Iterate over all hits of a certain array position
-	// 	while(h != NULL){
-	// 		//Check if we are dealing with the first hit at this position
-	// 		if(frst){
-	// 			//Next hit won't be the first anymore
-	// 			frst = false;
-	// 			//Move to the next hit
-	// 			h = h->nextHit;
-	// 		} else{
-	// 			//Save hit to delete
-	// 			delHit = h;
-	// 			//Get pointer to next hit
-	// 			h = h->nextHit;
-	// 			//Free current hit
-	// 			free(delHit);
-	// 		}
-	// 	}
-	// }
-
-	// //Testing
-	// struct seed *s;
-	// for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
-	// 	s = i->getData()->getData(*i)->getSeed(true);
-	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
-	// 	s = i->getData()->getData(*i)->getSeed(false);
-	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
-	// }
+	//Sort results
+	resList.sort(compEvals);
 
 	//Measure and output current runtime if demanded
 	if(calcRT){
@@ -1361,5 +1352,73 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 		tDiff = endTime - startTime;
 		//Output the measured time
 		cout << "Gapped extension took " << tDiff.count() << " s" << endl;
+	} else{
+		//Iterate over alignments
+		for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
+			//Output alignment
+			repAlgn(*it);
+			//Output color sets
+			// outpColSets(cdbg, *it);
+		}
+	}
+
+	//Free memory in hit array
+	freeHitArray(hitArr, hitArrSize);
+
+	//Testing
+	// struct seed *s;
+	// for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
+	// 	s = i->getData()->getData(*i)->getSeed(true);
+	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
+	// 	s = i->getData()->getData(*i)->getSeed(false);
+	// 	if(s != NULL) cerr << "Detected remaining seed in seedlist after calculations" << endl;
+	// }
+}
+
+//This function frees all memory additionally allocated for an hit array
+void freeHitArray(hit *arr, uint32_t &arrLen){
+	bool frst = false;
+	hit *h, *delHit;
+
+	for(uint32_t i = 0; i < arrLen; ++i){
+		//Check if hit array at current position is empty
+		if(arr[i].length == 0){
+			//Testing
+			// cout << "1 Option 1" << endl;
+
+			h = NULL;
+		} else{
+			//Testing
+			// cout << "1 Option 2" << endl;
+
+			//Get pointer of hit at current position
+			h = &arr[i];
+			//Mark hit as being the first in the hit array
+			frst = true;
+		}
+
+		//Iterate over all hits of a certain array position
+		while(h != NULL){
+			//Check if we are dealing with the first hit at this position
+			if(frst){
+				//Testing
+				// cout << "2 Option 1" << endl;
+
+				//Next hit won't be the first anymore
+				frst = false;
+				//Move to the next hit
+				h = h->nextHit;
+			} else{
+				//Testing
+				// cout << "2 Option 2" << endl;
+
+				//Save hit to delete
+				delHit = h;
+				//Get pointer to next hit
+				h = h->nextHit;
+				//Free current hit
+				free(delHit);
+			}
+		}
 	}
 }

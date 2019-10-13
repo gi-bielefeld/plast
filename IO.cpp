@@ -1,8 +1,9 @@
-#include "IO.h"
 #include <getopt.h>
 
+#include "IO.h"
+
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &C, double &eValLim){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -22,6 +23,9 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"X-dropoff",      optional_argument,  0, 'X'},
         {"max-results",    optional_argument,  0, 'n'},
         {"strand",         optional_argument,  0, 'd'},
+        {"lambda",         optional_argument,  0, 'l'},
+        {"stat-C",         optional_argument,  0, 'C'},
+        {"e-value",        optional_argument,  0, 'e'},
         {"runtimes",       no_argument,        0, 'r'},
         {0,                0,                  0,  0 }
     };
@@ -37,15 +41,6 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 		cerr << "ERROR: Command unknown" << endl;
 		return false;
 	}
-
-	//Testing
-	// cout << "nb_args:" << nb_args << endl;
-	// cout << "argList:" << endl;
-	// for(int i = 0; i < nb_args; ++i){
-	// 	cout << argList[i] << endl;
-	// }
-	// //a = getopt_long(nb_args, argList, OPTIONS, long_options, &option_index);
-	// cout << "Do we get at least here?" << endl;
 
 	//Parse all parameters given
 	//while((a = getopt(nb_args, argList, OPTIONS)) != -1){
@@ -184,6 +179,68 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 					
 					cerr << "Unrecognized strand option" <<  endl << "Default is used" << endl;
 				}
+
+				break;
+			case 'l':
+				//Try to read lambda value
+				lambda = strtod(optarg, NULL);
+
+				//Testing
+				// cout << "11" << endl;
+
+				//Check if the given value is out of range
+				if(errno == ERANGE || lambda == 0.0){
+					//Testing
+					// cout << "12 Option 2" << endl;
+
+					cerr << "ERROR: Invalid lambda value given" << endl;
+					return false;
+				}
+
+				//Testing
+				// cout << "12 Option 1" << endl;
+
+				break;
+			case 'C':
+				//Try to read C value
+				C = strtod(optarg, NULL);
+
+				//Testing
+				// cout << "13" << endl;
+
+				//Check if the given value is out of range
+				if(errno == ERANGE || C == 0.0){
+					//Testing
+					// cout << "14 Option 2" << endl;
+
+					cerr << "ERROR: Invalid C value given" << endl;
+					return false;
+				}
+
+				//Testing
+				// cout << "14 Option 1" << endl;
+
+				break;
+			case 'e':
+				//Try to read e-value threshold
+				eValLim = strtod(optarg, NULL);
+
+				//Testing
+				// cout << "15" << endl;
+
+				//Check if the given value is out of range
+				if(errno == ERANGE || eValLim == 0.0){
+					//Testing
+					cout << "16 Option 2" << endl;
+
+					cerr << "ERROR: Invalid e-value threshold given" << endl;
+					return false;
+				}
+
+				//Testing
+				// cout << "16 Option 1" << endl;
+
+				break;
 			default:
 				//Testing
 				//cout << "Default: optarg:" << optarg << endl;
@@ -265,19 +322,19 @@ void repAlgn(const hit *res){
 	uint32_t i = 0, algnCols, gaps = 0, posQ, posAlgn = 0;
 
 	//Output some general info
-	cout << "Score: " << res->score << "\tLength: " << res->gAlgn.aSeqQ.length() << "\tE-value: " << endl;//TODO: E-value should be included here!
+	cout << "Score: " << res->score << "\tLength: " << res->gAlgn.aSeqQ.length() << "\tE-value: " << res->eval << endl;
 	//Initial position in query (we start count from 1 here)
 	posQ = res->offQ + 1;
 
 	//Testing
-	// if(posQ == 2879){
-	// 	cout << "Start outputting alignment starting at position 2879" << endl;
-	// 	cout << "origUni: " << res->origUni.mappedSequenceToString() << endl;
-	// 	if(res->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
-	// 		cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
-	// 		exit(0);
-	// 	}
-	// 	//exit(0);
+	// if(res->score == 4){
+	// 	cerr << "Start outputting alignment having a score of 4" << endl;
+	// 	cerr << "origUni: " << res->origUni.mappedSequenceToString() << endl;
+	// // 	if(res->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
+	// // 		cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
+	// // 		exit(0);
+	// // 	}
+	// 	// exit(0);
 	// }
 
 	//Go through the alignment

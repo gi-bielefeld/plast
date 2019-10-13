@@ -30,6 +30,7 @@
 #include "Graph.h"
 #include "Graph.cpp"
 #include "Sequence.h"
+#include "Statistics.h"
 
 //Buffer size used to write binary files
 //const uint8_t bufsize = 2 * sizeof(uint32_t);
@@ -77,6 +78,12 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	uint32_t quorum = DEFAULT_QUORUM;
 	//Query counter
 	uint32_t qCounter = 0;
+	//Lambda needed for alignment statistic
+	double lambda = DEFAULT_LAMBDA;
+	//C needed for alignment statistic
+	double C = DEFAULT_C;
+	//E-value threshold for a hit to be considered
+	double eBound = DEFAULT_E_LIMIT;
 	//Query file name
 	string qFile;
 	//List of queries we are searching for
@@ -103,7 +110,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	//cout << "Next we are going to parse the arguments" << endl;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, calcRT, X, nRes)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, calcRT, X, nRes, lambda, C, eBound)){
 		//Display help message
 		dispHelp();
 		return 1;
@@ -114,7 +121,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	// for(vector<string>::iterator v = bOpt.filename_ref_in.begin(); v != bOpt.filename_ref_in.end(); ++v) cout << *v << endl;
 	// cout << "raw input files:" << endl;
 	// for(vector<string>::iterator v = bOpt.filename_seq_in.begin(); v != bOpt.filename_seq_in.end(); ++v) cout << *v << endl;
-	// cout << "number of threads: " << nb_threads << " query file: " << qFile << " search color file name: " << sColFile << " quorum: " << quorum << " strand: " << strand << " calcRT: " << (calcRT ? "Yes" : "No") << " X: " << X << " number of results: " << nRes << endl;
+	// cout << "number of threads: " << nb_threads << " query file: " << qFile << " search color file name: " << sColFile << " quorum: " << quorum << " strand: " << strand << " calcRT: " << (calcRT ? "Yes" : "No") << " X: " << X << " number of results: " << nRes << " lambda: " << lambda << " C: " << C << " e-value threshold: " << eBound << endl;
 	// return 0;
 
 	const uint32_t profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
@@ -287,7 +294,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, C, eBound);
 
 		//Testing
 		// UnitigColorMap<seedlist> sUni = cdbg.find(Kmer("CTCACCTTGGTTGAAAAATGCTAAAAGTGCC"));

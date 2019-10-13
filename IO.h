@@ -4,7 +4,7 @@
 #include "Search.h"
 
 #define MIN_PARAM_NB 4
-#define OPTIONS "i:s:k:g:S:R:t:q:c:m:X:n:d:r"
+#define OPTIONS "i:s:k:g:S:R:t:q:c:m:X:n:d:l:C:e:r"
 #define BUILD_COMMAND "Build"
 #define SEARCH_COMMAND "Search"
 #define RUNTIME_FLAG_DEFAULT false
@@ -22,7 +22,7 @@
 const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols);
 
 //This function parses the program parameters. Returns false if given arguments are not valid
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t &X, uint16_t &nRes);
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t &X, uint16_t &nRes, double &lambda, double &C, double &eValLim);
 
 //This function prints usage infos
 inline void dispHelp(){
@@ -50,7 +50,10 @@ inline void dispHelp(){
 	cerr << "   -m   --quorum         Quorum (absolute value)" << endl;
 	cerr << "   -X   --X-dropoff      X-dropoff value" << endl;
 	cerr << "   -n   --max-results    Maximum number of alignments to be outputted (default is " << DEFAULT_NB_RES << ")" << endl;
-	cerr << "   -d   --strand         DNA strands to consider during search. Can be '+','-' (default is both)" << endl << endl;
+	cerr << "   -d   --strand         DNA strands to consider during search. Can be '+','-' (default is both)" << endl;
+	cerr << "   -l   --lambda         Statistical value lambda" << endl;
+	cerr << "   -C   --stat-C         Statistical value C" << endl;
+	cerr << "   -e   --e-value        Expectation value threshold for a hit to be considered (default is 10)" << endl << endl;
 	cerr << "   >Optional without argument:" << endl << endl;
 	cerr << "   -r   --runtimes   Runtime measurement flag" << endl;
 }

@@ -846,6 +846,13 @@ void startRightX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, con
 
 	//Testing
 	// cout << "1 Option 1" << endl;
+	if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+		cerr << "After right extension: length: " << hit->length << " score: " << hit->score << " right extension path: " << endl;
+		for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
+			cerr << *i << " ";
+		}
+		cerr << endl;
+	}
 
 	// //Check whether our extension has been continued on successive unitigs
 	// if(extPtr != NULL){
@@ -2932,7 +2939,15 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 	// }
 
 	//Testing
-	// cout << "startLeftX_Drop_OnRevComp: origUni: " << hit->origUni.mappedSequenceToString() << endl;
+	// cerr << "startLeftX_Drop_OnRevComp: origUni: " << hit->origUni.mappedSequenceToString() << endl;
+	if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+		cerr << "After left extension: length: " << hit->length << " score: " << hit->score << " left extension path: " << endl;
+		for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
+			cerr << *i << " ";
+		}
+		cerr << endl;
+		report = true;
+	}
 
 	//A hit's start offset must never be inside the overlap at a unitig sequence's end
 	if(hit->offU > hit->origUni.size - k){
@@ -2944,9 +2959,9 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 
 	//Testing
 	// cout << "startLeftX_Drop_OnRevComp: Checked start offset" << endl;
-	// if(hit->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
-	// 	cout << "We have found the interesting unitig" << endl;
-	// 	// exit(0);
+	// if(hit->origUni.mappedSequenceToString() == "TTTCACCGCATCGGCAATGGCGGGCAGGGCG"){
+	// 	cerr << "startLeftX_Drop_OnRevComp: We have found the interesting unitig" << endl;
+	// 	exit(0);
 	// }
 	
 	//If hit is invalid we do not need to compress its left extension path
@@ -4009,11 +4024,16 @@ void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t>
 
 		//Testing
 		// cout << "switUni: Extension paths modified" << endl;
+		if(report) cerr << "switUni: Switch from unitig " << currUni.mappedSequenceToString() << " with len " << currUni.len << " offset was " << offset << endl;
 
 		//Update offset
 		offset -= currUni.len;
 		//Update current unitig
 		currUni = *suc;
+
+		//Testing
+		if(report) cerr << "switUni: Switch to unitig " << currUni.mappedSequenceToString() << " new offset: " << offset << endl;
+
 		//End iteration
 		break;
 
@@ -4026,7 +4046,10 @@ void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t>
 		//Testing
 		// if(rExtPth.empty()) cout << "3 Option 2" << endl;
 		// if(offset <= currUni.size - currUni.getGraph()->getK()) cout << "3 Option 3" << endl;
-		// cout << "switUni: Recursion terminated" << endl;
+		if(report){
+			cerr << "switUni: Recursion terminated" << endl;
+			report = false;
+		}
 
 		return;
 	}
