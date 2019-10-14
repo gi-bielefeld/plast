@@ -421,13 +421,13 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(maxGaps < i){
 			lCalcBorder = i - maxGaps;
 			//Initialize cell to the left of the first one to calculate as we will need it there
-			mat[i][lCalcBorder - 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[i][lCalcBorder - 1] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 		}
 
 		//Adjust right border
 		rCalcBorder = min(i + maxGaps, matBrth - 1);
 		//If existing, initialize cell to the right of the last calculated one as we might need it for calculations in the next iteration
-		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 
 		for(j = lCalcBorder; j <= rCalcBorder; ++j){
 
@@ -888,13 +888,13 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(maxGaps < i){
 			lCalcBorder = i - maxGaps;
 			//Initialize cell to the left of the first one to calculate as we will need it there
-			mat[i][lCalcBorder - 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[i][lCalcBorder - 1] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 		}
 
 		//Adjust right border
 		rCalcBorder = min(i + maxGaps, matBrth - 1);
 		//If existing, initialize cell to the right of the last calculated one as we might need it for calculations in the next iteration
-		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 
 		for(j = lCalcBorder; j <= rCalcBorder; ++j){
 			// //Make sure we calculate a banded alignment if matrix is too big
