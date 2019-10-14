@@ -1371,10 +1371,6 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	//Calculate gapped alignments
 	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambda, C);
-
-	//Testing
-	// cout << "Gapped alignments have been calculated" << endl;
-
 	//Sort results
 	resList.sort(compEvals);
 

@@ -1928,6 +1928,8 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 	// 	cout << "Inside startRightGappedAlignment after all calculations: gAlgn:" << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << endl << "globAlgn: aSeqG: " << globAlgn.aSeqG << endl << "globAlgn: aSeqQ: " << globAlgn.aSeqQ << endl;
 	// 	// exit(0);
 	// }
+	cout << "maxBorderScore: " << maxBorderScore << endl;
+	cout << "maxScore: " << maxScore << endl;
 
 	//Check whether exploration of next unitig was successful
 	if(explSuc && maxScore < maxBorderScore){

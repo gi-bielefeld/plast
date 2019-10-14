@@ -849,13 +849,13 @@ void startRightX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, con
 
 	//Testing
 	// cout << "1 Option 1" << endl;
-	if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
-		cerr << "After right extension: length: " << hit->length << " score: " << hit->score << " right extension path: " << endl;
-		for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
-			cerr << *i << " ";
-		}
-		cerr << endl;
-	}
+	// if(hit->origUni.mappedSequenceToString() == "CAGTACGGTATCGGCCCCCAACGCAATCATGCGCACAACGTCCAGACCGTTACGGATCCCGCTGTCTGCCAGAATGGTGATGTCGCCTTTCACCGCATCGGCAATGGCGGG"){
+	// 	cerr << "After right extension: length: " << hit->length << " score: " << hit->score << " right extension path: " << endl;
+	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i){
+	// 		cerr << *i << " ";
+	// 	}
+	// 	cerr << endl;
+	// }
 
 	// //Check whether our extension has been continued on successive unitigs
 	// if(extPtr != NULL){
