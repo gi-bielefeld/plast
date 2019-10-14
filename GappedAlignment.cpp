@@ -387,7 +387,7 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 			//GAP_SCORE is supposed to be negative
 			mat[i][0] = maxScore + i * GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 		} else{
-			mat[i][0] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[i][0] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 			//We want to save time by not treating the whole matrix
 			break;
 		}
@@ -398,7 +398,7 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(j <= maxGaps){
 			mat[0][j] = maxScore + j * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
 		} else{
-			mat[0][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[0][j] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 			//We want to save time by not treating the whole matrix
 			break;
 		}
@@ -540,201 +540,201 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	}
 }*/
 
-//This function calculates a banded alignment of a unitig and the query sequence to the left considering a quorum. Returns true if calculations on unitig could be finished (i.e. the unitig sequence was not to long to be stored inside the edit matrix).
-bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &X, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum){//TODO: So far we do not adjust the maximal number of gaps. This has to be changed as soon as we calculate real alignments!//TODO: This function does more than it should!
-	bool termCalcs, matShriked = false;
-	uint32_t matBrth, matHgth, i, j, lCalcBorder, rCalcBorder, maxMatPosI = 0, maxMatPosJ = 0, eMaxPosU = posU, eMaxPosQ = posQ, edgeMaxPosI = 0, edgeMaxPosJ = 0;
-	string uSeq;
+// //This function calculates a banded alignment of a unitig and the query sequence to the left considering a quorum. Returns true if calculations on unitig could be finished (i.e. the unitig sequence was not to long to be stored inside the edit matrix).
+// bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &X, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum){//TODO: So far we do not adjust the maximal number of gaps. This has to be changed as soon as we calculate real alignments!//TODO: This function does more than it should!
+// 	bool termCalcs, matShriked = false;
+// 	uint32_t matBrth, matHgth, i, j, lCalcBorder, rCalcBorder, maxMatPosI = 0, maxMatPosJ = 0, eMaxPosU = posU, eMaxPosQ = posQ, edgeMaxPosI = 0, edgeMaxPosJ = 0;
+// 	string uSeq;
 
-	//Get unitig's sequence
-	uSeq = uni.mappedSequenceToString();
+// 	//Get unitig's sequence
+// 	uSeq = uni.mappedSequenceToString();
 
-	//Testing
-	// cout << "Unitig sequence to compare:" << uSeq << " from pos " << posU << endl;
-	// cout << "Query sequence to compare: " << q << " from pos " << posQ << endl;
+// 	//Testing
+// 	// cout << "Unitig sequence to compare:" << uSeq << " from pos " << posU << endl;
+// 	// cout << "Query sequence to compare: " << q << " from pos " << posQ << endl;
 
-	//Calculate dynamic programming matrix borders
-	// matHgth = min(posU + maxGaps, posQ) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
-	// matBrth = min(pos)<-
-	//dim = min(posU, posQ) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
+// 	//Calculate dynamic programming matrix borders
+// 	// matHgth = min(posU + maxGaps, posQ) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
+// 	// matBrth = min(pos)<-
+// 	//dim = min(posU, posQ) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
 
-	//Make sure that the matrix is not becoming too big
-	if(posU > MAX_MATRIX_SIZE){
-		//If we reach the lower matrix border we definitely do not miss any sequence of the unitig
-		matBrth = min((uint32_t) MAX_MATRIX_SIZE, posQ + maxGaps) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
-		//Do not matter which matrix border we reach and the matrix should not become too big
-		matHgth = min(posQ, (uint32_t) MAX_MATRIX_SIZE) + 2;
-		matShriked = true;
-	} else{
-		//Make sure we cannot reach the lower matrix border except if our calculations are done
-		matBrth = min(posU, posQ + maxGaps) + 2;
-		//Consider as much unitig sequence as necessary but not more
-		matHgth = min(posQ, posU + maxGaps) + 2;
-	}
+// 	//Make sure that the matrix is not becoming too big
+// 	if(posU > MAX_MATRIX_SIZE){
+// 		//If we reach the lower matrix border we definitely do not miss any sequence of the unitig
+// 		matBrth = min((uint32_t) MAX_MATRIX_SIZE, posQ + maxGaps) + 2;//+2 since we need 1 column and row for the empty string and offset indexes start with 0
+// 		//Do not matter which matrix border we reach and the matrix should not become too big
+// 		matHgth = min(posQ, (uint32_t) MAX_MATRIX_SIZE) + 2;
+// 		matShriked = true;
+// 	} else{
+// 		//Make sure we cannot reach the lower matrix border except if our calculations are done
+// 		matBrth = min(posU, posQ + maxGaps) + 2;
+// 		//Consider as much unitig sequence as necessary but not more
+// 		matHgth = min(posQ, posU + maxGaps) + 2;
+// 	}
 
-	//TODO This is just preliminar and has to be changed a.s.a.p.!
-	//Check whether the unitig sequence which has to be compared fulfills the quorum
-	if(!quorumFulfilled(uni, 0, posU + 1, quorum)){
-		//If the quorum is not fulfilled we are not going to do anything!
-		matHgth = 1;
-		matBrth = 1;
-	}
+// 	//TODO This is just preliminar and has to be changed a.s.a.p.!
+// 	//Check whether the unitig sequence which has to be compared fulfills the quorum
+// 	if(!quorumFulfilled(uni, 0, posU + 1, quorum)){
+// 		//If the quorum is not fulfilled we are not going to do anything!
+// 		matHgth = 1;
+// 		matBrth = 1;
+// 	}
 
-	//Initialize dynamic programming matrix
-	int32_t **mat = (int32_t**) malloc(matHgth * sizeof(int32_t*));//TOOD: Is this the most efficient way to handle this?
-	for(i = 0; i < matHgth; ++i) mat[i] = (int32_t*) malloc(matBrth * sizeof(int32_t));
+// 	//Initialize dynamic programming matrix
+// 	int32_t **mat = (int32_t**) malloc(matHgth * sizeof(int32_t*));//TOOD: Is this the most efficient way to handle this?
+// 	for(i = 0; i < matHgth; ++i) mat[i] = (int32_t*) malloc(matBrth * sizeof(int32_t));
 
-	//Testing
-	// cout << "We are getting here" << endl;
-	// cout << "matHgth:" << matHgth << " matBrth:" << matBrth << endl;
+// 	//Testing
+// 	// cout << "We are getting here" << endl;
+// 	// cout << "matHgth:" << matHgth << " matBrth:" << matBrth << endl;
 
-	//Initialize upper left cell
-	mat[0][0] = maxScore;
+// 	//Initialize upper left cell
+// 	mat[0][0] = maxScore;
 
-	//Testing
-	// cout << "mat[0][0]:" << mat[0][0] << endl;
+// 	//Testing
+// 	// cout << "mat[0][0]:" << mat[0][0] << endl;
 	
-	//If one of the to compare sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
-	if(matBrth == 1){
-		eMax = mat[0][0];
-	} else{
-		//Initialize edge maximum
-		eMax = -X;
-	}
+// 	//If one of the to compare sequences is the empty sequence we need to set eMax correctly because we are not entering the main for loop at all
+// 	if(matBrth == 1){
+// 		eMax = mat[0][0];
+// 	} else{
+// 		//Initialize edge maximum
+// 		eMax = -X;
+// 	}
 
-	//Initialize first column
-	for(i = 1; i < matHgth; ++i){
-		if(i <= maxGaps){
-			mat[i][0] = maxScore + i * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
-		} else{
-			mat[i][0] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
-			//We want to save time by not treating the whole matrix
-			break;
-		}
-	}
+// 	//Initialize first column
+// 	for(i = 1; i < matHgth; ++i){
+// 		if(i <= maxGaps){
+// 			mat[i][0] = maxScore + i * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 		} else{
+// 			mat[i][0] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 			//We want to save time by not treating the whole matrix
+// 			break;
+// 		}
+// 	}
 
-	//Testing
-	// cout << "But do we get here?" << endl;
+// 	//Testing
+// 	// cout << "But do we get here?" << endl;
 
-	//Initialize first row
-	for(j = 1; j < matBrth; ++j){
-		if(j <= maxGaps){
-			mat[0][j] = maxScore + j * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
-		} else{
-			mat[0][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
-		}
-	}
+// 	//Initialize first row
+// 	for(j = 1; j < matBrth; ++j){
+// 		if(j <= maxGaps){
+// 			mat[0][j] = maxScore + j * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 		} else{
+// 			mat[0][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 		}
+// 	}
 
-	//Set left border
-	lCalcBorder = 1;
-	//rCalcBorder = min(dim, maxGaps);
+// 	//Set left border
+// 	lCalcBorder = 1;
+// 	//rCalcBorder = min(dim, maxGaps);
 
-	//Fill the matrix
-	for(i = 1; i < matHgth; ++i){
-		//Reset abort var
-		termCalcs = true;
+// 	//Fill the matrix
+// 	for(i = 1; i < matHgth; ++i){
+// 		//Reset abort var
+// 		termCalcs = true;
 
-		//Check if we can adjust left alignment calculation border
-		if(maxGaps < i){
-			lCalcBorder = i - maxGaps;
-			//Initialize cell to the left of the first one to calculate as we will need it there
-			mat[i][lCalcBorder - 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
-		}
+// 		//Check if we can adjust left alignment calculation border
+// 		if(maxGaps < i){
+// 			lCalcBorder = i - maxGaps;
+// 			//Initialize cell to the left of the first one to calculate as we will need it there
+// 			mat[i][lCalcBorder - 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 		}
 
-		//Adjust right border
-		rCalcBorder = min(i + maxGaps, matBrth - 1);
-		//If existing, initialize cell to the right of the last calculated one as we might need it for calculations in the next iteration
-		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 		//Adjust right border
+// 		rCalcBorder = min(i + maxGaps, matBrth - 1);
+// 		//If existing, initialize cell to the right of the last calculated one as we might need it for calculations in the next iteration
+// 		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
 
-		for(j = lCalcBorder; j <= rCalcBorder; ++j){
-			// //Make sure we calculate a banded alignment if matrix is too big
-			// if(j < lCalcBorder || j > rCalcBorder){
-			// 	mat[i][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
-			// } else{
+// 		for(j = lCalcBorder; j <= rCalcBorder; ++j){
+// 			// //Make sure we calculate a banded alignment if matrix is too big
+// 			// if(j < lCalcBorder || j > rCalcBorder){
+// 			// 	mat[i][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 			// } else{
 
-			//Calculate current cells value and check we don't drop
-			if((mat[i][j] = max(mat[i - 1][j - 1] + compUScore(q[posQ - i + 1], uSeq[posU - j + 1]), max(mat[i][j - 1] + GAP_SCORE, mat[i - 1][j] + GAP_SCORE))) > -X){//TODO: This has to be changed as soon as we are not using unit score anymore!
-				//Make sure we do not terminate our calculations too soon
-				termCalcs = false;
+// 			//Calculate current cells value and check we don't drop
+// 			if((mat[i][j] = max(mat[i - 1][j - 1] + compUScore(q[posQ - i + 1], uSeq[posU - j + 1]), max(mat[i][j - 1] + GAP_SCORE, mat[i - 1][j] + GAP_SCORE))) > -X){//TODO: This has to be changed as soon as we are not using unit score anymore!
+// 				//Make sure we do not terminate our calculations too soon
+// 				termCalcs = false;
 
-				//Testing
-				//cout << "Inside calcLeftGlobAlignment: Characters that have been compared were " << q[posQ - i + 1] << " in the query and " << uSeq[posU - j + 1] << " in the unitig" << endl;
+// 				//Testing
+// 				//cout << "Inside calcLeftGlobAlignment: Characters that have been compared were " << q[posQ - i + 1] << " in the query and " << uSeq[posU - j + 1] << " in the unitig" << endl;
 
-				//Check whether we have a new max score (NOTE: We could check only for better scores here as well. Do it this way will in doubt lead to larger alignments.<- In favour for alignments with smaller E-values, I changed this)//TODO: Maybe we don't what this because this might lead to less significant alignments!
-				if(maxScore < mat[i][j]){
-					//Update max score
-					maxScore = mat[i][j];
-					//Update maximum position
-					maxPosQ = posQ - i + 1;
-					maxPosU = posU - j + 1;
-					maxMatPosI = i;
-					maxMatPosJ = j;
-				}
+// 				//Check whether we have a new max score (NOTE: We could check only for better scores here as well. Do it this way will in doubt lead to larger alignments.<- In favour for alignments with smaller E-values, I changed this)//TODO: Maybe we don't what this because this might lead to less significant alignments!
+// 				if(maxScore < mat[i][j]){
+// 					//Update max score
+// 					maxScore = mat[i][j];
+// 					//Update maximum position
+// 					maxPosQ = posQ - i + 1;
+// 					maxPosU = posU - j + 1;
+// 					maxMatPosI = i;
+// 					maxMatPosJ = j;
+// 				}
 
-				//Check whether we are at the right or lower matrix edge and whether we have found a new maximum
-				if((i == matHgth - 1 || j == matBrth - 1) && eMax <= mat[i][j]){
-					//Update edge maximum
-					eMax = mat[i][j];
-					eMaxPosQ = posQ - i + 1;
-					eMaxPosU = posU - j + 1;
-					edgeMaxPosI = i;
-					edgeMaxPosJ = j;
-				}
-			}
+// 				//Check whether we are at the right or lower matrix edge and whether we have found a new maximum
+// 				if((i == matHgth - 1 || j == matBrth - 1) && eMax <= mat[i][j]){
+// 					//Update edge maximum
+// 					eMax = mat[i][j];
+// 					eMaxPosQ = posQ - i + 1;
+// 					eMaxPosU = posU - j + 1;
+// 					edgeMaxPosI = i;
+// 					edgeMaxPosJ = j;
+// 				}
+// 			}
 
-			//Testing
-			// cout << "mat[" << i << "][" << j << "]:" << mat[i][j] << " ";
-		}
+// 			//Testing
+// 			// cout << "mat[" << i << "][" << j << "]:" << mat[i][j] << " ";
+// 		}
 
-		//Testing
-		// cout << endl;
+// 		//Testing
+// 		// cout << endl;
 
-		//Check whether calculations may be terminated
-		if(termCalcs) break;
-	}
+// 		//Check whether calculations may be terminated
+// 		if(termCalcs) break;
+// 	}
 
-	//Testing
-	// cout << "Filled matrix:" << endl;
-	// for(i = 0; i < matHgth; ++i){
-	// 	for(j = 0; j < matBrth; ++j){
-	// 		cout << mat[i][j] << " ";
-	// 	}
-	// 	cout << endl;
-	// }
-	// cout << "Do forthtracing" << endl;
+// 	//Testing
+// 	// cout << "Filled matrix:" << endl;
+// 	// for(i = 0; i < matHgth; ++i){
+// 	// 	for(j = 0; j < matBrth; ++j){
+// 	// 		cout << mat[i][j] << " ";
+// 	// 	}
+// 	// 	cout << endl;
+// 	// }
+// 	// cout << "Do forthtracing" << endl;
 
-	//Do backtracing to get the alignment maximum scoring alignment
-	traceForth(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
+// 	//Do backtracing to get the alignment maximum scoring alignment
+// 	traceForth(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
 
-	//Check if maximum score is at the matrix border
-	if(maxPosU == eMaxPosU && maxPosQ == eMaxPosQ){
-		//Copy maximum scoring alignment to save time
-		brdAlgn = maxAlgn;
-	} else{
-		//Backtrace alignment to go on with on next unitig
-		traceForth(edgeMaxPosI, eMaxPosQ, q, edgeMaxPosJ, eMaxPosU, uSeq, mat, brdAlgn);
-	}
+// 	//Check if maximum score is at the matrix border
+// 	if(maxPosU == eMaxPosU && maxPosQ == eMaxPosQ){
+// 		//Copy maximum scoring alignment to save time
+// 		brdAlgn = maxAlgn;
+// 	} else{
+// 		//Backtrace alignment to go on with on next unitig
+// 		traceForth(edgeMaxPosI, eMaxPosQ, q, edgeMaxPosJ, eMaxPosU, uSeq, mat, brdAlgn);
+// 	}
 
-	//Testing
-	// cout << "Free the matrix" << endl;
+// 	//Testing
+// 	// cout << "Free the matrix" << endl;
 
-	//Free matrix
-	for(i = 0; i < matHgth; ++i) free(mat[i]);
-	free(mat);
+// 	//Free matrix
+// 	for(i = 0; i < matHgth; ++i) free(mat[i]);
+// 	free(mat);
 
-	//Update positions in unitig und q
-	if(eMax > -X){
-		posU = eMaxPosU;
-		posQ = eMaxPosQ;
-	} else{
-		posU = maxPosU;
-		posQ = maxPosQ;
-	}
+// 	//Update positions in unitig und q
+// 	if(eMax > -X){
+// 		posU = eMaxPosU;
+// 		posQ = eMaxPosQ;
+// 	} else{
+// 		posU = maxPosU;
+// 		posQ = maxPosQ;
+// 	}
 
-	if(eMax > -X && matShriked) return false;
+// 	if(eMax > -X && matShriked) return false;
 	
-	return true;
-}
+// 	return true;
+// }
 
 //This function calculates a banded alignment of a unitig and the query sequence to the left considering a quorum and a search color set. Returns true if calculations on unitig could be finished (i.e. the unitig sequence was not to long to be stored inside the edit matrix).
 bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &X, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool srchCritCheck){//TODO: So far we do not adjust the maximal number of gaps. This has to be changed as soon as we calculate real alignments!//TODO: This function does more than it should!
@@ -858,7 +858,7 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(i <= maxGaps){
 			mat[i][0] = maxScore + i * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
 		} else{
-			mat[i][0] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[i][0] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 		}
 	}
 
@@ -867,7 +867,7 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(j <= maxGaps){
 			mat[0][j] = maxScore + j * GAP_SCORE;//GAP_SCORE is supposed to be negative//TODO: This has to be changed as soon as we are not using unit score anymore!
 		} else{
-			mat[0][j] = INT32_MIN + 1;//TODO: This has to be changed as soon as we are not using unit score anymore!
+			mat[0][j] = INT32_MIN - GAP_SCORE;//TODO: This has to be changed as soon as we are not using unit score anymore!
 		}
 	}
 
@@ -1109,45 +1109,45 @@ void contRightGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &ext
 	}
 }
 
-//This function calculates the continuation of a gapped alignment on a predecessive unitig or the next peace of the query considering a quorum
-void contLeftGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &X, const uint32_t &maxGaps, struct Algn &maxAlgn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
-	bool unitigDone, explSuc = false;
-	uint32_t maxPosQ = posQ, maxPosU = posU;
-	int32_t maxBorderScore;
-	struct Algn brdAlgn;
-	UnitigColorMap<seedlist> maxUni = uni;
+// //This function calculates the continuation of a gapped alignment on a predecessive unitig or the next peace of the query considering a quorum
+// void contLeftGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &X, const uint32_t &maxGaps, struct Algn &maxAlgn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
+// 	bool unitigDone, explSuc = false;
+// 	uint32_t maxPosQ = posQ, maxPosU = posU;
+// 	int32_t maxBorderScore;
+// 	struct Algn brdAlgn;
+// 	UnitigColorMap<seedlist> maxUni = uni;
 
-	//Calculate gapped alignment
-	unitigDone = calcLeftGlobAlignment(uni, q, posU, posQ, X, maxGaps, maxPosQ, maxPosU, maxAlgn, brdAlgn, score, maxBorderScore, quorum);
+// 	//Calculate gapped alignment
+// 	unitigDone = calcLeftGlobAlignment(uni, q, posU, posQ, X, maxGaps, maxPosQ, maxPosU, maxAlgn, brdAlgn, score, maxBorderScore, quorum);
 
-	//Testing
-	//cout << "Exploration counter: " << explCount << " posQ: " << posQ << endl;
+// 	//Testing
+// 	//cout << "Exploration counter: " << explCount << " posQ: " << posQ << endl;
 
-	//Check outcome of alignment calculation
-	if(!unitigDone){
-		explSuc = contLeftOnSameUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum);
-	} else if(maxBorderScore > -X && posQ > 0){
-		//Testing
-		//cout << "Call of contGappedOnPredUni" << endl;
+// 	//Check outcome of alignment calculation
+// 	if(!unitigDone){
+// 		explSuc = contLeftOnSameUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum);
+// 	} else if(maxBorderScore > -X && posQ > 0){
+// 		//Testing
+// 		//cout << "Call of contGappedOnPredUni" << endl;
 
-		//Continue calculations on the next unitig
-		explSuc = contGappedOnPredUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum);
-	}
+// 		//Continue calculations on the next unitig
+// 		explSuc = contGappedOnPredUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum);
+// 	}
 
-	//Check whether exploration of next unitig was successful (this is only the case if a new maximum score has been found as well)
-	if(explSuc && score < maxBorderScore){
-		//Score has to be updated if we have found a better one on a successive unitig
-		score = maxBorderScore;
-		//Save new maximum scoring alignment
-		maxAlgn = brdAlgn;
-	} else{
-		//Save new offsets in hit
-		posU = maxPosU;
-		posQ = maxPosQ;
-		//Reset the unitig on which the maximum has been found
-		uni = maxUni;
-	}
-}
+// 	//Check whether exploration of next unitig was successful (this is only the case if a new maximum score has been found as well)
+// 	if(explSuc && score < maxBorderScore){
+// 		//Score has to be updated if we have found a better one on a successive unitig
+// 		score = maxBorderScore;
+// 		//Save new maximum scoring alignment
+// 		maxAlgn = brdAlgn;
+// 	} else{
+// 		//Save new offsets in hit
+// 		posU = maxPosU;
+// 		posQ = maxPosQ;
+// 		//Reset the unitig on which the maximum has been found
+// 		uni = maxUni;
+// 	}
+// }
 
 //This function calculates the continuation of a gapped alignment on a predecessive unitig or the next peace of the query considering a quorum and a search color set
 void contLeftGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &X, const uint32_t &maxGaps, struct Algn &maxAlgn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
@@ -1263,27 +1263,27 @@ bool contGappedOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 	return false;
 }
 
-//This function continues a gapped alignment calculation to the left on the same unitig considering a quorum. Returns true if a new maximal score has been found.
-bool contLeftOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
-	uint32_t tmpQOff = qOff - 1, tmpUOff = uOff - 1;
-	int32_t tmpScore = score;
-	struct Algn tmpAlgn;
+// //This function continues a gapped alignment calculation to the left on the same unitig considering a quorum. Returns true if a new maximal score has been found.
+// bool contLeftOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
+// 	uint32_t tmpQOff = qOff - 1, tmpUOff = uOff - 1;
+// 	int32_t tmpScore = score;
+// 	struct Algn tmpAlgn;
 
-	contLeftGappedAlignment(uni, extPth, q, tmpQOff, tmpUOff, X, maxGaps, tmpAlgn, tmpScore, explCount, quorum);
+// 	contLeftGappedAlignment(uni, extPth, q, tmpQOff, tmpUOff, X, maxGaps, tmpAlgn, tmpScore, explCount, quorum);
 
-	//Check whether we have found a new maximum
-	if(score < tmpScore){
-		//Update maximum
-		score = tmpScore;
-		qOff = tmpQOff;
-		uOff = tmpUOff;
-		algn.aSeqG = tmpAlgn.aSeqG + algn.aSeqG;
-		algn.aSeqQ = tmpAlgn.aSeqQ + algn.aSeqQ;
-		return true;
-	}
+// 	//Check whether we have found a new maximum
+// 	if(score < tmpScore){
+// 		//Update maximum
+// 		score = tmpScore;
+// 		qOff = tmpQOff;
+// 		uOff = tmpUOff;
+// 		algn.aSeqG = tmpAlgn.aSeqG + algn.aSeqG;
+// 		algn.aSeqQ = tmpAlgn.aSeqQ + algn.aSeqQ;
+// 		return true;
+// 	}
 
-	return false;
-}
+// 	return false;
+// }
 
 //This function continues a gapped alignment calculation to the left on the same unitig considering a quorum and a search color set. Returns true if a new maximal score has been found.
 bool contLeftOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
@@ -1552,106 +1552,106 @@ bool contGappedOnSuccUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 	return suc;
 }
 
-//This function initiates a gapped alignment calculation on all predecessive unitigs considering a quorum. Returns true if calculations have been successful
-bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
-	bool suc = false;
-	uint16_t predCount, nextPred;
-	uint32_t tmpPosU, tmpPosQ, maxPosQ, maxPosU;
-	int32_t maxScore, tmpScore;
-	struct Algn maxAlgn;
-	UnitigColorMap<seedlist> predUni;
-	BackwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> predIter = uni.getPredecessors();
+// //This function initiates a gapped alignment calculation on all predecessive unitigs considering a quorum. Returns true if calculations have been successful
+// bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum){
+// 	bool suc = false;
+// 	uint16_t predCount, nextPred;
+// 	uint32_t tmpPosU, tmpPosQ, maxPosQ, maxPosU;
+// 	int32_t maxScore, tmpScore;
+// 	struct Algn maxAlgn;
+// 	UnitigColorMap<seedlist> predUni;
+// 	BackwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> predIter = uni.getPredecessors();
 
-	//Testing
-	//cout << "Last unitig was " << uni.toString() << endl;
-	// cout << "We start on the predecessor directly" << endl;
+// 	//Testing
+// 	//cout << "Last unitig was " << uni.toString() << endl;
+// 	// cout << "We start on the predecessor directly" << endl;
 
-	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
-		//Report this incident//TODO: If this happens the condition that an extended seed cannot be reached anymore is violated. Implement a procedure after the extension that merges such seeds with other seed that would have reached them!
-		//cerr << "Maximum recursion depth reached during extension. Position in q: " << qOff << endl;
-		//Terminate this extension
-		return suc;
-	}
+// 	//Check whether we have reached the maximum recursion depth of an extension
+// 	if(++explCount > MAXRECURSIONDEPTH){
+// 		//Report this incident//TODO: If this happens the condition that an extended seed cannot be reached anymore is violated. Implement a procedure after the extension that merges such seeds with other seed that would have reached them!
+// 		//cerr << "Maximum recursion depth reached during extension. Position in q: " << qOff << endl;
+// 		//Terminate this extension
+// 		return suc;
+// 	}
 
-	//Check whether there are predecessors to continue
-	if(predIter.hasPredecessors()){
-		maxScore = score;
-		//Set counter
-		predCount = 1;
+// 	//Check whether there are predecessors to continue
+// 	if(predIter.hasPredecessors()){
+// 		maxScore = score;
+// 		//Set counter
+// 		predCount = 1;
 
-		//Check if there still exists an extension path to follow
-		if(!extPth.empty()){
-			//Testing
-			// cout << "Extension path is not empty" << endl << "Next comes " << extPth.front() << endl;
+// 		//Check if there still exists an extension path to follow
+// 		if(!extPth.empty()){
+// 			//Testing
+// 			// cout << "Extension path is not empty" << endl << "Next comes " << extPth.front() << endl;
 
-			//Get next predecessor
-			nextPred = extPth.front();
-			//Delete that predecessor from path
-			extPth.pop_front();
-			//We do not need to count how many successors we have explored yet
-			explCount = 0;
-		} else{
-			//We have no predecessor given to go on with
-			nextPred = 0;
-		}
+// 			//Get next predecessor
+// 			nextPred = extPth.front();
+// 			//Delete that predecessor from path
+// 			extPth.pop_front();
+// 			//We do not need to count how many successors we have explored yet
+// 			explCount = 0;
+// 		} else{
+// 			//We have no predecessor given to go on with
+// 			nextPred = 0;
+// 		}
 
-		//Testing
-		// cout << "We are about to switch on the predecessive unitig" << endl;
-		// cout << "nextPred:" << nextPred << endl;
+// 		//Testing
+// 		// cout << "We are about to switch on the predecessive unitig" << endl;
+// 		// cout << "nextPred:" << nextPred << endl;
 
-		//Explore each neighbor
-		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = predIter.begin(); nI != predIter.end(); ++nI, ++predCount){
-			//Check if we still have to wait for the correct predecessor to go on with
-			if(predCount < nextPred){
-				//Testing
-				// cout << "We skip unitig " << nI->mappedSequenceToString() << endl;
+// 		//Explore each neighbor
+// 		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = predIter.begin(); nI != predIter.end(); ++nI, ++predCount){
+// 			//Check if we still have to wait for the correct predecessor to go on with
+// 			if(predCount < nextPred){
+// 				//Testing
+// 				// cout << "We skip unitig " << nI->mappedSequenceToString() << endl;
 
-				continue;	
-			}
+// 				continue;	
+// 			}
 
-			struct Algn tmpAlgn;
-			//Get next unitig
-			predUni = *nI;
-			tmpPosQ = qOff - 1;
-			tmpPosU = predUni.size - predUni.getGraph()->getK();
-			tmpScore = score;
+// 			struct Algn tmpAlgn;
+// 			//Get next unitig
+// 			predUni = *nI;
+// 			tmpPosQ = qOff - 1;
+// 			tmpPosU = predUni.size - predUni.getGraph()->getK();
+// 			tmpScore = score;
 
-			//Testing
-			// cout << "Next unitig is " << predUni.mappedSequenceToString() << endl;
-			// cout << "tmpPosU:" << tmpPosU << "tmpPosQ:" << tmpPosQ << "tmpScore:" << tmpScore << endl;
+// 			//Testing
+// 			// cout << "Next unitig is " << predUni.mappedSequenceToString() << endl;
+// 			// cout << "tmpPosU:" << tmpPosU << "tmpPosQ:" << tmpPosQ << "tmpScore:" << tmpScore << endl;
 
-			//Calculate gapped alignment on the predecessive unitig
-			contLeftGappedAlignment(predUni, extPth, q, tmpPosQ, tmpPosU, X, maxGaps, tmpAlgn, tmpScore, explCount, quorum);
+// 			//Calculate gapped alignment on the predecessive unitig
+// 			contLeftGappedAlignment(predUni, extPth, q, tmpPosQ, tmpPosU, X, maxGaps, tmpAlgn, tmpScore, explCount, quorum);
 
-			//Check for new maximum
-			if(maxScore < tmpScore){
-				//Update maximum
-				maxScore = tmpScore;
-				maxPosU = tmpPosU;
-				maxPosQ = tmpPosQ;
-				maxAlgn = tmpAlgn;
-				uni = predUni;
-				suc = true;
-			}
+// 			//Check for new maximum
+// 			if(maxScore < tmpScore){
+// 				//Update maximum
+// 				maxScore = tmpScore;
+// 				maxPosU = tmpPosU;
+// 				maxPosQ = tmpPosQ;
+// 				maxAlgn = tmpAlgn;
+// 				uni = predUni;
+// 				suc = true;
+// 			}
 
-			//If we reach this point and had a specific predecessor to go on with we are done
-			if(nextPred > 0) break;
-		}
+// 			//If we reach this point and had a specific predecessor to go on with we are done
+// 			if(nextPred > 0) break;
+// 		}
 
-		//Only update score and qOff if exploration was successful
-		if(suc){
-			//Give back best result found
-			score = maxScore;
-			qOff = maxPosQ;
-			uOff = maxPosU;
-			algn.aSeqG = maxAlgn.aSeqG + algn.aSeqG;
-			algn.aSeqQ = maxAlgn.aSeqQ + algn.aSeqQ;
-		}
-	}
+// 		//Only update score and qOff if exploration was successful
+// 		if(suc){
+// 			//Give back best result found
+// 			score = maxScore;
+// 			qOff = maxPosQ;
+// 			uOff = maxPosU;
+// 			algn.aSeqG = maxAlgn.aSeqG + algn.aSeqG;
+// 			algn.aSeqQ = maxAlgn.aSeqQ + algn.aSeqQ;
+// 		}
+// 	}
 
-	return suc;
-}
+// 	return suc;
+// }
 
 //This function initiates a gapped alignment calculation on all predecessive unitigs considering a quorum and a search color set. Returns true if calculations have been successful
 bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const int16_t &X, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
@@ -1928,8 +1928,8 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 	// 	cout << "Inside startRightGappedAlignment after all calculations: gAlgn:" << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << endl << "globAlgn: aSeqG: " << globAlgn.aSeqG << endl << "globAlgn: aSeqQ: " << globAlgn.aSeqQ << endl;
 	// 	// exit(0);
 	// }
-	cout << "maxBorderScore: " << maxBorderScore << endl;
-	cout << "maxScore: " << maxScore << endl;
+	// cout << "maxBorderScore: " << maxBorderScore << endl;
+	// cout << "maxScore: " << maxScore << endl;
 
 	//Check whether exploration of next unitig was successful
 	if(explSuc && maxScore < maxBorderScore){
@@ -1954,69 +1954,69 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 	}
 }
 
-//This function calculates a gapped alignment to the left side of the starting position considering a quorum. ATTENTION: Hit's length attribute will be deprecated after function call!
-void startLeftGappedAlignment(hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum){
-	bool explSuc = false, unitigDone = true;
-	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
-	int32_t maxScore = 0, maxBorderScore;
-	list<uint16_t> extPth = decmprExtPth(h->lExt);
-	struct Algn globAlgn;
-	UnitigColorMap<seedlist> currUni = h->origUni;
+// //This function calculates a gapped alignment to the left side of the starting position considering a quorum. ATTENTION: Hit's length attribute will be deprecated after function call!
+// void startLeftGappedAlignment(hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum){
+// 	bool explSuc = false, unitigDone = true;
+// 	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
+// 	int32_t maxScore = 0, maxBorderScore;
+// 	list<uint16_t> extPth = decmprExtPth(h->lExt);
+// 	struct Algn globAlgn;
+// 	UnitigColorMap<seedlist> currUni = h->origUni;
 
-	//Testing
-	// cout << "OrigUni:" << currUni.mappedSequenceToString() << endl;
-	// cout << "Start of left gapped extension" << endl << "Initial posU: " << posU << " initial posQ: " << posQ << endl;
-	// cout << "Hit score:" << h->score << endl;
+// 	//Testing
+// 	// cout << "OrigUni:" << currUni.mappedSequenceToString() << endl;
+// 	// cout << "Start of left gapped extension" << endl << "Initial posU: " << posU << " initial posQ: " << posQ << endl;
+// 	// cout << "Hit score:" << h->score << endl;
 
-	//Check whether we can start the calculation right on this unitig or whether we are already at the begin of unitig or query sequence
-	if(posQ > 0 && posU > 0){
-		//Testing
-		// cout << "Do we get here?" << endl;
+// 	//Check whether we can start the calculation right on this unitig or whether we are already at the begin of unitig or query sequence
+// 	if(posQ > 0 && posU > 0){
+// 		//Testing
+// 		// cout << "Do we get here?" << endl;
 
-		//Set alignment start positions (-1, because we want to start right in front of the hit)
-		--posU;
-		--posQ;
-		//Calculate gapped alignment
-		unitigDone = calcLeftGlobAlignment(currUni, q, posU, posQ, X, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum);
-	} else{
-		//Set variable for exploration of predecessive unitigs
-		maxBorderScore = 0;
-	}
+// 		//Set alignment start positions (-1, because we want to start right in front of the hit)
+// 		--posU;
+// 		--posQ;
+// 		//Calculate gapped alignment
+// 		unitigDone = calcLeftGlobAlignment(currUni, q, posU, posQ, X, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum);
+// 	} else{
+// 		//Set variable for exploration of predecessive unitigs
+// 		maxBorderScore = 0;
+// 	}
 
-	//Testing
-	// cout << "Left extension on the same unitig has finished" << endl << "posU:" << posU << "posQ:" << posQ << "maxScore:" << maxScore << endl;
+// 	//Testing
+// 	// cout << "Left extension on the same unitig has finished" << endl << "posU:" << posU << "posQ:" << posQ << "maxScore:" << maxScore << endl;
 
-	//Check whether we have reached the beginning of the current unitig
-	if(!unitigDone){
-		explSuc = contLeftOnSameUni(currUni, extPth, q, posQ, posU, X, maxGaps, globAlgn, maxBorderScore, explCount, quorum);
-	} else if(maxBorderScore > -X && posQ > 0){
-		//Continue calculations on the next unitig
-		explSuc = contGappedOnPredUni(currUni, extPth, q, posQ, posU, X, maxGaps, globAlgn, maxBorderScore, explCount, quorum);
-	}
+// 	//Check whether we have reached the beginning of the current unitig
+// 	if(!unitigDone){
+// 		explSuc = contLeftOnSameUni(currUni, extPth, q, posQ, posU, X, maxGaps, globAlgn, maxBorderScore, explCount, quorum);
+// 	} else if(maxBorderScore > -X && posQ > 0){
+// 		//Continue calculations on the next unitig
+// 		explSuc = contGappedOnPredUni(currUni, extPth, q, posQ, posU, X, maxGaps, globAlgn, maxBorderScore, explCount, quorum);
+// 	}
 
-	//Check whether exploration of predecessive unitig was successful
-	if(explSuc && maxScore < maxBorderScore){
-		//Save new offsets in hit
-		h->offU = posU;
-		h->offQ = posQ;
+// 	//Check whether exploration of predecessive unitig was successful
+// 	if(explSuc && maxScore < maxBorderScore){
+// 		//Save new offsets in hit
+// 		h->offU = posU;
+// 		h->offQ = posQ;
 
-		//Save the achieved score
-		h->score += maxBorderScore;
-		//Save the better alignment
-		h->gAlgn.aSeqG = globAlgn.aSeqG + h->gAlgn.aSeqG;
-		h->gAlgn.aSeqQ = globAlgn.aSeqQ + h->gAlgn.aSeqQ;
-	} else{
-		//Save new offsets in hit
-		h->offU = maxPosU;
-		h->offQ = maxPosQ;
+// 		//Save the achieved score
+// 		h->score += maxBorderScore;
+// 		//Save the better alignment
+// 		h->gAlgn.aSeqG = globAlgn.aSeqG + h->gAlgn.aSeqG;
+// 		h->gAlgn.aSeqQ = globAlgn.aSeqQ + h->gAlgn.aSeqQ;
+// 	} else{
+// 		//Save new offsets in hit
+// 		h->offU = maxPosU;
+// 		h->offQ = maxPosQ;
 
-		//Save the achieved score
-		h->score += maxScore;
+// 		//Save the achieved score
+// 		h->score += maxScore;
 
-		// //Reset left border unitig
-		// h->lUnitig = currUni;
-	}
-}
+// 		// //Reset left border unitig
+// 		// h->lUnitig = currUni;
+// 	}
+// }
 
 //This function calculates a gapped alignment to the left side of the starting position considering a quorum and a search color set. ATTENTION: Hit's length attribute will be deprecated after function call!
 void startLeftGappedAlignment(hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
