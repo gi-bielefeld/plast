@@ -309,7 +309,9 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 			//Calculate the time difference
 			std::chrono::duration<double> tDiff = endTime - startTime;
 			//Output the measured time
-			cout << "Gapped extension took " << tDiff.count() << " s" << endl;
+			cout << "Freeing the array took " << tDiff.count() << " s" << endl;
+			//Update start time for next part
+			startTime = std::chrono::system_clock::now();
 		}
 	}
 

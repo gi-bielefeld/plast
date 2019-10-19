@@ -617,14 +617,6 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 // 			// 	cerr << "Seed was uoff:" << currSeed->offsetU << " qoff:" << currSeed->offsetQ << " len:" << currSeed->len << endl;
 // 			// 	exit(0);
 // 			// }
-			
-// 			//Delete the current seed
-// 			free(currSeed);
-// 			//Move on to the next seed
-// 			currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
-// 		}
-// 	}
-// }
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
 void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
@@ -634,6 +626,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 
 	//Testing
 	// cout << "Extension on reference strand" << endl;
+	// uint32_t nbSeeds = 0;
 
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
@@ -659,6 +652,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			// if(currUni.mappedSequenceToString() == "CGCCTGAGCAATCTCTGGCTTACGCCGCTGC" && currSeed->offsetU == 0 && currSeed->offsetQ == 358){
 			// 	report = true;
 			// }
+			// ++nbSeeds;
 
 			//Extend hit to the right
 			startRightX_Drop(&newHit, q, X, quorum, searchSet);
@@ -672,14 +666,14 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			// 	cout << "extendRefSeeds: After right extension: offU: " << newHit.offU << " offQ: " << newHit.offQ << " score: " << newHit.score << " length: " << newHit.length << endl;
 			// 	exit(0);
 			// }
-			// cout << "We do get here" << endl;
+			// cout << "Seed after right extension:" << endl;
 			// cout << "extendRefSeeds: Processing seed offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " on unitig " << currUni.mappedSequenceToString() << endl; 
 
-			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query
+			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || currSeed->offsetQ + currSeed->len == q.length()){
 				//Testing
-				// cout << "We get here" << endl;
+				// cerr << "Hit after right extension: Length: " << newHit.length << " Score: " << newHit.score << endl;
 
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, X, quorum, searchSet);
@@ -725,6 +719,9 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 		// 	exit(0);
 		// }
 	}
+
+	//Testing
+	// cout << "Total number of extensions: " << nbSeeds << endl;
 }
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
@@ -737,7 +734,8 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 	UnitigColorMap<seedlist> currUni;
 
 	//Testing
-	// cout << "We are at the beginning of extendRevCompSeeds" << endl;
+	// cout << "Extension on reverse complementary strand" << endl;
+	// uint32_t nbSeeds = 0;
 
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<seedlist>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
@@ -774,6 +772,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			// 	cerr << "Initial seed is offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " len: " << currSeed->len << endl;
 			// 	// exit(0);
 			// }
+			// ++nbSeeds;
 
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
@@ -815,6 +814,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 				// 	cout << "3 Option 1" << endl;
 				// }
 				// cout << "We passed the filter" << endl;
+				// cout << "Hit after right extension: Length: " << newHit.length << " Score: " << newHit.score << endl;
 
 				//Extend hit to the left
 				startLeftX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
@@ -937,6 +937,9 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 		// 	cout << hitArr[j].length << endl;
 		// }
 	}
+
+	//Testing
+	// cout << "Total number of extensions: " << nbSeeds << endl;
 }
 
 // //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and outputs the result if demanded
@@ -1034,10 +1037,10 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 		bandRadius = (*it)->length / GAP_RATIO;
 
 		//Testing
-		// if((*it)->origUni.mappedSequenceToString() == "CGCCTGAGCAATCTCTGGCTTACGCCGCTGC" && (*it)->score == 19){
+		// if((*it)->origUni.mappedSequenceToString() == "CATTCAACGCCAATAAGTTAGTTTGATCCGGATCAAACTAACTT"){
 		// 	cout << "Before right GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl << "aSeqG: " << (*it)->gAlgn.aSeqG << endl << "aSeqQ: " << (*it)->gAlgn.aSeqQ << endl;
-		// 	// report = true;
-		// 	exit(0);
+		// 	report = true;
+		// // 	exit(0);
 		// }
 		// befscore = (*it)->score;
 
@@ -1086,7 +1089,7 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 		//We want to avoid doing left extensions for duplicates
 		if(!isDupl){
 			//Testing
-			// cout << "Calculate left gapped alignment" << endl;
+			// if(report) cout << "Calculate left gapped alignment" << endl;
 
 			startLeftGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
 
@@ -1101,6 +1104,10 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 			// if((*it)->gAlgn.aSeqQ == "ATAGCGCCTGAGCAACCGCTGG"){
 			// 	cout << "Suspicious results found" << endl << "Score: " << (*it)->score << " was before " << befscore << endl;
 			// 	cout << "origUni: " << (*it)->origUni.mappedSequenceToString() << " offU: " << (*it)->offU << " offQ: " << (*it)->offQ << endl;
+			// 	exit(0);
+			// }
+			// if((*it)->origUni.mappedSequenceToString() == "CATTCAACGCCAATAAGTTAGTTTGATCCGGATCAAACTAACTT"){
+			// 	cout << "After left GappedAlignment: (*it)->offU: " << (*it)->offU << " (*it)->offQ: " << (*it)->offQ << endl;
 			// 	exit(0);
 			// }
 		} else{
@@ -1376,6 +1383,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	//Testing
 	// cout << "Results have been sorted" << endl;
+	// exit(0);
 
 	//Measure and output current runtime if demanded
 	if(calcRT){

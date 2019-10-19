@@ -45,9 +45,6 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 	//Parse all parameters given
 	//while((a = getopt(nb_args, argList, OPTIONS)) != -1){
 	while ((a = getopt_long(nb_args, argList, OPTIONS, long_options, &option_index)) != -1){
-		//Testing
-		// cout << "We get here\na:" << (char) a << endl;
-
 		//Assign parameter values
 		switch(a){
 			case 'i':
@@ -392,6 +389,11 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 	bool identical = false;
 	//char *kmerSeq = (char*) malloc(res->origUni.getGraph()->getK());
 	string kmerSeq = string(res->origUni.getGraph()->getK(), 'A');
+
+	/*Some additional stuff that Roland needs for an experiment*/
+	uint32_t currQpos = res->offQ;
+	/*Some additional stuff that Roland needs for an experiment*/
+
 	int32_t kmerSeqPos = 0;
 	string color;
 	vector<string> colors;
@@ -415,6 +417,11 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 			++kmerSeqPos;
 		}
 
+		/*Some additional stuff that Roland needs for an experiment*/
+		//Check if current character in query's alignment sequence is not a gap
+		if(res->gAlgn.aSeqQ[i] != GAP) ++currQpos;
+		/*Some additional stuff that Roland needs for an experiment*/
+
 		//Testing
 		// cout << "i: " << i << endl;
 		// cout << "kmerSeq: " << kmerSeq << endl;
@@ -427,7 +434,7 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 
 			//Initialize k-mer
 			currK = Kmer(kmerSeq.c_str());
-			//Look up color set
+			//Look up k-mer
 			uni = res->origUni.getGraph()->find(currK);
 
 			//Testing
@@ -435,18 +442,23 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 			// UnitigColorMap<seedlist> bla = uni.getGraph()->find(Kmer("TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"));
 			// cout << "This unitig can " << (bla.isEmpty ? "not " : "") << "be found in the graph" << endl;
 
+			//Get k-mer's color set
 			uniCols = *uni.getData()->getUnitigColors(uni);
+			//Reset color set
 			colors = vector<string>();
 
 			//Testing
 			// cout << "Extract colors" << endl;
 
+			//Iterate over k-mer's colors
 			for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
+				//Get current ID's color name
 				color = cdbg.getColorName(c.getColorID());
 
+				//If the color set is empty we have nothing to compare against
 				if(colors.empty()){
 					colors.push_back(color);
-				} else if(colors.back() != color){
+				} else if(colors.back() != color){//Check if we have just seen the current color already
 					colors.push_back(color);
 				}
 			}
@@ -454,15 +466,19 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 			//Testing
 			// cout << "We have extracted the color set" << endl;
 
+			//Check if we have dealed with a different k-mer before
 			if(!curColSet.colNames.empty()){
 				colIt = curColSet.colNames.begin();
 
+				//Iterate over current k-mer's color set
 				for(vector<string>::iterator j = colors.begin(); j != colors.end(); ++j){
+					//Color sets of different sizes cannot be identical
 					if(curColSet.colNames.size() != colors.size()){
 						identical = false;
 						break;
 					}
 
+					//Compare the current colors
 					if(*colIt == *j){
 						identical = true;
 					} else{
@@ -506,6 +522,10 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 				//Output color set
 				cout << "Color set ending at alignment position " << curColSet.endPos;
 
+				/*Some additional stuff that Roland needs for an experiment*/
+				cout << " (position " << currQpos << " in the query sequence)";
+				/*Some additional stuff that Roland needs for an experiment*/
+
 				for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){
 					cout << " " << *name;
 				}
@@ -541,6 +561,10 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 	
 	//Output color set
 	cout << "Color set ending at alignment position " << curColSet.endPos;
+
+	/*Some additional stuff that Roland needs for an experiment*/
+	cout << " (position " << currQpos << " in the query sequence)";
+	/*Some additional stuff that Roland needs for an experiment*/
 
 	//Check if color set to be outputted is empty which happens if the graph sequence of our alignment is shorter than k
 	if(curColSet.colNames.empty()){

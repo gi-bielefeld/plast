@@ -489,15 +489,39 @@ bool calcSemiGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	// // 	cout << "maxMatPosI: " << maxMatPosI << " maxMatPosJ: " << maxMatPosJ << " maxPosU: " << maxPosU << " maxPosQ: " << maxPosQ << endl;
 	// // 	cout << "edgeMaxPosI: " << edgeMaxPosI << " edgeMaxPosJ: " << edgeMaxPosJ << " eMaxPosU: " << eMaxPosU << " eMaxPosQ: " << eMaxPosQ << endl;
  // 	}
+	// cout << "uni.size: " << uni.size << " posU: " << posU << " endBuf: " << endBuf << " uCmpSeqLen: " << uCmpSeqLen << endl;
 
-	//Do backtracing to get the alignment maximum scoring alignment
-	traceBack(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
+	//Check if we had to terminate prematurely due to a lack of search criteria coverage
+	if(uni.size - (posU + endBuf) > uCmpSeqLen){
+		//Testing
+		// cout << "We get in here" << endl;
+
+		//Reset edge maximum to prevent an extension on a successive unitig
+		eMax = -X;
+		//Set edge maximum matrix positions to overall maximum postions to prevent a trace back of the border alignment
+		edgeMaxPosI = maxMatPosI;
+		edgeMaxPosJ = maxMatPosJ;
+	}
+
+	//Testing
+	// cout << "Before trace back" << endl;
+	// cout << "After trace back" << endl;
 
 	//Check if maximum score is at the matrix border
 	if(maxMatPosI == edgeMaxPosI && maxMatPosJ == edgeMaxPosJ){
+		//Testing
+		// cout << "Do we get even here?" << endl;
+
+		//Do backtracing to get the alignment maximum scoring alignment
+		traceBack(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
 		//Copy maximum scoring alignment to save time
 		brdAlgn = maxAlgn;
+
+		//Testing
+		// cout << "And here as well?" << endl;
 	} else{
+		//Do backtracing to get the alignment maximum scoring alignment
+		traceBack(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
 		//Backtrace alignment to go on with on next unitig
 		traceBack(edgeMaxPosI, eMaxPosQ, q, edgeMaxPosJ, eMaxPosU, uSeq, mat, brdAlgn);
 	}
@@ -751,10 +775,11 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 
 	//Testing
 	// cout << "1 Option";
-	// if(report){
-		// cout << "Inside calcLeftGlobAlignment: posU: " << posU << " posQ: " << posQ << " unitig is " << uni.mappedSequenceToString() << endl;
+	// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA"){
+	// 	cout << "Inside calcLeftGlobAlignment: posU: " << posU << " posQ: " << posQ << " unitig is " << uni.mappedSequenceToString() << endl;
 	// 	UnitigColorMap<seedlist> bla = uni.getGraph()->find(Kmer(uni.mappedSequenceToString().c_str()));
 	// 	cout << "This unitig can " << (bla.isEmpty ? "not " : "") << "be found in the graph" << endl;
+	// 	cout << "uCmpSeqLen: " << uCmpSeqLen << endl;
 	// 	// exit(0);
 	// }
 	
@@ -769,7 +794,7 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		if(covPos > 0 && (uint32_t) covPos <= uCmpSeqLen){
 			//Testing
 			// cout << "3 Option 1" << endl;
-			// cout << "covPos: " << covPos << endl;
+			// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA") cout << "covPos: " << covPos << endl;
 			// if(uSeq == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT"){
 			// 	cout << "covPos: " << covPos << endl;
 			// }
@@ -787,7 +812,7 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	// }
 
 	//Testing
-	// cout << "uCmpSeqLen: " << uCmpSeqLen << endl;
+	// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA") cout << "uCmpSeqLen: " << uCmpSeqLen << endl;
 	// if(uSeq == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT"){
 	// 	cout << "maxAlgn before calculations on this unitig: " << maxAlgn.aSeqG << endl;
 	// 	// exit(0);	
@@ -827,6 +852,9 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 
 	//Testing
 	// cout << "1" << endl;
+	// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA"){
+	// 	cout << "matHgth: " << matHgth << " matBrth: " << matBrth << " covPos: " << covPos << endl;
+	// }
 
 	// //Make sure that the matrix is not becoming too big
 	// if(dim > MAX_MATRIX_SIZE){
@@ -950,16 +978,27 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 	}
 
 	//Testing
-	// cout << "Filled matrix:" << endl;
-	// for(i = 0; i < matHgth; ++i){
-	// 	for(j = 0; j < matBrth; ++j){
-	// 		cout << mat[i][j] << " ";
+	// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA"){
+	// 	cout << "Filled matrix:" << endl;
+	// 	for(i = 0; i < matHgth; ++i){
+	// 		for(j = 0; j < matBrth; ++j){
+	// 			cout << mat[i][j] << " ";
+	// 		}
+	// 		cout << endl;
 	// 	}
-	// 	cout << endl;
+	// 	cout << "Calculations have " << (termCalcs ? "" : "not ") << "been terminated" << endl;
+	// 	cout << "eMax: " << eMax << endl;
+	// 	// exit(0);
 	// }
 
-	//Do backtracing to get the alignment maximum scoring alignment
-	traceForth(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
+	//Check if we had to terminate prematurely due to a lack of search criteria coverage
+	if(posU > uCmpSeqLen){
+		//Reset edge maximum to prevent an extension on a predecessive unitig
+		eMax = -X;
+		//Set edge maximum matrix positions to overall maximum postions to prevent a trace back of the border alignment
+		edgeMaxPosI = maxMatPosI;
+		edgeMaxPosJ = maxMatPosJ;
+	}
 
 	//Check if maximum score is at the matrix border
 	if(maxMatPosI == edgeMaxPosI && maxMatPosJ == edgeMaxPosJ){
@@ -968,9 +1007,13 @@ bool calcLeftGlobAlignment(const UnitigColorMap<seedlist> &uni, const string &q,
 		// 	cout << "We can copy the maximum alignment" << endl;
 		// }
 
+		//Do backtracing to get the alignment maximum scoring alignment
+		traceForth(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
 		//Copy maximum scoring alignment to save time
 		brdAlgn = maxAlgn;
 	} else{
+		//Do backtracing to get the alignment maximum scoring alignment
+		traceForth(maxMatPosI, maxPosQ, q, maxMatPosJ, maxPosU, uSeq, mat, maxAlgn);
 		//Backtrace alignment to go on with on next unitig
 		traceForth(edgeMaxPosI, eMaxPosQ, q, edgeMaxPosJ, eMaxPosU, uSeq, mat, brdAlgn);
 	}
@@ -1057,7 +1100,7 @@ void contRightGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &ext
 	UnitigColorMap<seedlist> maxUni = uni;
 
 	//Testing
-	// cout << "Start calculations on unitig " << uni.mappedSequenceToString() << endl;
+	// if(report) cout << "Start calculations on unitig " << uni.mappedSequenceToString() << endl;
 
 	//
 	//++posQ;
@@ -1170,6 +1213,7 @@ void contLeftGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &extP
 	//Testing
 	// cout << "Exploration counter: " << explCount << " posQ: " << posQ << endl;
 	// cout << "Unitig is " << (unitigDone ? "" : "not ") << "done" << endl;
+	// if(report) cout << "Inside contLeftGappedAlignment after calculations on this unitig: maxAlgn: aSeqG: " << maxAlgn.aSeqG << " aSeqQ: " << maxAlgn.aSeqQ << " brdAlgn: aSeqG: " << brdAlgn.aSeqG << " aSeqQ: " << brdAlgn.aSeqQ << endl;
 
 	// //If we are at the queries beginning we are done
 	// if(posQ > 0){
@@ -1182,7 +1226,11 @@ void contLeftGappedAlignment(UnitigColorMap<seedlist> &uni, list<uint16_t> &extP
 		explSuc = contLeftOnSameUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum, searchSet);
 	} else if(maxBorderScore > -X && posQ > 0){
 		//Testing
-		// cout << "Call of contGappedOnPredUni" << endl;
+		// if(report && uni.mappedSequenceToString() == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA"){
+		// 	cout << "Call of contGappedOnPredUni" << endl;
+		// 	cout << "maxBorderScore: " << maxBorderScore << " posQ: " << posQ << endl;
+		// 	exit(0);
+		// }
 
 		//Continue calculations on the next unitig
 		explSuc = contGappedOnPredUni(uni, extPth, q, posQ, posU, X, maxGaps, brdAlgn, maxBorderScore, explCount, quorum, searchSet);
@@ -1240,7 +1288,7 @@ bool contGappedOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 	struct Algn tmpAlgn;
 
 	//Testing
-	// cout << "Exploration on same unitig" << endl;
+	// if(report) cout << "Exploration on same unitig" << endl;
 	// cout << "tmpQOff: " << tmpQOff << endl;
 	// cout << "qOff: " << qOff << endl;
 
@@ -1290,6 +1338,9 @@ bool contLeftOnSameUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, co
 	uint32_t tmpQOff = qOff - 1, tmpUOff = uOff - 1;
 	int32_t tmpScore = score;
 	struct Algn tmpAlgn;
+
+	//Testing
+	// if(report) cout << "Continue calculations on " << uni.mappedSequenceToString() << endl;
 
 	contLeftGappedAlignment(uni, extPth, q, tmpQOff, tmpUOff, X, maxGaps, tmpAlgn, tmpScore, explCount, quorum, searchSet);
 
@@ -1724,7 +1775,7 @@ bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 
 			//Testing
 			// if(report){
-			// cout << "Next unitig is " << predUni.mappedSequenceToString() << endl;
+			// 	cout << "Next unitig is " << predUni.mappedSequenceToString() << endl;
 			// }
 
 			//Calculate gapped alignment on the predecessive unitig
@@ -1732,6 +1783,7 @@ bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 
 			//Testing
 			// cout << "tmpScore: " << tmpScore << endl;
+			// if(report) cout << "We return" << endl;
 
 			//Check for new maximum
 			if(maxScore < tmpScore){
@@ -1896,12 +1948,12 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 
 	//Testing
 	// cout << "Inside startRightGappedAlignment after calculation of gapped alignment on the first unitig:\nunitigDone: " << unitigDone << "\nmaxBorderScore: " << maxBorderScore << "\nposU: " << posU << "\nposQ: " << posQ << "\nmaxPosQ: " << maxPosQ << "\nmaxPosU: " << maxPosU << "\nmaxScore: " << maxScore << endl;
-	// if(h->origUni.mappedSequenceToString() == "GCAAGAGCCGCTGTTTCTTGAACAATATCTCG"){
-	// 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
+	// if(h->origUni.mappedSequenceToString() == "CATTCAACGCCAATAAGTTAGTTTGATCCGGATCAAACTAACTT"){
+	// // 	// cout << "Seed of the unitig:" << endl << "offsetU: " << currSeed->offsetU << " offsetQ: " << currSeed->offsetQ << " score: " << currSeed->score << " length: " << currSeed->len << endl;
 	// 	cout << "Inside startRightGappedAlignment after calculations on this unitig: gAlgn:" << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << endl << "globAlgn: aSeqG: " << globAlgn.aSeqG << endl << "globAlgn: aSeqQ: " << globAlgn.aSeqQ << endl;
-	// 	cout << "Inside startRightGappedAlignment after calculations on this unitig: Extension path:" << endl;
-	// 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i) cout << *i << " ";
-	// 	cout << endl;
+	// // 	cout << "Inside startRightGappedAlignment after calculations on this unitig: Extension path:" << endl;
+	// // 	for(list<uint16_t>::const_iterator i = extPth.begin(); i != extPth.end(); ++i) cout << *i << " ";
+	// // 	cout << endl;
 	// }
 
 	// //Check if query sequence is left
@@ -2045,12 +2097,12 @@ void startLeftGappedAlignment(hit *h, const string &q, const uint16_t &X, const 
 		maxBorderScore = 0;
 	}
 
-	//Testing                                  TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC
-	// if(h->origUni.mappedSequenceToString() == "CTCACCTTGGTTGAAAAATGCTAAAAGTGCCCCCTCAATACATTTATCAAGATATTGGTCT"){
-	// 	// cout << "Inside startLeftGappedAlignment after calculations on same unitig: posU: " << posU << " posQ: " << posQ << " maxPosU: " << maxPosU << " maxPosQ: " << maxPosQ << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << endl;
-	// 	cout << "We have found the interesting unitig" << endl;
-	// // 	report = true;
-	// 	exit(0);
+	//Testing
+	// if(h->origUni.mappedSequenceToString() == "CATTCAACGCCAATAAGTTAGTTTGATCCGGATCAAACTAACTT"){
+	// 	// cout << "Inside startLeftGappedAlignment after calculations on same unitig: posU: " << posU << " posQ: " << posQ << " maxPosU: " << maxPosU << " maxPosQ: " << maxPosQ << endl << "aSeqG: " << h->gAlgn.aSeqG << endl << "aSeqQ: " << h->gAlgn.aSeqQ << " globAlgn: aSeqG: " << globAlgn.aSeqG << " aSeqQ: " << globAlgn.aSeqQ << endl;
+	// 	// cout << "We have found the interesting unitig" << endl;
+	// 	report = true;
+	// 	// exit(0);
 	// }
 	// cout << "Inside startLeftGappedAlignment: Calculations on this unitig done" << endl;
 
@@ -2210,6 +2262,9 @@ void traceForth(uint32_t &matPosI, uint32_t posQ, const string &query, uint32_t 
 	while(matPosI != 0 || matPosJ != 0){
 		//Testing
 		// cout << "We haven't reached the matrix corner yet" << endl;
+		if(report && uniSeq == "GGGTTTTCAAATCTTTCAATTCATCTGGCCCAATCAAAGCCAGCCCCAAATCTTCGGCA"){
+			cout << "matPosI: " << matPosI << " matPosJ: " << matPosJ << " posQ: " << posQ << " posU: " << posU << " uniSeq[posU]: " << uniSeq[posU] << " query[posQ]: " << query[posQ] << endl;
+		}
 
 		//Check if we have reached the left or upper matrix border already
 		if(matPosI == 0){
