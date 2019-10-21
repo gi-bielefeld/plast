@@ -17,6 +17,7 @@
 #define MINUS_STRAND '-'
 #define BASES_PER_LINE 60
 #define GAP '-'
+#define REPORT_COLORS_FLAG_DEFAULT false
 
 //This function reads in a file in which colors are stored the search will be based on
 const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols);
@@ -55,7 +56,7 @@ inline void dispHelp(){
 	cerr << "   -C   --stat-C         Statistical value C" << endl;
 	cerr << "   -e   --e-value        Expectation value threshold for a hit to be considered (default is 10)" << endl << endl;
 	cerr << "   >Optional without argument:" << endl << endl;
-	cerr << "   -r   --runtimes   Runtime measurement flag" << endl;
+	cerr << "   -r   --report-colors   Enable alignment color coverage output" << endl;
 }
 
 //This function loads query sequences from a file and stores it in a list

@@ -60,6 +60,8 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 
 	//A flag indicating whether we need to measure run times
 	bool calcRT = RUNTIME_FLAG_DEFAULT;
+	//A flag indicating whether color coverage should be outputted for each alignment
+	bool repCols = REPORT_COLORS_FLAG_DEFAULT;
 	//A flag indicating whether we have to build a graph and an index before actually searching for the query
 	int16_t prep = PREPROS_FLAG_DEFAULT;
 	//Determine the X-drop parameter
@@ -110,7 +112,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	//cout << "Next we are going to parse the arguments" << endl;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, calcRT, X, nRes, lambda, C, eBound)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, C, eBound)){
 		//Display help message
 		dispHelp();
 		return 1;
@@ -121,7 +123,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 	// for(vector<string>::iterator v = bOpt.filename_ref_in.begin(); v != bOpt.filename_ref_in.end(); ++v) cout << *v << endl;
 	// cout << "raw input files:" << endl;
 	// for(vector<string>::iterator v = bOpt.filename_seq_in.begin(); v != bOpt.filename_seq_in.end(); ++v) cout << *v << endl;
-	// cout << "number of threads: " << nb_threads << " query file: " << qFile << " search color file name: " << sColFile << " quorum: " << quorum << " strand: " << strand << " calcRT: " << (calcRT ? "Yes" : "No") << " X: " << X << " number of results: " << nRes << " lambda: " << lambda << " C: " << C << " e-value threshold: " << eBound << endl;
+	// cout << "number of threads: " << nb_threads << " query file: " << qFile << " search color file name: " << sColFile << " quorum: " << quorum << " strand: " << strand << " calcRT: " << (calcRT ? "Yes" : "No") << " X: " << X << " number of results: " << nRes << " lambda: " << lambda << " C: " << C << " e-value threshold: " << eBound << " output colors: " << (repCols ? "Yes" : "No") << endl;
 	// return 0;
 
 	const uint32_t profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
@@ -294,7 +296,7 @@ int main(int argc, char **argv){//TODO This doesn't work yet for the reverse com
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, C, eBound);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, C, eBound, repCols);
 
 		//Testing
 		// UnitigColorMap<seedlist> sUni = cdbg.find(Kmer("CTCACCTTGGTTGAAAAATGCTAAAAGTGCC"));

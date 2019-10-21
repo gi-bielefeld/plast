@@ -26,7 +26,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"lambda",         optional_argument,  0, 'l'},
         {"stat-C",         optional_argument,  0, 'C'},
         {"e-value",        optional_argument,  0, 'e'},
-        {"runtimes",       no_argument,        0, 'r'},
+        {"report-colors",  no_argument,        0, 'r'},
         {0,                0,                  0,  0 }
     };
 
