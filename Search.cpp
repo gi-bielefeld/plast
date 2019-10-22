@@ -1406,12 +1406,12 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 				//Output color sets if demanded
 				if(colOut){
 					//Testing
-					cout << "6 Option 1" << endl;
+					// cout << "6 Option 1" << endl;
 
 					outpColSets(cdbg, *it);
 				} else{
 					//Testing
-					cout << "6 Option 2" << endl;
+					// cout << "6 Option 2" << endl;
 				}
 			}
 
