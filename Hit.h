@@ -1,8 +1,6 @@
 #ifndef HIT_HPP
 #define HIT_HPP
 
-// #include "Seedlist.h"
-
 //A unitig may have 4 successors. Thus, we can store 4 successors per byte.
 #define SUCCESSORS_PER_BYTE 4
 //We need 2 bit to encode a successor
@@ -17,7 +15,7 @@ struct ExtPth{
 };
 
 //Stores an alignment
-struct Algn{//TODO Instead of storing both sequences it would be fine as well just to store the underlying edit sequence!
+struct Algn{
 	//Alignment sequence from the graph
 	string aSeqG;
 	//Alignment sequence from query
@@ -29,7 +27,7 @@ class hit {
 	public:
 		
 		//Default constructor
-		hit () { lExt.path = NULL; rExt.path = NULL; }//TODO Do we really have to set this?
+		hit () { lExt.path = NULL; rExt.path = NULL; }
 
 		//Copy constructor
 		hit (const hit &h) {
@@ -79,31 +77,6 @@ void makeValidBorders(hit *hit, const string &q);
 
 //This function compresses the extension paths of left and right extension and returns a merged extension path object
 struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
-
-// 	//Walk through extension path
-// 	for(list<uint16_t>::const_iterator j = extPth.begin(); j != extPth.end(); ++j){
-// 		//Check if current byte is full
-// 		if(shifts == SUCCESSORS_PER_BYTE){
-// 			//Move to next byte
-// 			++pos;
-// 			//Reset shifts
-// 			shifts = 0;
-// 		} else{
-// 			//Shift all information by 2 bits to the left
-// 			cmprPth[pos] <<= BITS_PER_SUCCESSOR;
-// 			++shifts;	
-// 		}
-
-// 		//Testing
-// 		//cout << "cmprPth[pos]:" << (uint16_t) cmprPth[pos] << "pos:" << pos << " shifts:" << shifts << endl;
-
-// 		//Add next successor to byte (we have to subtract one to shift to the correct scale 1-4 -> 0-3)
-// 		cmprPth[pos] |= ((*j) - 1);
-// 	}
-
-// 	//Testing
-// 	//cout << "I don't care!" << endl;
-// }
 
 //This function decompresses an extension path object
 const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);

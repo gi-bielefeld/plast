@@ -16,45 +16,30 @@ class seedlist : public CCDBG_Data_t<seedlist> {
 			return nextSeedRcomp;
 		} 
 
-		//struct seed* getLastProcSeed() const { return nextProcSeed; }//get last element of seed list of extended seeds
-
 		//Set a seed to be the first seed in a respective list ATTENTION: Using this for the reverse complementary strand makes the use of pushSeed impossible because frstSeedRcomp is not set correctly!
 		void setSeed(struct seed* newSeed, const bool &onRefStrand){ onRefStrand ? nextSeedRef = newSeed : nextSeedRcomp = newSeed; }
 
 		void pushSeed(struct seed* newSeed, const bool &onRefStrand){
 			if(onRefStrand){
-				//Testing
-				// cout << "1 Option 1" << endl;
-
 				//Make the previous seed the new seed's successor
 				newSeed->nextSeed = nextSeedRef;
 				//Make the new seed the first seed in the seed list
 				nextSeedRef = newSeed;
 			} else{
-				//Testing
-				// cout << "1 Option 2" << endl;
-
 				//Make the new seed the last seed in the seed list (to ensure seeds are ordered by decreasing query offset)
 				if(!nextSeedRcomp){
-					//Testing
-					// cout << "2 Option 2" << endl;
-
 					nextSeedRcomp = newSeed;
 				} else{
-					//Testing
-					// cout << "2 Option 1" << endl;
-
 					//Link the previously inserted seed to the new seed
 					frstSeedRcomp->nextSeed = newSeed;
 				}
+
 				//Store a pointer to the last inserted seed
 				frstSeedRcomp = newSeed;
 			}
 		}
 
 		struct seed* getLastInSd() const { return frstSeedRcomp; }//get the last inserted seed from the seed list of the reverse complementary query
-
-		//void setLastProcSeed(struct seed* newSeed){ nextProcSeed = newSeed; }//insert new element at the seed list's end
 
 		int32_t getlBrd() const { return lBrd; }
 
@@ -71,7 +56,6 @@ class seedlist : public CCDBG_Data_t<seedlist> {
 		struct seed *nextSeedRef;
 		struct seed *nextSeedRcomp;
 		struct seed *frstSeedRcomp;
-		//struct seed *nextProcSeed;
 
 		//The lowest offset position in the unitig at which search criteria are not fulfilled anymore
 		int32_t lBrd;

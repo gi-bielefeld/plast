@@ -2,9 +2,9 @@
 #define GRAPH_HPP
 
 //Default k values for the compacted CDBG
-#define DEFAULT_GRAPH_K 31//9
+#define DEFAULT_GRAPH_K 31
 //Default minimizer length for the compacted CDBG
-#define DEFAULT_GRAPH_G 23//4
+#define DEFAULT_GRAPH_G 23
 //Default number of threads used for graph construction
 #define DEFAULT_NB_THREADS 1
 

@@ -25,10 +25,6 @@ string revComp(const string &seq){
 
 	//Go through the query from the end to the beginning
 	for(int32_t i = seq.length() - 1; i >= 0; --i){
-		//Testing
-		//cout << "i:" << i << endl;
-
-		//c = seq[i];
 		//Check which base we are dealing with and append its complement
 		switch(seq[i]){
 			case NUCL_BASE_A:
@@ -41,9 +37,6 @@ string revComp(const string &seq){
 				revSeq += CMPL_BASE_G;
 				break;
 			case NUCL_BASE_T:
-				//Testing
-				//cout << "Do we get here?" << endl;
-
 				revSeq += CMPL_BASE_T;
 				break;
 			default:

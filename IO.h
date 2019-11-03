@@ -27,7 +27,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 //This function prints usage infos
 inline void dispHelp(){
-	cerr << "PLAST [COMMAND] [COMMAND_PARAMETERS]" << endl << endl;//TODO: Change program name!
+	cerr << "PLAST [COMMAND] [COMMAND_PARAMETERS]" << endl << endl;
 	cerr << "[COMMAND]:" << endl << endl;
 	cerr << "   Build    Build index (and graph)" << endl;
 	cerr << "   Search   Search inside an indexed graph" << endl << endl;
@@ -66,6 +66,6 @@ void loadQueries(const string &filename, vector<string> &qList);
 void repAlgn(const hit *res);
 
 //This function outputs the color sets of given result
-void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res);//TODO This function still needs to be tested!
+void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res);
 
 #endif

@@ -43,40 +43,25 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 	}
 
 	//Parse all parameters given
-	//while((a = getopt(nb_args, argList, OPTIONS)) != -1){
 	while ((a = getopt_long(nb_args, argList, OPTIONS, long_options, &option_index)) != -1){
 		//Assign parameter values
 		switch(a){
 			case 'i':
-				//Testing
-				//cout << "optarg:" << optarg << endl;
-
 				filePref = optarg;
 				break;
 			case 'S':
-				//Testing
-				/*cout << "Why do we not go here?" << endl;*/
-				//cout << "optind:" << optind << endl;
-
 				for(--optind; (optind < nb_args) && (*argList[optind] != '-'); ++optind){
-					// seqs.push_back(argList[optind]);
-
 					gOpt.filename_seq_in.push_back(argList[optind]);
 				}
 
 				break;
 			case 'R':
 				for(--optind; (optind < nb_args) && (*argList[optind] != '-'); ++optind){
-					// seqs.push_back(argList[optind]);
-
 					gOpt.filename_ref_in.push_back(argList[optind]);
 				}
 
 				break;
 			case 's':
-				//Testing
-				//cout << "Do we get here?" << endl;
-
 				s = atoi(optarg);
 				break;
 			case 'k':
@@ -104,23 +89,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				m = atoi(optarg);
 				break;
 			case 'X':
-				//Testing
-				// cerr << atoi(optarg) << endl;
-
 				//Check if X is applicable
 				if(atoi(optarg) < 0 || atoi(optarg) > INT16_MAX){
-					//Testing
-					// if(atoi(optarg) < 0){
-					// 	// cout << "6 Option 1" << endl;
-					// } else{
-					// 	cout << "6 Option 2" << endl;
-					// }
-					// if(atoi(optarg) > INT16_MAX){
-					// 	cout << "7 Option 1" << endl;
-					// } else{
-					// 	// cout << "7 Option 2" << endl;
-					// }
-
 					cerr << "ERROR: X-dropoff value not applicable" << endl;
 					return false;
 				}
@@ -130,50 +100,25 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'n':
 				//Check if value is valid
 				if(atoi(optarg) <= 0){
-					//Testing
-					// cout << "8 Option 1" << endl;
-
 					cerr << "ERROR: Maximum number of alignments should be a positive number" << endl;
 					return false;
 				} else if(atoi(optarg) > UINT16_MAX){
-					//Testing
-					// cout << "9 Option 1" << endl;
-
 					cerr << "Maximum number of alignments set to maximum" << endl;
 					nRes = UINT16_MAX;
 				} else{
-					//Testing
-					// cout << "9 Option 2" << endl;
-
 					nRes = atoi(optarg);
 				}
-
-				//Testing
-				// cout << "8 Option 2" << endl;
 
 				break;
 			case 'r':
 				r = true;
 				break;
 			case 'd':
-				//Testing
-				// cout << optarg << endl;
-
 				if(*optarg == PLUS_STRAND){
 					strd = Plus;
-
-					//Testing
-					// cout << "10 Option 1" << endl;
-					// exit(0);
 				} else if(*optarg == MINUS_STRAND){
-					//Testing
-					// cout << "10 Option 2" << endl;
-
 					strd = Minus;
 				} else{
-					//Testing
-					// cout << "10 Option 3" << endl;
-					
 					cerr << "Unrecognized strand option" <<  endl << "Default is used" << endl;
 				}
 
@@ -182,72 +127,39 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				//Try to read lambda value
 				lambda = strtod(optarg, NULL);
 
-				//Testing
-				// cout << "11" << endl;
-
 				//Check if the given value is out of range
 				if(errno == ERANGE || lambda == 0.0){
-					//Testing
-					// cout << "12 Option 2" << endl;
-
 					cerr << "ERROR: Invalid lambda value given" << endl;
 					return false;
 				}
-
-				//Testing
-				// cout << "12 Option 1" << endl;
 
 				break;
 			case 'C':
 				//Try to read C value
 				C = strtod(optarg, NULL);
 
-				//Testing
-				// cout << "13" << endl;
-
 				//Check if the given value is out of range
 				if(errno == ERANGE || C == 0.0){
-					//Testing
-					// cout << "14 Option 2" << endl;
-
 					cerr << "ERROR: Invalid C value given" << endl;
 					return false;
 				}
-
-				//Testing
-				// cout << "14 Option 1" << endl;
 
 				break;
 			case 'e':
 				//Try to read e-value threshold
 				eValLim = strtod(optarg, NULL);
 
-				//Testing
-				// cout << "15" << endl;
-
 				//Check if the given value is out of range
 				if(errno == ERANGE || eValLim == 0.0){
-					//Testing
-					cout << "16 Option 2" << endl;
-
 					cerr << "ERROR: Invalid e-value threshold given" << endl;
 					return false;
 				}
 
-				//Testing
-				// cout << "16 Option 1" << endl;
-
 				break;
 			default:
-				//Testing
-				//cout << "Default: optarg:" << optarg << endl;
-
 				break;
 		}
 	}
-
-	//Testing
-	// cout << "a: " << a << endl;
 
 	//If we have received any input sequences we need to build a graph
 	if(!gOpt.filename_seq_in.empty() || !gOpt.filename_ref_in.empty()) ++prepros;
@@ -264,7 +176,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 //This function reads in a file in which colors are stored the search will be based on
 const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols){
 	string line;
-	pair<string, size_t> color("", -1);//Color id is set to -1 here to avoid false results if color from color search set is not present in the graph//TODO: Avoid this by mapping the colors directly within this function!
+	pair<string, size_t> color("", -1);//Color id is set to -1 here to avoid false results if color from color search set is not present in the graph<-//TODO: Avoid this by mapping the colors directly within this function!
 	list<pair<string, size_t>> colorlist;
 
 	//Open the file
@@ -322,17 +234,6 @@ void repAlgn(const hit *res){
 	cout << "Score: " << res->score << "\tLength: " << res->gAlgn.aSeqQ.length() << "\tE-value: " << res->eval << endl;
 	//Initial position in query (we start count from 1 here)
 	posQ = res->offQ + 1;
-
-	//Testing
-	// if(res->score == 4){
-	// 	cerr << "Start outputting alignment having a score of 4" << endl;
-	// 	cerr << "origUni: " << res->origUni.mappedSequenceToString() << endl;
-	// // 	if(res->origUni.mappedSequenceToString() == "TTTGTTTTCAATTGCTGATGAATGGGGTATGAGTAAACTGAG"){
-	// // 		cout << "We have found the interesting unitig and we have to move the starting offset" << endl;
-	// // 		exit(0);
-	// // 	}
-	// 	// exit(0);
-	// }
 
 	//Go through the alignment
 	while(posAlgn < res->gAlgn.aSeqQ.length()){
@@ -403,10 +304,6 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 	UnitigColorMap<seedlist> uni;
 	ColSet curColSet = ColSet(0, colors);
 
-	//Testing
-	// cout << "gAlgn.aSeqG: " << res->gAlgn.aSeqG << endl;
-	// cout << "Seed was length: " << res->length << " offset u: " << res->offU << " q: " << res->offQ << " unitig: " << res->origUni.mappedSequenceToString() << endl;
-
 	//Go through graph alignment sequence
 	for(uint32_t i = 0; i < res->gAlgn.aSeqG.length(); ++i){
 		//Check if current character in alignment is not a gap
@@ -422,33 +319,16 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 		if(res->gAlgn.aSeqQ[i] != GAP) ++currQpos;
 		/*Some additional stuff that Roland needs for an experiment*/
 
-		//Testing
-		// cout << "i: " << i << endl;
-		// cout << "kmerSeq: " << kmerSeq << endl;
-
 		//Check if our k-mer sequence is full
 		if(kmerSeqPos == res->origUni.getGraph()->getK()){
-			//Testing
-			// cout << "We have just found a new k-mer to check" << endl;
-			// cout << "kmerSeq: " << kmerSeq << endl;
-
 			//Initialize k-mer
 			currK = Kmer(kmerSeq.c_str());
 			//Look up k-mer
 			uni = res->origUni.getGraph()->find(currK);
-
-			//Testing
-			// cout << "Unitig is " << (uni.isEmpty ? "" : "not ") << "empty" << endl;
-			// UnitigColorMap<seedlist> bla = uni.getGraph()->find(Kmer("TCTTTACGGCGAAGTTCAGCGCCCTCATAGCC"));
-			// cout << "This unitig can " << (bla.isEmpty ? "not " : "") << "be found in the graph" << endl;
-
 			//Get k-mer's color set
 			uniCols = *uni.getData()->getUnitigColors(uni);
 			//Reset color set
 			colors = vector<string>();
-
-			//Testing
-			// cout << "Extract colors" << endl;
 
 			//Iterate over k-mer's colors
 			for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
@@ -462,9 +342,6 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 					colors.push_back(color);
 				}
 			}
-
-			//Testing
-			// cout << "We have extracted the color set" << endl;
 
 			//Check if we have dealed with a different k-mer before
 			if(!curColSet.colNames.empty()){
@@ -490,33 +367,6 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 				}
 			}
 
-			// //Get k-mer's color set
-			// colIDs = vector<size_t>();
-			// for(UnitigColors::iterator colIt = uni.getData()->getUnitigColors(uni)->begin(uni); colIt != uni.getData()->getUnitigColors(uni)->end(); ++colIt){
-			// 	if(colIDs.empty()){
-			// 		colIDs.push_back();
-			// 	} else if(*j != colIDs.back()){
-			// 		colIDs.push_back();
-			// 	}
-			// }
-
-			// //Compare color sets
-			// l = 0;
-
-			// for(vector<size_t>::iterator j = colIDs.begin(); j != colIDs.end(); ++j){
-			// 	if(l < curColSet.)
-			// }
-
-			// if(*j == colIt->getColorID()){
-			// 		identical = true;
-			// 	} else{
-			// 		identical = false;
-			// 		break;
-			// 	}
-
-			//Testing
-			// cout << "Color set comparison done" << endl;
-
 			//Check outcome of comparison
 			if(!identical && !curColSet.colNames.empty()){
 				//Output color set
@@ -533,10 +383,6 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 				cout << endl;
 			}
 
-			//Testing
-			// cout << "kmerSeq:" << kmerSeq << endl;
-			// cout << "We have outputted a color set and get here" << endl;
-
 			//Update color set (doesn't do anything if color sets are identical anyways)
 			curColSet.colNames = colors;
 			//Decrease k-mer sequence length
@@ -545,19 +391,11 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 			for(int32_t j = 0; j < kmerSeqPos; ++j){
 				kmerSeq[j] = kmerSeq[j + 1];
 			}
-
-			// kmerSeq[kmerSeqPos] <<= sizeof(char);
-
-			//Testing
-			// cout << "kmerSeq after shift:" << kmerSeq << endl;
 		}
 
 		//Update color set end position
 		++curColSet.endPos;
 	}
-
-	// //Free sequence
-	// free(kmerSeq);
 	
 	//Output color set
 	cout << "Color set ending at alignment position " << curColSet.endPos;
@@ -573,7 +411,7 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 		//Resize unitig so that its color set represents the alignments color set
 		uni.dist = min(res->offU, (uint32_t) uni.len - 1);
 		//Get color set
-		uniCols = *uni.getData()->getUnitigColors(uni);//TODO Put this into a function!
+		uniCols = *uni.getData()->getUnitigColors(uni);
 		colors = vector<string>();
 
 		for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){

@@ -1,6 +1,5 @@
 #include "Index.h"
 #include "Sequence.h"
-//#include "Smer.cpp"
 
 //This function writes PLAST's q-gram profile to disk
 void saveProfile(ofstream &fStr, const uint32_t &profSize, uint32_t* qProfile){
@@ -69,7 +68,7 @@ void saveIndexBin(const char *filename, const uint32_t &profSize, uint32_t* qPro
 	saveProfile(destFile, profSize, qProfile);
 
 	//Calculate the number of bytes needed to store a k-mer
-	const uint16_t nBytes = (k / BASES_PER_BYTE) + (k % BASES_PER_BYTE == 0 ? 0 : 1);/*NOTE: Doing it this way means that we migth waste a certain part of a byte per k-mer when storing them!*/
+	const uint16_t nBytes = (k / BASES_PER_BYTE) + (k % BASES_PER_BYTE == 0 ? 0 : 1);
 	//Iterate over the graph
 	for(i = 0; i < numUni; ++i){
 		//Write the compacted representation of current unitig's starting k-mer to file
@@ -100,9 +99,6 @@ void loadIndexesBin(const char* fName, const uint32_t &qProfSize, uint32_t *qPro
 	//Open file
 	ifstream idxFile(fName, ios::in|ios::binary|ios::ate);
 
-	//Testing
-	//cout << "kMerSize:" << kMerSize << "\nnBytes:" << nBytes << endl;
-
 	//Check if the file is open
 	if(!idxFile.is_open()){
 		cerr << "ERROR: Index file could not be opened" << endl;
@@ -117,7 +113,6 @@ void loadIndexesBin(const char* fName, const uint32_t &qProfSize, uint32_t *qPro
 	//Load q-gram profile//
 
 	//Initialize memory block to be loaded (We are going to load each shift value pair separately)
-	//TODO: Is it more efficient to read in everything at once? Check for other idexes as well!
 	memBlock = (char*) malloc(2 * sizeof(uint32_t));
 	i = 0;
 
@@ -193,14 +188,11 @@ void loadIndexes(const string fName, const uint32_t qSize, uint32_t*& prof, Comp
 
 	//Load q-gram index
 	prof = loadQProf(fStr, qSize);
-	//Load link array
-	//lArr = loadLinkArr(fStr, cdbg, seedNum);
 	//Close the file
 	fStr.close();
 }
 
 //This function builds all necessary indexes
-//TODO: Currently, we use a q-gram index as one part of the indexing. With an increasing seed length more and entries of this index are not used at all and stay 0 which means a high waste of memory for nothing. The usage of minimal perfect hashing could improve this situation. However the construction of such a hashing function might be time consuming. Some first information about minimal perfect hashing might be found here: http://stevehanov.ca/blog/index.php?id=119
 void buildIndex(ColoredCDBG<seedlist> &cdbg, const int32_t &minSeedLength, uint32_t* qProf, size_t &numSmers, const uint32_t &profSize, struct s_mer_pos*& linkArr, UnitigColorMap<seedlist>*& uniArray){
 	uint32_t seqEnd, i = 0, k = cdbg.getK();
 	int32_t pRank;
@@ -214,7 +206,7 @@ void buildIndex(ColoredCDBG<seedlist> &cdbg, const int32_t &minSeedLength, uint3
 		//Store the current unitig inside the unitig array
 		uniArray[i] = *it;
 
-		//Check whether the forward or the reverse complementary sequence is stored for the unitig //TODO So far we only want to consider the forward sequence. At some point this has to be changed!
+		//Check whether the forward or the reverse complementary sequence is stored for the unitig
 		if(it->strand){
 			uSeq = it->referenceUnitigToString();
 
@@ -252,18 +244,11 @@ void buildIndex(ColoredCDBG<seedlist> &cdbg, const int32_t &minSeedLength, uint3
 		++i;
 	}
 
-	//Testing
-	//cout << "We get here" << endl;
-
 	for(i  = 1; i < profSize; ++i){
 		qProf[i] += qProf[i-1];
 	}
 
-	//Testing
-	//cout << "We get here as well" << endl;
-
 	linkArr = (struct s_mer_pos*) malloc(numSmers * sizeof(struct s_mer_pos));
-
 	//Reset unitig counter
 	i = 0;
 
@@ -291,16 +276,8 @@ void buildIndex(ColoredCDBG<seedlist> &cdbg, const int32_t &minSeedLength, uint3
 			}
 		}
 
-		//Testing
-		//cout << "We enter the loop at least" << endl;
-
 		for(uint32_t j = 0; j < seqEnd; ++j){
 			pRank = compRank(uSeq.substr(j, minSeedLength), pRank);
-
-			//Testing
-			//cout << "uSeq.substr(j, minSeedLength):" << uSeq.substr(j, minSeedLength) << endl;
-			//cout << "qProf[pRank] - 1:" << qProf[pRank] - 1 << endl;
-			
 			//we need to subtract 1 here to even fill posArray's first entry
 			linkArr[qProf[pRank] - 1].unitig_id = i;
 			linkArr[qProf[pRank] - 1].offset = j;
@@ -309,8 +286,5 @@ void buildIndex(ColoredCDBG<seedlist> &cdbg, const int32_t &minSeedLength, uint3
 
 		//Increment unitig counter
 		++i;
-
-		//Testing
-		//cout << "i:" << i << endl;
 	}
 }
