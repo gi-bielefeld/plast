@@ -5,7 +5,7 @@
 * Local alignment search between DNA query and graphical pangenome 
 * Assembled genomes or reads as input
 * Significance estimation based on alignment statistic
-* Customized focus on part of the graph
+* Customized focus on parts of the graph
 * Color coverage output per alignment on demand
 
 ## Table of Contents
@@ -13,6 +13,7 @@
 * [Requirements](https://gitlab.ub.uni-bielefeld.de/gi/plast#requirements)
 * [Compilation](https://gitlab.ub.uni-bielefeld.de/gi/plast#compilation)
 * [Usage](https://gitlab.ub.uni-bielefeld.de/gi/plast#usage)
+* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#testdata)
 * [FAQ](https://gitlab.ub.uni-bielefeld.de/gi/plast#faq)
 * [Contact](https://gitlab.ub.uni-bielefeld.de/gi/plast#contact)
 * [License](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
@@ -148,6 +149,21 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    ```
 
 4. **Alignment statistic parameter estimation**
+   ...
+
+
+## Test data
+
+1. **Pangenome simulation**
+
+   ...
+   
+3. ** PARA C**
+
+   ...
+   
+4. **Salmonella pangenome from EnteroBase**
+
    ...
 
 
