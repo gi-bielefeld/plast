@@ -2,7 +2,9 @@
 #define STATISTICS_HPP
 
 #define DEFAULT_LAMBDA 0.99
+#define DEFAULT_LAMBDA_G 0.3
 #define DEFAULT_C 21.68
+#define DEFAULT_C_G 4.44
 #define DEFAULT_E_LIMIT 10
 #define SIM_Q_LENGTH 1000
 

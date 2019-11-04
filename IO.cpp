@@ -3,7 +3,7 @@
 #include "IO.h"
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &C, double &eValLim){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -11,20 +11,22 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 	static struct option long_options[] = {
         {"graph-prefix",   required_argument,  0, 'i'},
-        {"seed-length",    optional_argument,  0, 's'},
+        {"seed-length",    optional_argument,  0, 'w'},
         {"kmer-length",    optional_argument,  0, 'k'},
         {"min-length",     optional_argument,  0, 'g'},
         {"raw-input",      optional_argument,  0, 'S'},
         {"ref-input",      optional_argument,  0, 'R'},
         {"threads",        optional_argument,  0, 't'},
         {"query",          optional_argument,  0, 'q'},
-        {"colors",         optional_argument,  0, 'c'},
+        {"search-set",     optional_argument,  0, 's'},
         {"quorum",         optional_argument,  0, 'm'},
         {"X-dropoff",      optional_argument,  0, 'X'},
         {"max-results",    optional_argument,  0, 'n'},
         {"strand",         optional_argument,  0, 'd'},
         {"lambda",         optional_argument,  0, 'l'},
-        {"stat-C",         optional_argument,  0, 'C'},
+        {"lambda-gap",     optional_argument,  0, 'L'},
+        {"stat-C",         optional_argument,  0, 'c'},
+        {"stat-C-gap",     optional_argument,  0, 'C'},
         {"e-value",        optional_argument,  0, 'e'},
         {"report-colors",  no_argument,        0, 'r'},
         {0,                0,                  0,  0 }
@@ -61,7 +63,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				}
 
 				break;
-			case 's':
+			case 'w':
 				s = atoi(optarg);
 				break;
 			case 'k':
@@ -76,7 +78,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'q':
 				qFile = optarg;
 				break;
-			case 'c':
+			case 's':
 				c = optarg;
 				break;
 			case 'm':
@@ -134,13 +136,35 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				}
 
 				break;
-			case 'C':
+			case 'L':
+				//Try to read lambda value
+				lambdaG = strtod(optarg, NULL);
+
+				//Check if the given value is out of range
+				if(errno == ERANGE || lambdaG == 0.0){
+					cerr << "ERROR: Invalid gapped lambda value given" << endl;
+					return false;
+				}
+
+				break;
+			case 'c':
 				//Try to read C value
 				C = strtod(optarg, NULL);
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || C == 0.0){
 					cerr << "ERROR: Invalid C value given" << endl;
+					return false;
+				}
+
+				break;
+			case 'C':
+				//Try to read C value
+				Cgap = strtod(optarg, NULL);
+
+				//Check if the given value is out of range
+				if(errno == ERANGE || Cgap == 0.0){
+					cerr << "ERROR: Invalid gapped C value given" << endl;
 					return false;
 				}
 

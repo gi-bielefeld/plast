@@ -295,7 +295,7 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 }
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &C, const double &eLim, const bool &colOut){
+void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
 	auto endTime = std::chrono::system_clock::now();
@@ -394,7 +394,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	}
 
 	//Calculate gapped alignments
-	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambda, C);
+	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambdaGap, Cgap);
 	//Sort results
 	resList.sort(compEvals);
 

@@ -18,17 +18,6 @@
 #include "Sequence.h"
 #include "Statistics.h"
 
-//This function seems to be not used anymore
-int32_t compSeqs(string &unitigSeq, const string &q, uint32_t &startInUni, uint32_t &startInQ, uint32_t &bpToComp){
-	int32_t score = 0;
-
-	for(uint32_t i = 0; i < bpToComp; ++i){
-		score += compUScore(unitigSeq[startInUni + i], q[startInQ + i]);
-	}
-
-	return score;
-}
-
 int main(int argc, char **argv){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
@@ -58,8 +47,12 @@ int main(int argc, char **argv){
 	uint32_t qCounter = 0;
 	//Lambda needed for alignment statistic
 	double lambda = DEFAULT_LAMBDA;
+	//Gapped lambda needed for alignment statistic
+	double lambdaGap = DEFAULT_LAMBDA_G;
 	//C needed for alignment statistic
 	double C = DEFAULT_C;
+	//Gapped C needed for alignment statistic
+	double Cgap = DEFAULT_C_G;
 	//E-value threshold for a hit to be considered
 	double eBound = DEFAULT_E_LIMIT;
 	//Query file name
@@ -76,7 +69,7 @@ int main(int argc, char **argv){
 	CCDBG_Build_opt bOpt;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, C, eBound)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, lambdaGap, C, Cgap, eBound)){
 		//Display help message
 		dispHelp();
 		return 1;
@@ -191,7 +184,7 @@ int main(int argc, char **argv){
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, C, eBound, repCols);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){
