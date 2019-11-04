@@ -158,7 +158,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    ...
    
-3. ** PARA C**
+3. **PARA C**
 
    ...
    
