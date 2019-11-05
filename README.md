@@ -25,7 +25,7 @@ PLAST builds a **compacted, colored de Bruijn graph** from given input genomes u
 ## Compilation
 
 ```
-cd <plast_directory>
+cd <plast_directory>/src
 make
 ```
 
