@@ -28,6 +28,8 @@ int main(int argc, char **argv){
 	bool calcRT = RUNTIME_FLAG_DEFAULT;
 	//A flag indicating whether color coverage should be outputted for each alignment
 	bool repCols = REPORT_COLORS_FLAG_DEFAULT;
+	//A flag indicating whether this run is only a simulation run
+	bool isSim = SIM_RUN_FLAG_DEFAULT;
 	//A flag indicating whether we have to build a graph and an index before actually searching for the query
 	int16_t prep = PREPROS_FLAG_DEFAULT;
 	//Determine the X-drop parameter
@@ -69,7 +71,7 @@ int main(int argc, char **argv){
 	CCDBG_Build_opt bOpt;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, lambdaGap, C, Cgap, eBound)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim)){
 		//Display help message
 		dispHelp();
 		return 1;
@@ -184,7 +186,7 @@ int main(int argc, char **argv){
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){

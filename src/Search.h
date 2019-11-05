@@ -307,7 +307,7 @@ void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, cons
 void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C);
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut);
+void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim);
 
 //This function frees all memory additionally allocated for an hit array
 void freeHitArray(hit *arr, uint32_t &arrLen);

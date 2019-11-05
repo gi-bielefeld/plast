@@ -7,6 +7,7 @@
 #define DEFAULT_C_G 4.44
 #define DEFAULT_E_LIMIT 10
 #define SIM_Q_LENGTH 1000
+#define SIM_RUN_FLAG_DEFAULT 0
 
 //This function calculates an e-value for a given score
 inline double calcEVal(const uint32_t &score, const double &lambda, const double &C, const uint32_t &qLen){

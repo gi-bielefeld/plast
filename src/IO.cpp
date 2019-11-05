@@ -3,7 +3,7 @@
 #include "IO.h"
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -29,6 +29,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"stat-C-gap",     optional_argument,  0, 'C'},
         {"e-value",        optional_argument,  0, 'e'},
         {"report-colors",  no_argument,        0, 'r'},
+        {"sim-run",        no_argument,        0, 'u'},
         {0,                0,                  0,  0 }
     };
 
@@ -179,6 +180,9 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 					return false;
 				}
 
+				break;
+			case 'u':
+				isSim = true;
 				break;
 			default:
 				break;

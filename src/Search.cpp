@@ -295,7 +295,7 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const
 }
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut){
+void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
 	auto endTime = std::chrono::system_clock::now();
@@ -309,7 +309,6 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	hit hitArr[hitArrSize];
 	//Variables needed for the gapped extension
 	list<hit*> resList;
-	list<hit*>::iterator iter;
 
 	/*Searching for seeds*/
 	cout << "Searching for seeds" << endl;
@@ -393,8 +392,25 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 		}
 	}
 
+	//Check if this is a simulation run
+	if(isSim){
+		//Go through results and report ungapped scores
+		for(list<hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (ungapped): " << (*iter)->score << endl;
+	}
+
 	//Calculate gapped alignments
 	calcGappedAlignment(cdbg, resList, q, X, quorum, searchColors, lambdaGap, Cgap);
+
+	//Check if this is a simulation run
+	if(isSim){
+		//Go through results and report gapped scores
+		for(list<hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (gapped): " << (*iter)->score << endl;
+		
+		//Free memory in hit array
+		freeHitArray(hitArr, hitArrSize);
+		return;
+	}
+
 	//Sort results
 	resList.sort(compEvals);
 
