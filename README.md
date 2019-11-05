@@ -191,4 +191,4 @@ For any question, feedback or problem, please feel free to file an issue on this
 
 * Bifrost is BSD-2 licensed (https://github.com/pmelsted/bifrost)
 
-* PLAST is BSD-2 licensed [LICENSE](https://gitlab.ub.uni-bielefeld.de/gi/plast/blob/master/LICENSE)
+* PLAST is GNU GPLv3 licensed [LICENSE](https://gitlab.ub.uni-bielefeld.de/gi/plast/blob/master/LICENSE)
