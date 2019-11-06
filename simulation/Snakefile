@@ -1,0 +1,50 @@
+configfile: 'config.yaml'
+
+nbBatches = int(int(config['nbQs']) / int(config['bSize']))
+
+rule all:
+    input:
+    	"results/parameters.txt",
+    	"results/dist.pdf"
+
+rule genRandQueries:
+	input:
+		python = config['Pyth2bin']
+	params:
+		nbQs = config['nbQs'],
+		qLen = config['qLen'],
+		batchSize = config['bSize']
+	output:
+		temp("queries/Random_{bID}.q")
+	shell:
+		"mkdir -p queries; NB_BATCHES=%s; for ((i=1; i <=$NB_BATCHES; i++)); do for ((j=1; j<={params.batchSize}; j++)); do {input.python} scripts/GenRandDNA_Seq.py {params.qLen}; done >> queries/Random_""$i"".q; done" %str(nbBatches)
+
+rule queryGraph:
+	input:
+		pBin = config['PLASTbin'],
+		graph = config['gPathPref'],
+		query = "queries/Random_{bID}.q"
+	output:
+		scores = temp("results/maxScores_{bID}.txt"),
+		log = temp("results/maxScores_{bID}.log")
+	shell:
+		"mkdir -p results; {input.pBin} Search -i $(echo {input.graph} | cut -d'.' -f1) -q {input.query} -e 100 -u > {output.scores} 2> {output.log}"
+
+rule aggregateScores:
+	input:
+		python = config['Pyth2bin'],
+		scores = expand("results/maxScores_{bID}.txt", bID=range(1, nbBatches + 1))
+	output:
+		temp("results/aggMaxScores.txt")
+	shell:
+		"{input.python} scripts/aggScores.py {input.scores} > {output}"
+
+rule calcParams:
+	input:
+		python = config['Pyth2bin'],
+		scores = "results/aggMaxScores.txt"
+	output:
+		statParam = "results/parameters.txt",
+		figure = "results/dist.pdf"
+	shell:
+		"{input.python} scripts/estParams.py {input.scores} > {output.statParam}"

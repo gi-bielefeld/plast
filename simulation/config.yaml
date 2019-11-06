@@ -1,0 +1,21 @@
+# PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
+
+
+#Path to the pangenome graph
+gPathPref: 
+#Python2 binary path
+Pyth2bin: 
+
+#------------------------------------------------------------------------------
+
+
+# DO NOT ADJUST THE FOLLOWING PARAMETERS (unless you know what you are doing) -
+
+#How many random queries do we want to consider?
+nbQs: 1000000
+#Query lengths
+qLen: 1000
+#Number of queries per file
+bSize: 10000
+#PLAST binary path
+PLASTbin: "../src/PLAST"
