@@ -185,7 +185,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       cores in parallel.
    
       ```
-      snakemake --cores 8
+      snakemake --cores <Nb cores>
       ```
 
    4. Simulation results for gapped and ungapped alignment parameters can be found in *results/parameters.txt*.
@@ -200,7 +200,16 @@ Test data is provided in the directory *testdata*.
    
 3. **PARA C**
 
-   ...
+   All assembly barcodes of the Para C dataset are listed in *ParaCcomplete220.txt*. In combination with an access token, they can be downloaded from 
+   [EnteroBase](https://enterobase.warwick.ac.uk) using the the provided download script:
+   
+   ```
+   ./download_assemblies.sh ParaCcomplete220.txt <token>
+   ```
+   
+   How to get a token is described [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
+   
+   Assembly file names used as subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
    
 4. **Salmonella pangenome from EnteroBase**
 
