@@ -185,7 +185,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       cores in parallel.
    
       ```
-      snakemake --cores 8
+      snakemake --cores <Nb cores>
       ```
 
    4. Simulation results for gapped and ungapped alignment parameters can be found in *results/parameters.txt*.
