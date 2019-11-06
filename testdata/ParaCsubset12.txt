@@ -1,0 +1,12 @@
+SAL_FA2360AA_AS.scaffold.fasta
+SAL_KA4665AA_AS.scaffold.fasta
+SAL_KA2758AA_AS.scaffold.fasta
+SAL_JA8483AA_AS.scaffold.fasta
+SAL_KA2751AA_AS.scaffold.fasta
+SAL_KA2722AA_AS.scaffold.fasta
+SAL_JA4553AA_AS.scaffold.fasta
+SAL_KA2723AA_AS.scaffold.fasta
+SAL_KA2770AA_AS.scaffold.fasta
+SAL_EA5152AA_AS.scaffold.fasta
+SAL_IA5709AA_AS.scaffold.fasta
+SAL_LA4011AA_AS.scaffold.fasta
