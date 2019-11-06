@@ -22,6 +22,8 @@
 
 PLAST builds a **compacted, colored de Bruijn graph** from given input genomes using the API of [Bifrost](https://github.com/pmelsted/bifrost). Apart from the requirements of Bifrost (c++ and cmake), there are no further strict dependencies.
 
+Parameter estimations for alignment statistics require a running version of [snakemake](https://snakemake.readthedocs.io/en/stable/).
+
 ## Compilation
 
 ```
@@ -149,14 +151,52 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    ```
 
 4. **Alignment statistic parameter estimation**
-   ...
+   
+   PLAST uses alignment statistics in order to filter out alignments not representing sequence homology between query and graph sequence and to calculate an
+   e-value for each result. Default parameters for our alignment statistic are chosen carefully and allow basic searches in any pangenome graph. However,
+   results with an e-value close to the significance threshold have to be handled with care.
 
+   Sound statistical parameters can be estimated by running the [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow provided in the
+   *simulation* directory.
+   
+   For running the snakemake workflow, proceed as follows:
+   
+   1. Change to the directory *simulation*:
+   
+      ```
+      cd simulation
+      ```
+
+   2. Before executing the workflow, it requires the location of a working python2 interpreter and it needs to know for which graph parameters have to be
+      estimated. Both informations have to be written into the file *config.yaml*.
+
+
+      *config.yaml*:
+      ```
+      ...
+      #Path to the pangenome graph (please insert here!)
+      gPathPref: "/path/to/myGraph.gfa"
+      #Python2 binary path (please insert here!)
+      Pyth2bin: "/path/to/python2"
+      ...
+      ```
+   
+   3. Run the workflow by typing `snakemake`. Depending on your graph, simulations might take a while. Use the option `--cores` to run simulations on many
+      cores in parallel.
+   
+      ```
+      snakemake --cores 8
+      ```
+
+   4. Simulation results for gapped and ungapped alignment parameters can be found in *results/parameters.txt*.
 
 ## Test data
 
+Test data is provided in the directory *testdata*.
+
 1. **Pangenome simulation**
 
-   ...
+   The directory contains a script to be used for pangenome simulation with [ALF](http://alfsim.org/#index). 
    
 3. **PARA C**
 
@@ -164,8 +204,15 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    
 4. **Salmonella pangenome from EnteroBase**
 
-   ...
-
+   We used a pangenome of 5000 *Salmonella typhimurium* assemblies from [EnteroBase](https://enterobase.warwick.ac.uk). A list of all 5000 assembly
+   barcodes can be used to download the data from EnteroBase. For this, an access token is required. How to get a token is described
+   [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
+   
+   Use the provided script for downloading the assemblies:
+   
+   ```
+   ./download_assemblies.sh chosen5000.txt <token>
+   ```
 
 ## FAQ
 
