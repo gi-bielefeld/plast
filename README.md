@@ -200,7 +200,7 @@ Test data is provided in the directory *testdata*.
    
 3. **PARA C**
 
-   All assembly barcodes of the Para C dataset are listed in *ParaCcomplete220.txt*. In combination with an access token, they can be downloaded from 
+   All assembly barcodes of the Para C dataset published [here](https://genome.cshlp.org/content/28/9/1395.short) are listed in *ParaCcomplete220.txt*. In combination with an access token, they can be downloaded from 
    [EnteroBase](https://enterobase.warwick.ac.uk) using the the provided download script:
    
    ```
@@ -209,11 +209,11 @@ Test data is provided in the directory *testdata*.
    
    How to get a token is described [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
    
-   Assembly file names used as subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
+   File names of assemblies subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
    
 4. **Salmonella pangenome from EnteroBase**
 
-   We used a pangenome of 5000 *Salmonella typhimurium* assemblies from [EnteroBase](https://enterobase.warwick.ac.uk). A list of all 5000 assembly
+   A pangenome of 5000 *Salmonella typhimurium* assemblies from [EnteroBase](https://enterobase.warwick.ac.uk). A list of all 5000 assembly
    barcodes can be used to download the data from EnteroBase. For this, an access token is required. How to get a token is described
    [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
    
