@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import matplotlib.pyplot as plt
@@ -9,16 +9,16 @@ from matplotlib.patches import Rectangle
 #This function changes counts to normalized cumulative counts. It is expected that values are decreasingly sorted)
 def chNormCum(counts):
 	#Get total number of counts
-	nbCnts = sum(counts)
+	nbCnts = sum(counts[1])
 
-	for c in range(1,len(counts)):
+	for c in range(1,len(counts[1])):
 		#Add the number of larger scores to the next smaller one
-		counts[i] += counts[i - 1]
+		counts[1][c] += counts[1][c - 1]
 		#Normalize previous entry
-		counts[i - 1] /= nbCnts
+		counts[1][c - 1] /= nbCnts
 
 	#Normalize lowest score count as well
-	counts[len(counts) - 1] /= nbCnts
+	counts[1][len(counts[1]) - 1] /= nbCnts
 
 #The line function we want to fit
 def lineFunc(x, lmd, c):
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 	#Open input file
 	file = open(sys.argv[1], 'r')
 	#The first line in the file is not of interest for us
-	l.readline()
+	file.readline()
 
 	#Read each remaining line
 	for l in file:
@@ -95,17 +95,17 @@ if __name__ == '__main__':
 				lrgValFound = True
 
 		#Get smallest index (corresponding to largest score as values are decreasingly sorted)
-		smlst = dataset[1].index(lrgVal)
+		smlst = r[1][0].index(lrgVal)
 		#Get largest index
-		lrgst = dataset[1].index(smlVal)
+		lrgst = r[1][0].index(smlVal)
 		#Fit line
 		popt, pcov = curve_fit(lineFunc, r[1][0][smlst:lrgst], np.log(r[1][1][smlst:lrgst]))
 		#Output parameters
-		print "Lambda (%s):" %r[0], popt[0], "C (%s):" %r[0], popt[1]
+		print("Lambda (%s):" %r[0], popt[0], "C (%s):" %r[0], popt[1])
 		#Calculate fitting errors
 		perr = np.sqrt(np.diag(pcov))
 		#Output errors
-		print "Errors:", perr[0], perr[1]
+		print("Errors:", perr[0], perr[1])
 		#Calculate lines y-values
 		ys = [func(i, popt[0], np.exp(popt[1])) for i in r[1][0]]
 		#Plot line
@@ -124,4 +124,4 @@ if __name__ == '__main__':
 	#Label x-axis
 	plt.xlabel("Score")
 	#Save figure
-	plt.savefig("dist.pdf", format="pdf")
+	plt.savefig("results/dist.pdf", format="pdf")

@@ -3,8 +3,6 @@
 
 #Path to the pangenome graph
 gPathPref: 
-#Python2 binary path
-Pyth2bin: 
 
 #------------------------------------------------------------------------------
 

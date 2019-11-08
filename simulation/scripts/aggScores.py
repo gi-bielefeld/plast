@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 
@@ -15,14 +15,15 @@ def pushScore(score, sDict):
 #This function outputs found scores and their abundances
 def reportHit(sDict):
 	#Get entries in ungapped dictionary
-	entries = sDict.keys()
+	entries = list(sDict.keys())
+
 	#Sort scores decreasingly
-	entries.sort()
+	entries.sort(reverse=True)
 
 	#Go through all dictionary entries
 	for e in entries:
 		#Output entry
-		print e, sDict[e]
+		print(e, sDict[e])
 
 if __name__ == '__main__':
 	#Dictionary with max ungapped score-count key-value pairs
@@ -67,7 +68,7 @@ if __name__ == '__main__':
 		sFile.close()
 
 	#Output scores
-	print "Ungapped results:"
+	print("Ungapped results:")
 	reportHit(ugCnts)
-	print "Gapped results:"
+	print("Gapped results:")
 	reportHit(gCnts)
