@@ -22,7 +22,10 @@
 
 PLAST builds a **compacted, colored de Bruijn graph** from given input genomes using the API of [Bifrost](https://github.com/pmelsted/bifrost). Apart from the requirements of Bifrost (c++ and cmake), there are no further strict dependencies.
 
-Parameter estimations for alignment statistics require a running version of [snakemake](https://snakemake.readthedocs.io/en/stable/).
+Parameter estimations for alignment statistics require a running version of 
+[snakemake](https://snakemake.readthedocs.io/en/stable/) and the additional
+packages [matplotlib](https://matplotlib.org) and
+[scipy](https://www.scipy.org).
 
 ## Compilation
 
@@ -167,8 +170,10 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       cd simulation
       ```
 
-   2. Before executing the workflow, it requires the location of a working python2 interpreter and it needs to know for which graph parameters have to be
-      estimated. Both informations have to be written into the file *config.yaml*.
+   2. Before executing the workflow, it requires the location of a graph
+      parameters have to be
+      estimated for. Add the graph's path to the configuration file
+      (*config.yaml*).
 
 
       *config.yaml*:
@@ -176,8 +181,6 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       ...
       #Path to the pangenome graph (please insert here!)
       gPathPref: "/path/to/myGraph.gfa"
-      #Python2 binary path (please insert here!)
-      Pyth2bin: "/path/to/python2"
       ...
       ```
    
