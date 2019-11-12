@@ -112,7 +112,7 @@ int main(int argc, char **argv){
 		cdbg.write(graphFilePref, 1, true);
 	} else{
 		//Load graph
-		if(!cdbg.read((graphFilePref + GFA_FILE_ENDING).c_str(), (graphFilePref + COLOR_FILE_ENDING).c_str(), true)){
+		if(!cdbg.read(graphFilePref + GFA_FILE_ENDING, graphFilePref + COLOR_FILE_ENDING, true)){
 			cerr << "ERROR: Graph could not be loaded" << endl;
 			exit(EXIT_FAILURE);
 		}
