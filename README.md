@@ -165,8 +165,9 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    e-value for each result. Default parameters for our alignment statistic are chosen carefully and allow basic searches in any pangenome graph. However,
    results with an e-value close to the significance threshold have to be handled with care.
 
-   Sound statistical parameters can be estimated by running the [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow provided in the
-   *simulation* directory.
+   Sound statistical parameters can be estimated by running a 
+   [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow provided in
+   the *simulation* directory.
    
    For running the snakemake workflow, proceed as follows:
    
@@ -205,7 +206,9 @@ Test data is provided in the directory *testdata*.
 
 1. **Pangenome simulation**
 
-   The directory contains a script to be used for pangenome simulation with [ALF](http://alfsim.org/#index). 
+   The directory contains a parameter file to be used for pangenome simulation 
+   with [ALF](http://alfsim.org/#index). Additionally, a script is provided to 
+   transfer sequences outputted by ALF into contiguous genome sequences.
    
 3. **PARA C**
 
