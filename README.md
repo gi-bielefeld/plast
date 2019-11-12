@@ -133,7 +133,11 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    We want to search three queries stored in *myQueries.q* (one query per line) within the graph *someGraph.{gfa,bfg_colors,idx}* (see Example 1).
 
-   Assuming we are only interested in alignments to sequences which appear in genomic sequences of *genomeAssemblyA.fasta*, *genomeAssemblyB.fasta* and *genomeReadsC.fasta*. In the context of a colored de-Bruijn graph, sequences from these input files each have their own color in the graph. We have to specify the colors in a search set file (`-s mySearchSet.txt`):
+   Assuming we are only interested in alignments to genomic sequences of either 
+   *genomeAssemblyA.fasta*, *genomeAssemblyB.fasta* or *genomeReadsC.fasta*. In 
+   the context of a colored de-Bruijn graph, sequences from these input files 
+   each have their own color in the graph. We have to specify the colors in a 
+   search set file (`-s mySearchSet.txt`):
 
    ```
    PLAST Search -i someGraph -q myQueries.q -s mySearchSet.txt
@@ -147,7 +151,9 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    genomeReadsC.fasta
    ```
 
-   If we additionally want to require that at least two colors should cover each alignment that we want to find, we have to specify this by a quorum (`-m 2`):
+   If we additionally want to require that sequences of at least two colors 
+   should support each alignment that we want to find, we have to specify this 
+   by a quorum (`-m 2`):
 
    ```
    PLAST Search -i someGraph -q myQueries.q -s mySearchSet.txt -m 2
