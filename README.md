@@ -122,7 +122,14 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Build -i anotherGraph -k 25 -g 18 -w 12
    ```
 
-   The index is built using the graph saved as *anotherGraph.{gfa,bfg_colors}* (`-i anotherGraph`) which has been built with a k-mer length of 25 (`-k 25`) and minimizer length of 18 (`-g 18`) for a minimal seed length of 12 (`-w 12`). The index is saved as *anotherGraph.idx*.
+   The index is built using the graph saved as *anotherGraph.{gfa,bfg_colors}* 
+   (`-i anotherGraph`) which has been built with a k-mer length of 25 (`-k 25`) 
+   and minimizer length of 18 (`-g 18`) for a minimal seed length of 12 
+   (`-w 12`). The index is saved as *anotherGraph.idx*.
+   
+   **ATTENTION:** Be aware that for using values of k > 31 your Bifrost libraries 
+   have to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
+   the CFLAGS in PLAST's makefile before compilation!
 
 3. **Searching**
 
