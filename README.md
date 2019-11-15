@@ -40,7 +40,8 @@ By default, the installation creates:
 You may want to make the binary (*PLAST*) accessible via your (*PATH*) variable.
 
 Please note the installation instructions regarding the default maximum *k*-mer size of Bifrost from its README.
-If your Bifrost libraries have been compiled for 64 bit, change the PLAST makefile accordingly (easy to see how).
+If your Bifrost libraries have been compiled for 64 bit, change the PLAST 
+makefile accordingly (add `-DMAX_KMER_SIZE=64` to CFLAGS).
 
 If during the compilation, the bifrost library files are not found, make sure that the corresponding folder is found as include path by the C++ compiler. You may have to add
 `-I/usr/local/include` (with the corresponding folder) to the CFLAGS in the makefile.
