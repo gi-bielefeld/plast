@@ -139,7 +139,8 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Search -i someGraph -q myQueries.q
    ```
 
-   We want to search three queries stored in *myQueries.q* (one query per line) within the graph *someGraph.{gfa,bfg_colors,idx}* (see Example 1).
+   We want to search three queries stored in *myQueries.q* (one query sequence 
+   per line) within the graph *someGraph.{gfa,bfg_colors,idx}* (see Example 1).
 
    Assuming we are only interested in alignments to genomic sequences of either 
    *genomeAssemblyA.fasta*, *genomeAssemblyB.fasta* or *genomeReadsC.fasta*. In 
