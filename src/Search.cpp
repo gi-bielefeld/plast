@@ -20,11 +20,11 @@ bool vfySrchCrit(UnitigColorMap<seedlist> unitig, const uint32_t &off, const int
 }
 
 //This function performs the seed detection if a search color set is given
-void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq){
+void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq){
 	uint32_t occnum;
 	int32_t pRank = -1;
 	size_t uniLen;
-	struct seed *newSeed, *lastSeed;
+	struct Seed *newSeed, *lastSeed;
 
 	//Go through the query and check for each s-mer whether it appears in the graph
 	for(uint32_t i = 0; i < q.length() - minSeedLength + 1; ++i){
@@ -51,7 +51,7 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 			//Check if the seed list is empty
 			if(uArr[posArray[qProfile[pRank] + j].unitig_id].getData()->getData(uArr[posArray[qProfile[pRank] + j].unitig_id])->getSeed(isRefSeq) == NULL){
 				//Create a new seed and...
-				newSeed = (struct seed*) malloc(sizeof(struct seed));
+				newSeed = (struct Seed*) malloc(sizeof(struct Seed));
 				newSeed->offsetU = compOffset(posArray[qProfile[pRank] + j].offset, minSeedLength, uniLen, isRefSeq);
 				newSeed->offsetQ = compOffset(i, minSeedLength, q.length(), isRefSeq);
 				newSeed->len = minSeedLength;
@@ -72,7 +72,7 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 						++lastSeed->len;
 					} else {
 						//If an extension is not possible create a new seed
-						newSeed = (struct seed*) malloc(sizeof(struct seed));
+						newSeed = (struct Seed*) malloc(sizeof(struct Seed));
 						newSeed->offsetU = posArray[qProfile[pRank] + j].offset;
 						newSeed->offsetQ = i;
 						newSeed->len = minSeedLength;
@@ -93,7 +93,7 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 						--lastSeed->offsetQ;
 					} else{
 						//If an extension is not possible create a new seed
-						newSeed = (struct seed*) malloc(sizeof(struct seed));
+						newSeed = (struct Seed*) malloc(sizeof(struct Seed));
 						newSeed->offsetU = compOffset(posArray[qProfile[pRank] + j].offset, minSeedLength, uniLen, isRefSeq);
 						newSeed->offsetQ = compOffset(i, minSeedLength, q.length(), isRefSeq);
 						newSeed->len = minSeedLength;
@@ -109,9 +109,9 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 }
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
-	struct seed *currSeed;
-	hit newHit;
+void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+	struct Seed *currSeed;
+	Hit newHit;
 	UnitigColorMap<seedlist> currUni;
 
 	//Iterate over all seeds of all unitigs
@@ -149,7 +149,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 					//Save pointer to the hit list at the current q position
 					newHit.nextHit = hitArr[newHit.offQ].nextHit;
 					//Create a new hit
-					hitArr[newHit.offQ].nextHit = new hit(newHit);
+					hitArr[newHit.offQ].nextHit = new Hit(newHit);
 
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqG = "";
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
@@ -166,11 +166,11 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
 //Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
-void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	bool isValid = true;
-	struct seed *currSeed;
-	hit newHit;
-	hit *hitIt;
+	struct Seed *currSeed;
+	Hit newHit;
+	Hit *hitIt;
 	UnitigColorMap<seedlist> currUni;
 
 	//Iterate over all seeds of all unitigs
@@ -229,7 +229,7 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 						//Save pointer to the hit list at the current q position
 						newHit.nextHit = hitArr[newHit.offQ].nextHit;
 						//Create a new hit
-						hitArr[newHit.offQ].nextHit = new hit(newHit);
+						hitArr[newHit.offQ].nextHit = new Hit(newHit);
 						hitArr[newHit.offQ].nextHit->gAlgn.aSeqG = "";
 						hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
 					}
@@ -248,13 +248,13 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 }
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C){
+void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C){
 	bool isDupl = false;
 	uint32_t bandRadius;
-	list<hit*>::const_iterator iter;
+	list<Hit*>::const_iterator iter;
 
 	//Go through result list
-	for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
+	for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
 		//Calculate gapped extension to the right
@@ -306,9 +306,9 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//The query's reverse complement
 	string revQ;
 	//Variables needed for the seed extension
-	hit hitArr[hitArrSize];
+	Hit hitArr[hitArrSize];
 	//Variables needed for the gapped extension
-	list<hit*> resList;
+	list<Hit*> resList;
 
 	/*Searching for seeds*/
 	cout << "Searching for seeds" << endl;
@@ -362,7 +362,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 
 	//Find best results
 	for(uint32_t i = 0; i < hitArrSize; ++i){
-		hit *hitList;
+		Hit *hitList;
 
 		if(hitArr[i].length == 0){
 			hitList = NULL;
@@ -395,7 +395,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//Check if this is a simulation run
 	if(isSim){
 		//Go through results and report ungapped scores
-		for(list<hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (ungapped): " << (*iter)->score << endl;
+		for(list<Hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (ungapped): " << (*iter)->score << endl;
 	}
 
 	//Calculate gapped alignments
@@ -404,7 +404,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	//Check if this is a simulation run
 	if(isSim){
 		//Go through results and report gapped scores
-		for(list<hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (gapped): " << (*iter)->score << endl;
+		for(list<Hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (gapped): " << (*iter)->score << endl;
 		
 		//Free memory in hit array
 		freeHitArray(hitArr, hitArrSize);
@@ -424,7 +424,7 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 		cout << "Gapped extension took " << tDiff.count() << " s" << endl;
 	} else{
 		//Iterate over alignments
-		for(list<hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
+		for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 			//Check e-value once again
 			if((*it)->eval <= eLim){
 				//Output alignment
@@ -441,9 +441,9 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 }
 
 //This function frees all memory additionally allocated for an hit array
-void freeHitArray(hit *arr, uint32_t &arrLen){
+void freeHitArray(Hit *arr, uint32_t &arrLen){
 	bool frst = false;
-	hit *h, *delHit;
+	Hit *h, *delHit;
 
 	for(uint32_t i = 0; i < arrLen; ++i){
 		//Check if hit array at current position is empty

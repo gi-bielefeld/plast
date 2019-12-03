@@ -621,7 +621,7 @@ bool contGappedOnPredUni(UnitigColorMap<seedlist> &uni, list<uint16_t> &extPth, 
 }
 
 //This function calculates a gapped alignment to the right side of the starting position considering a quorum and a search color set. ATTENTION: Hit's length attribute will be deprecated after function call!
-void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	bool explSuc = false, unitigDone = true;
 	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
 	int32_t maxScore = 0, maxBorderScore;
@@ -653,7 +653,7 @@ void startRightGappedAlignment(hit *h, const string &q, const uint16_t &X, const
 }
 
 //This function calculates a gapped alignment to the left side of the starting position considering a quorum and a search color set. ATTENTION: Hit's length attribute will be deprecated after function call!
-void startLeftGappedAlignment(hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &X, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	bool explSuc = false, unitigDone = true;
 	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
 	int32_t maxScore = 0, maxBorderScore;

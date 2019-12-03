@@ -21,11 +21,15 @@ rule queryGraph:
 		pBin = config['PLASTbin'],
 		graph = config['gPathPref'],
 		query = "queries/Random_{bID}.q"
+	params:
+		k = config['k'],
+		g = config['miniLen'],
+		w = config['seedLen']
 	output:
 		scores = temp("results/maxScores_{bID}.txt"),
 		log = temp("results/maxScores_{bID}.log")
 	shell:
-		"mkdir -p results; {input.pBin} Search -i $(echo {input.graph} | sed 's/.gfa//g') -q {input.query} -e 100 -u > {output.scores} 2> {output.log}"
+		"mkdir -p results; {input.pBin} Search -i $(echo {input.graph} | sed 's/.gfa//g') -q {input.query} -k {params.k} -g {params.g} -w {params.w} -e 100 -u > {output.scores} 2> {output.log}"
 
 rule aggregateScores:
 	input:

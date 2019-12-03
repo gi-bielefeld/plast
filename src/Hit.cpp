@@ -2,9 +2,9 @@
 #include "Smer.h"
 
 //This function scans through a hit list decreasingly ordered by score and replaces the worst entry by the given hit if it is not the worst one itself
-void replWorseRes(list<hit*> &hList, hit* hit){
+void replWorseRes(list<Hit*> &hList, Hit* hit){
 	//Go through hit list
-	for(list<class hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
+	for(list<class Hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
 		//Compare current entry with hit to insert
 		if((*i)->score < hit->score){
 			//Insert hit
@@ -17,9 +17,9 @@ void replWorseRes(list<hit*> &hList, hit* hit){
 }
 
 //This function scans through a hit list and inserts the given hit right in front of the first entry which score is smaller or equal to the given hit's score
-void insRes(list<hit*> &hList, hit* hit){
+void insRes(list<Hit*> &hList, Hit* hit){
 	//Go through hit list
-	for(list<class hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
+	for(list<class Hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
 		//Compare current entry with hit to insert
 		if((*i)->score < hit->score){
 			//Insert hit
