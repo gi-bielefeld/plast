@@ -1,8 +1,8 @@
 #include "Seedlist.h"
 
 //This function searches for the closest seed to reach during an extension and returns it if it exists (otherwise NULL)
-struct seed* searchRightNeighbor(struct seed* sLSeed, const uint32_t &iniExtSeedOffsQ, const uint32_t &extLen, const uint32_t &curUPos, struct seed*& prevSeed){
-	struct seed *lastSeed = NULL, *nearestSeed = NULL;
+struct Seed* searchRightNeighbor(struct Seed* sLSeed, const uint32_t &iniExtSeedOffsQ, const uint32_t &extLen, const uint32_t &curUPos, struct Seed*& prevSeed){
+	struct Seed *lastSeed = NULL, *nearestSeed = NULL;
 	
 	//Reset prevSeed
 	prevSeed = NULL;
@@ -30,9 +30,9 @@ struct seed* searchRightNeighbor(struct seed* sLSeed, const uint32_t &iniExtSeed
 }
 
 //This function searches for the closed seed to reach during an extension and returns it if it exists (otherwise NULL)
-struct seed* searchLeftNeighbor(struct seed *seedList, const uint32_t &qOff, const uint32_t &uOff, struct seed*& prevSeed){
-	struct seed *nearestSeed = NULL;
-	struct seed *lastSeed = NULL;
+struct Seed* searchLeftNeighbor(struct Seed *seedList, const uint32_t &qOff, const uint32_t &uOff, struct Seed*& prevSeed){
+	struct Seed *nearestSeed = NULL;
+	struct Seed *lastSeed = NULL;
 
 	//Iterate over the seed list
 	while(seedList != NULL){

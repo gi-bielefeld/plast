@@ -69,6 +69,13 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				break;
 			case 'k':
 				k = atoi(optarg);
+
+				//Check if k exceeds maximum
+				if(MAX_KMER_SIZE <= k){
+					cerr << "ERROR: Used k exceeds the maximum value supported by your installation" << endl;
+					return false;
+				}
+
 				break;
 			case 'g':
 				g = atoi(optarg);
@@ -254,7 +261,7 @@ void loadQueries(const string &filename, vector<string> &qList){
 }
 
 //This function outputs a hit's alignment
-void repAlgn(const hit *res){
+void repAlgn(const Hit *res){
 	bool largeNb = false;
 	uint32_t i = 0, algnCols, gaps = 0, posQ, posAlgn = 0;
 
@@ -313,10 +320,9 @@ void repAlgn(const hit *res){
 	}
 }
 
-//This function outputs the color sets of given result
-void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
+//This function outputs the color sets of a given result
+void outpColSets(ColoredCDBG<seedlist> &cdbg, const Hit *res){
 	bool identical = false;
-	//char *kmerSeq = (char*) malloc(res->origUni.getGraph()->getK());
 	string kmerSeq = string(res->origUni.getGraph()->getK(), 'A');
 
 	/*Some additional stuff that Roland needs for an experiment*/
@@ -328,7 +334,6 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 	vector<string> colors;
 	vector<string>::iterator colIt;
 	Kmer currK;
-	UnitigColors uniCols;
 	UnitigColorMap<seedlist> uni;
 	ColSet curColSet = ColSet(0, colors);
 
@@ -342,56 +347,35 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 			++kmerSeqPos;
 		}
 
-		/*Some additional stuff that Roland needs for an experiment*/
-		//Check if current character in query's alignment sequence is not a gap
-		if(res->gAlgn.aSeqQ[i] != GAP) ++currQpos;
-		/*Some additional stuff that Roland needs for an experiment*/
-
 		//Check if our k-mer sequence is full
 		if(kmerSeqPos == res->origUni.getGraph()->getK()){
 			//Initialize k-mer
 			currK = Kmer(kmerSeq.c_str());
 			//Look up k-mer
 			uni = res->origUni.getGraph()->find(currK);
-			//Get k-mer's color set
-			uniCols = *uni.getData()->getUnitigColors(uni);
-			//Reset color set
-			colors = vector<string>();
-
-			//Iterate over k-mer's colors
-			for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
-				//Get current ID's color name
-				color = cdbg.getColorName(c.getColorID());
-
-				//If the color set is empty we have nothing to compare against
-				if(colors.empty()){
-					colors.push_back(color);
-				} else if(colors.back() != color){//Check if we have just seen the current color already
-					colors.push_back(color);
-				}
-			}
+			//Get color set for this position
+			colors = formColSet(cdbg, uni);
 
 			//Check if we have dealed with a different k-mer before
 			if(!curColSet.colNames.empty()){
 				colIt = curColSet.colNames.begin();
 
-				//Iterate over current k-mer's color set
-				for(vector<string>::iterator j = colors.begin(); j != colors.end(); ++j){
-					//Color sets of different sizes cannot be identical
-					if(curColSet.colNames.size() != colors.size()){
-						identical = false;
-						break;
-					}
+				//Color sets of different sizes cannot be identical
+				if(curColSet.colNames.size() != colors.size()){
+					identical = false;
+				} else{
+					//Iterate over current k-mer's color set
+					for(vector<string>::iterator j = colors.begin(); j != colors.end(); ++j){
+						//Compare the current colors
+						if(*colIt == *j){
+							identical = true;
+						} else{
+							identical = false;
+							break;
+						}
 
-					//Compare the current colors
-					if(*colIt == *j){
-						identical = true;
-					} else{
-						identical = false;
-						break;
+						++colIt;
 					}
-
-					++colIt;
 				}
 			}
 
@@ -423,6 +407,11 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 
 		//Update color set end position
 		++curColSet.endPos;
+
+		/*Some additional stuff that Roland needs for an experiment*/
+		//Check if current character in query's alignment sequence is not a gap
+		if(res->gAlgn.aSeqQ[i] != GAP) ++currQpos;
+		/*Some additional stuff that Roland needs for an experiment*/
 	}
 	
 	//Output color set
@@ -438,21 +427,9 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res){
 		uni = res->origUni;
 		//Resize unitig so that its color set represents the alignments color set
 		uni.dist = min(res->offU, (uint32_t) uni.len - 1);
+		uni.len = 1;
 		//Get color set
-		uniCols = *uni.getData()->getUnitigColors(uni);
-		colors = vector<string>();
-
-		for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
-			color = cdbg.getColorName(c.getColorID());
-
-			if(colors.empty()){
-				colors.push_back(color);
-			} else if(colors.back() != color){
-				colors.push_back(color);
-			}
-		}
-
-		curColSet.colNames = colors;
+		curColSet.colNames = formColSet(cdbg, uni);
 	}
 
 	for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){

@@ -22,15 +22,15 @@ struct Algn{
 	string aSeqQ;
 };
 
-class hit {
+class Hit {
 
 	public:
 		
 		//Default constructor
-		hit () { lExt.path = NULL; rExt.path = NULL; }
+		Hit () { lExt.path = NULL; rExt.path = NULL; }
 
 		//Copy constructor
-		hit (const hit &h) {
+		Hit (const Hit &h) {
 			length = h.length;
 			score = h.score;
 			offU = h.offU;
@@ -60,20 +60,20 @@ class hit {
 		//Gapped alignment of hit
 		struct Algn gAlgn;
 		//Pointer to the next hit
-		hit *nextHit;
+		Hit *nextHit;
 };
 
 //This function inserts a hit into the hit list where all hits are order increasingly by their left border's q index
-void insertHit(hit*& hitToIns, hit* hitList);
+void insertHit(Hit*& hitToIns, Hit* hitList);
 
 //This function scans through a hit list decreasingly ordered by score and replaces the worst entry by the given hit if it is not the worst one itself
-void replWorseRes(list<hit*> &hList, hit* hit);
+void replWorseRes(list<Hit*> &hList, Hit* hit);
 
 //This function scans through a hit list and inserts the given hit right in front of the first entry which score is smaller or equal to the given hit's score
-void insRes(list<hit*> &hList, hit* hit);
+void insRes(list<Hit*> &hList, Hit* hit);
 
 //This function retreats an ungapped extension of a seed on the reverse complementary strand if its right border ends within the k-1 overlap in a unitig sequence's end
-void makeValidBorders(hit *hit, const string &q);
+void makeValidBorders(Hit *hit, const string &q);
 
 //This function compresses the extension paths of left and right extension and returns a merged extension path object
 struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
@@ -82,6 +82,6 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
 const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);
 
 //This function compares two hits based on their e-values. Returns true if fh is smaller than sh.
-inline bool compEvals(const hit *fh, const hit *sh){ return (fh->eval < sh->eval); };
+inline bool compEvals(const Hit *fh, const Hit *sh){ return (fh->eval < sh->eval); };
 
 #endif

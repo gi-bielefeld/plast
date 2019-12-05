@@ -22,7 +22,8 @@
 
 PLAST builds a **compacted, colored de Bruijn graph** from given input genomes using the API of [Bifrost](https://github.com/pmelsted/bifrost). Apart from the requirements of Bifrost (c++ and cmake), there are no further strict dependencies.
 
-Parameter estimations for alignment statistics require a running version of 
+Parameter estimations for alignment statistics can be done using a workflow that
+requires a running version of 
 [snakemake](https://snakemake.readthedocs.io/en/stable/) and the additional
 packages [matplotlib](https://matplotlib.org) and
 [scipy](https://www.scipy.org).
@@ -176,7 +177,8 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    Sound statistical parameters can be estimated by running a 
    [snakemake](https://snakemake.readthedocs.io/en/stable/) workflow provided in
-   the *simulation* directory.
+   the *simulation* directory. Alternatively, a Bash script is provided and may
+   be used for the same purpose as well.
    
    For running the snakemake workflow, proceed as follows:
    
@@ -189,7 +191,9 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    2. Before executing the workflow, it requires the location of a graph
       parameters have to be
       estimated for. Add the graph's path to the configuration file
-      (*config.yaml*).
+      (*config.yaml*). You may need to change graph properties (*k*-mer and/or
+      minimizer length) or the minimal seed length your graph was indexed for if
+      they are different from default.
 
 
       *config.yaml*:
@@ -197,6 +201,15 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       ...
       #Path to the pangenome graph (please insert here!)
       gPathPref: "/path/to/myGraph.gfa"
+      
+      #Graph and index properties (please change if non-default!)
+
+      #k-mer length used for graph
+      k: 31
+      #Minimizer length used for graph
+      miniLen: 23
+      #Minimal seed length used for index
+      seedLen: 11
       ...
       ```
    
@@ -204,10 +217,32 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       cores in parallel.
    
       ```
-      snakemake --cores <Nb cores>
+      snakemake --cores <Nb_cores>
       ```
 
    4. Simulation results for gapped and ungapped alignment parameters can be found in *results/parameters.txt*.
+    
+   Running the workflow is the recommened way for parameter estimation. However,
+   using a simple Bash script is possible as well.
+
+   For running the Bash script, proceed as follows:
+
+   1. Change to the directory *simulation*:
+   
+      ```
+      cd simulation
+      ```
+
+   2. Execute the Bash script by providing the graph path as first argument.
+      Non-default values for *k*-mer length (`-k`), minimizer length (`-g`) and
+      minimal seed length (`-w`) may follow using the appropriate flag.
+
+      ```
+      ./estParams.sh /path/to/myOtherGraph.gfa -k <my_k> -g <my_minimizer_length> -w <my_min_seed_length>
+      ```
+      
+   3. Simulation results for gapped and ungapped alignment parameters can be
+      found in *results/parameters.txt*.
 
 ## Test data
 

@@ -4,6 +4,15 @@
 #Path to the pangenome graph (please insert here!)
 gPathPref: 
 
+#Graph and index properties (please change if non-default!)
+
+#k-mer length used for graph
+k: 31
+#Minimizer length used for graph
+miniLen: 23
+#Minimal seed length used for index
+seedLen: 11
+
 #------------------------------------------------------------------------------
 
 

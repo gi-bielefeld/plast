@@ -295,21 +295,21 @@ inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const
 }
 
 //This function performs the seed detection if a search color set is given
-void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq);
+void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq);
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
-void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C);
+void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C);
 
 //This function performs the actual graph search for a query
 void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim);
 
 //This function frees all memory additionally allocated for an hit array
-void freeHitArray(hit *arr, uint32_t &arrLen);
+void freeHitArray(Hit *arr, uint32_t &arrLen);
 
 #endif

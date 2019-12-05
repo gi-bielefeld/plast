@@ -65,9 +65,33 @@ inline void dispHelp(){
 void loadQueries(const string &filename, vector<string> &qList);
 
 //This function outputs a hit's alignment
-void repAlgn(const hit *res);
+void repAlgn(const Hit *res);
 
-//This function outputs the color sets of given result
-void outpColSets(ColoredCDBG<seedlist> &cdbg, const hit *res);
+//This function outputs the color sets of a given result
+void outpColSets(ColoredCDBG<seedlist> &cdbg, const Hit *res);
+
+//This function iterates over an UnitigColors object and returns the set of all color names
+inline const vector<string> formColSet(ColoredCDBG<seedlist> &cdbg, const UnitigColorMap<seedlist> &uni){
+	string color;
+	//Initialize color set
+	vector<string> set = vector<string>();
+	//Get UnitigColors object
+	const UnitigColors uniCols = *uni.getData()->getUnitigColors(uni);
+
+	//Iterate over colors
+	for(UnitigColors::const_iterator c = uniCols.begin(uni); c != uniCols.end(); ++c){
+		//Get current ID's color name
+		color = cdbg.getColorName(c.getColorID());
+
+		//If the color set is empty we have nothing to compare against
+		if(set.empty()){
+			set.push_back(color);
+		} else if(set.back() != color){//Check if we have just seen the current color already
+			set.push_back(color);
+		}
+	}
+
+	return set;
+}
 
 #endif

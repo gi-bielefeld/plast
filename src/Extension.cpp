@@ -83,7 +83,7 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<seedlist>, D
 }
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
-void startRightX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startRightX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpSeedLen = hit->length;
@@ -142,7 +142,7 @@ void startRightX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_
 }
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
-void startRightX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpSeedLen = hit->length;
@@ -203,7 +203,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 	//Even if we are on the reverse complementary strand and no position is covered on this unitig, because we have checked the first k - 1 position on the last unitig already
 	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand);
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
-	struct seed *nearestSeed, *prevSeed;
+	struct Seed *nearestSeed, *prevSeed;
 
 	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
 	iniSeqPos = uniSeqPos;
@@ -324,7 +324,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 	//Get the number of covered positions
 	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand);
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
-	struct seed *nearestSeed, *prevSeed;
+	struct Seed *nearestSeed, *prevSeed;
 
 	//Find the nearest seed that we might be able to reach during our extension
 	nearestSeed = searchRightNeighbor(sucUnitig->getData()->getData(*sucUnitig)->getSeed(sucUnitig->strand), iniQoff, extLen, iniSeqPos, prevSeed);
@@ -516,7 +516,7 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, D
 }
 
 //This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color set
-void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpExtLen = 1, progress, posU = hit->offU, posQ = hit->offQ;
@@ -526,7 +526,7 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, posU - tmpExtLen, false);
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
-	struct seed *nearestSeed, *prevSeed = NULL;
+	struct Seed *nearestSeed, *prevSeed = NULL;
 
 	//Find the nearest seed that we could reach
 	nearestSeed = searchLeftNeighbor(hit->origUni.getData()->getData(hit->origUni)->getSeed(hit->origUni.strand), hit->offQ, hit->offU, prevSeed);
@@ -615,7 +615,7 @@ void startLeftX_Drop(hit* hit, const string &q, const int16_t &X, const uint32_t
 }
 
 //This function starts the left extension for seeds lying on the query's reverse complement considering a quorum and a search color set
-void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpExtLen = 1, progress, overlap = 0;
@@ -625,7 +625,7 @@ void startLeftX_Drop_OnRevComp(hit* hit, const string &q, const int16_t &X, cons
 	uint32_t k = hit->origUni.getGraph()->getK();
 	list<uint16_t> extPth;
 	string uSeq = hit->origUni.mappedSequenceToString();
-	struct seed *nearestSeed, *prevSeed = NULL;
+	struct Seed *nearestSeed, *prevSeed = NULL;
 
 	//Find the nearest seed that we could reach
 	nearestSeed = searchLeftNeighbor(hit->origUni.getData()->getData(hit->origUni)->getSeed(hit->origUni.strand), hit->offQ, hit->offU, prevSeed);
@@ -729,7 +729,7 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 	uint32_t uPos= prevUni->size - prevUni->getGraph()->getK() + 1;
 	int32_t checkedPos = getSrchCritCov(*prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni->size, prevUni->strand), !prevUni->strand);
 	string prevUniSeq = prevUni->mappedSequenceToString();
-	struct seed *nearestSeed, *prevSeed = NULL;
+	struct Seed *nearestSeed, *prevSeed = NULL;
 
 	//Find the nearest seed that we might be able to reach during our extension
 	nearestSeed = searchLeftNeighbor(prevUni->getData()->getData(*prevUni)->getSeed(prevUni->strand), qPos, uPos, prevSeed);
@@ -825,7 +825,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 	uint32_t k = prevUni->getGraph()->getK();
 	uint32_t progress;
 	string prevUniSeq = prevUni->mappedSequenceToString();
-	struct seed *nearestSeed, *prevSeed = NULL;
+	struct Seed *nearestSeed, *prevSeed = NULL;
 
 	//Find the nearest seed that we might be able to reach during our extension
 	nearestSeed = searchLeftNeighbor(prevUni->getData()->getData(*prevUni)->getSeed(prevUni->strand), qPos, uPos, prevSeed);
@@ -920,7 +920,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 }
 
 //This function checks if a hit's start offset for the gapped extension lies inside the overlap of a unitig sequence's end. If so it tries to move the start position on a unitig where it is not inside the overlap anymore. If this is not possible the hit is marked as invalid by setting its score to 0.
-void mvStartToValUni(hit* h, list<uint16_t>& lExtPth){
+void mvStartToValUni(Hit* h, list<uint16_t>& lExtPth){
 	//If we want to switch unitigs the right extension path must not be empty
 	if(h->rExt.nbElem > 0){
 		//Decompress right extension path
