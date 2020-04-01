@@ -52,6 +52,14 @@ inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quoru
 	bool lFix, rFix;
 	int32_t lBrd, rBrd;
 
+	//If the maximum color id (+1, since ids start at 0) is already smaller than our quorum it can never be fulfilled
+	if(quorum > uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1){
+		//Save offsets
+		uni.getData()->getData(uni)->setlBrd(-1);
+		uni.getData()->getData(uni)->setrBrd(uni.size);
+		return;
+	}
+
 	//Check whether a search set is given
 	if(srchColSet.empty()){
 		//If quorum is 1 we do not need to do anything
