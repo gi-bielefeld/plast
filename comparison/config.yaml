@@ -1,0 +1,85 @@
+# PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
+
+#The place where the data is stored
+dataDir: ""
+
+#The program binaries that shall be used
+blastnbin: ""
+makeblastdbBin: ""
+mmseqs2Bin: ""
+ublastBin: ""
+#Only an absolute path will work here!
+blatBin: ""
+blat_faToTwoBit: ""
+
+###Please change if necessary!###
+
+#The reference assembly used to draw queries from (located in the data dir)
+referenceAssembly: "GCF_000195995.1_ASM19599v1_genomic.fna"
+#The PLAST binary
+PLASTbin: "../src/PLAST"
+
+#------------------------------------------------------------------------------
+
+
+# DO NOT ADJUST THE FOLLOWING PARAMETERS (unless you know what you are doing) -
+
+###General###
+
+#Things we want to measure
+measure: ["runtime", "memory"]
+level: ["", "small"]
+#Tools to compare
+# tool: ["PLAST", "BLAST", "MMseqs2", "UBLAST", "BLAT"]
+tool: []
+#Pangenome sizes to test
+pangenomeSizes: ["25", "100", "200", "300", "400", "500", "1250", "2500", "3750", "5000"]
+#Largest size we want to have averaged measures for
+maximumAveragedSize: "500"
+#Number of queries to use
+numberOfQueries: "100"
+#The query length
+queryLength: "1000"
+#Maximum number of results to find (a high number -> we want to find everything)
+maximumResultNumber: "1250000"
+#Minimum exact match length
+wordSize: "11"
+#Gap open cost
+gapOpen: "2"
+#Gap extension cost
+gapExtend: "2"
+#Mismatch score
+mismatchScore: "-1"
+#Match score
+matchScore: "1"
+#E-value threshold used
+eValueThreshold: "10"
+#Number of threads used
+threads: "1"
+
+###Program specific###
+
+###PLAST###
+
+#Suffixes of graph files
+graphFileEndings: ["gfa", "bfg_colors", "idx"]
+
+###BLAST###
+
+#BLAST's search mode
+BLASTtask: "blastn"
+#X-drop parameter in bits
+XdropParameterBits: "6.635"
+#BLAST database file endings
+BLASTdatabaseFileSuffixes: ["nhr", "nin", "nsq"]
+#BLAST database type
+BLASTdatabaseType: "nucl"
+
+###MMseqs2###
+
+#Mis/match scores to be used as substitution matrix
+subMatrix: "unitScoresAbs.out"
+#Search sensitivity
+srchSens: "5.7"
+#MMseqs2's strand option (2->both)
+MMseqs2StrandOption: "2"
