@@ -34,4 +34,3 @@ for i in range(n):
 	fNames.remove(ch)
 	#Output file name
 	print(ch, end=' ')
-	print(ch, end=' ', file=sys.stderr)

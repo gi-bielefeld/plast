@@ -1,16 +1,16 @@
 # PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
 
 #The place where the data is stored
-dataDir: ""
+dataDir: "/mnt/volume/salmonella/Typhimurium/chosen"
 
 #The program binaries that shall be used
-blastnbin: ""
-makeblastdbBin: ""
-mmseqs2Bin: ""
-ublastBin: ""
+blastnbin: "/usr/bin/blastn"
+makeblastdbBin: "/usr/bin/makeblastdb"
+mmseqs2Bin: "~/mmseqs/bin/mmseqs"
+ublastBin: "~/usearch/usearch11.0.667_i86linux32"
 #Only an absolute path will work here!
-blatBin: ""
-blat_faToTwoBit: ""
+blatBin: "/home/ubuntu/blat/blat"
+blat_faToTwoBit: "~/blat/faToTwoBit"
 
 ###Please change if necessary!###
 
@@ -30,8 +30,8 @@ PLASTbin: "../src/PLAST"
 measure: ["runtime", "memory"]
 level: ["", "small"]
 #Tools to compare
-# tool: ["PLAST", "BLAST", "MMseqs2", "UBLAST", "BLAT"]
-tool: []
+tool: ["PLAST", "BLAST", "MMseqs2", "UBLAST", "BLAT"]
+# tool: []
 #Pangenome sizes to test
 pangenomeSizes: ["25", "100", "200", "300", "400", "500", "1250", "2500", "3750", "5000"]
 #Largest size we want to have averaged measures for
@@ -83,3 +83,11 @@ subMatrix: "unitScoresAbs.out"
 srchSens: "5.7"
 #MMseqs2's strand option (2->both)
 MMseqs2StrandOption: "2"
+#File endings of MMseqs2's dbs
+databaseFileEndings: ["", ".dbtype", ".index", ".lookup", ".source", "_h", "_h.dbtype", "_h.index"]
+#File endings of MMseq2's result files
+MMseqs2ResultFileEndings: ["", ".dbtype", ".index"]
+#File endings of MMseqs2's index files
+MMseqs2IndexFileEndings: ["", ".dbtype", ".index"]
+# #File endings of MMseqs2's query dbs
+# queryDatabaseFileEndings: ["", ".dbtype", ".index", ".lookup", ".source", "_h", "_h.dbtype", "_h.index"]
