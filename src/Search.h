@@ -14,7 +14,11 @@ enum SrchStrd {Plus, Minus, Both};
 //This function checks if a unitig fulfills a quorum completely (ATTENTION: This function does not work for a quorum of 1)
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum){
 	uint16_t counter = 0;
+	uint32_t allwdToMs;
 	size_t curID = SIZE_MAX;
+
+	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
+	allwdToMs = ((ColoredCDBG<seedlist>*) uni.getGraph())->getNbColors() - quorum;
 
 	//Iterate over unitig's colors
 	for(UnitigColors::const_iterator i = uni.getData()->getUnitigColors(uni)->begin(uni); curID != i.getColorID(); i.nextColor()){
@@ -25,6 +29,9 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, curID)){
 			//Increment counter and check if we are done
 			if(++counter == quorum) return true;
+		} else{
+			//Decrement number of colors we are still allowed to miss and check if we can stop
+			if(allwdToMs-- == 0) return false;
 		}
 	}
 
@@ -34,6 +41,10 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 //This function checks if a unitig fulfills the search criteria completely
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
 	uint16_t counter = 0;
+	uint32_t allwdToMs;
+
+	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
+	allwdToMs = srchColSet.size() - quorum;
 
 	//Go through search color set
 	for(list<pair<string, size_t>>::const_iterator col = srchColSet.begin(); col != srchColSet.end(); ++col){
@@ -41,6 +52,9 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, col->second)){
 			//Check whether our quorum is already reached
 			if(quorum == ++counter) return true;
+		} else{
+			//Decrement number of colors we are still allowed to miss and check if we can stop
+			if(allwdToMs-- == 0) return false;
 		}
 	}
 
