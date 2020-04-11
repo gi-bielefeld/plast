@@ -8,10 +8,10 @@
 #	4. runtime file
 
 BLAT_BIN=$1
-DB_LIST=../"$2"
-QUERY=../"$3"
-RES_FILE=../"$4"
-RT_FILE=../"$5"
+DB_LIST="$2"
+QUERY="$3"
+RES_FILE="$4"
+RT_FILE="$5"
 
 MAX_DB_NB=750
 

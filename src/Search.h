@@ -17,8 +17,8 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 	uint32_t allwdToMs;
 	size_t curID = SIZE_MAX;
 
-	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
-	allwdToMs = ((ColoredCDBG<seedlist>*) uni.getGraph())->getNbColors() - quorum;
+	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore (ATTENTION: This will cause problems as soon as quorum > colorMax + 1! Currenty, this cannot happen, because it is checked inside the function that calls this function.)
+	allwdToMs = uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1 - quorum;//((ColoredCDBG<seedlist>*) uni.getGraph())->getNbColors() - quorum;
 
 	//Iterate over unitig's colors
 	for(UnitigColors::const_iterator i = uni.getData()->getUnitigColors(uni)->begin(uni); curID != i.getColorID(); i.nextColor()){

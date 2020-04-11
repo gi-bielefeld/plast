@@ -20,8 +20,8 @@ rule plotData:
 
 rule aggRTs:
 	input:
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[s for s in config['pangenomeSizes'] if s <= config['maximumAveragedSize']]),
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in config['pangenomeSizes'] if s > config['maximumAveragedSize']], id=range(1,5))
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[str(s) for s in [int(t) for t in config['pangenomeSizes']] if s <= int(config['maximumAveragedSize'])]),
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [int(t) for t in config['pangenomeSizes']] if s > int(config['maximumAveragedSize'])], id=range(1,5))
 	output:
 		"{tool}/runtimes/runtimes{tool}.txt"
 	shell:
@@ -218,9 +218,9 @@ rule buildIndex:
 
 rule addRTs:
 	input:
-		expand("UBLAST/runtimes/runtimesUBLAST_{part}.txt", part=[item for sublist in [expand("c" + panid + "_part{nr}", nr=range(1, int(ceil(int(panid.split("_sub")[0]) / 100) + 1))) for panid in config['pangenomeSizes'] + [ smpid + "_sub" + str(i) for i in range(1,5) for smpid in config['pangenomeSizes'] if smpid <= config['maximumAveragedSize']]] for item in sublist])
+		"UBLAST/runtimes/runtimesUBLAST_c{panID}_part1.txt"
 	output:
-		"UBLAST/runtimes/runtimesUBLAST{panID, _c[0-9_sub]+}.txt"
+		"UBLAST/runtimes/runtimesUBLAST_c{panID, [0-9_sub]+}.txt"
 	shell:
 		"python scripts/addRts.py {input} {output}"
 
@@ -257,8 +257,9 @@ rule makeChunks:
 
 rule runBLAT:
 	input:
-		dblist = "BLAT/dbs/list{describtion}.txt",
-		query = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength'])
+		dblist = "BLAT/dbs/list_{describtion}.txt",
+		query = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
+		genomes = expand("BLAT/dbs/{genomeID}.2bit", genomeID=[basename(f).split(".fasta")[0] for f in glob("%s/*.fasta" %config['dataDir'])])
 	output:
 		runtime = "BLAT/runtimes/runtimesBLAT_{describtion}.txt",
 		results = temp("BLAT/results/resultsBLAT_{describtion}.ps1")
@@ -269,7 +270,7 @@ rule createDB_lists:
 	input:
 		"%s/chosen_{describtion}.txt" %config['dataDir']
 	output:
-		temp("BLAT/dbs/list{describtion}.txt")
+		temp("BLAT/dbs/list_{describtion}.txt")
 	shell:
 		"for g in $(cat {input}); do BASE_NAME=$(echo $g | sed 's/\// /g' | awk '{{print $NF}}' | sed 's/.fasta/.2bit/g'); echo 'BLAT/dbs/'$BASE_NAME ; done > {output}"
 
