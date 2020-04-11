@@ -14,8 +14,8 @@ enum SrchStrd {Plus, Minus, Both};
 //This function checks if a unitig fulfills a quorum completely (ATTENTION: This function does not work for a quorum of 1)
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum){
 	uint16_t counter = 0;
-	uint32_t allwdToMs;
-	size_t curID = SIZE_MAX;
+	int32_t allwdToMs;
+	size_t curID = SIZE_MAX, lstID = SIZE_MAX - 1;
 
 	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore (ATTENTION: This will cause problems as soon as quorum > colorMax + 1! Currenty, this cannot happen, because it is checked inside the function that calls this function.)
 	allwdToMs = uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1 - quorum;//((ColoredCDBG<seedlist>*) uni.getGraph())->getNbColors() - quorum;
@@ -24,6 +24,8 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 	for(UnitigColors::const_iterator i = uni.getData()->getUnitigColors(uni)->begin(uni); curID != i.getColorID(); i.nextColor()){
 		//Update current id
 		curID = i.getColorID();
+		//Decrement number of colors allowed to miss by the number of colors we have skipped
+		allwdToMs -= curID - lstID - 1;
 
 		//Check if the color is present on the complete unitig
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, curID)){
@@ -31,8 +33,11 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 			if(++counter == quorum) return true;
 		} else{
 			//Decrement number of colors we are still allowed to miss and check if we can stop
-			if(allwdToMs-- == 0) return false;
+			if(--allwdToMs < 0) return false;
 		}
+
+		//Update last last id
+		lstID = curID;
 	}
 
 	return false;
