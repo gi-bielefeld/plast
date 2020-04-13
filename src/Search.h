@@ -14,30 +14,64 @@ enum SrchStrd {Plus, Minus, Both};
 //This function checks if a unitig fulfills a quorum completely (ATTENTION: This function does not work for a quorum of 1)
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum){
 	uint16_t counter = 0;
-	int32_t allwdToMs;
-	size_t curID = SIZE_MAX, lstID = SIZE_MAX - 1;
+	size_t curID = SIZE_MAX, lstID = -1, allwdToMs;
+
+	//Testing
+	// cout << "isCovered: colorMax: " << uni.getData()->getUnitigColors(uni)->colorMax(uni) << endl;
+	// cout << "isCovered: quorum: " << quorum << endl;
 
 	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore (ATTENTION: This will cause problems as soon as quorum > colorMax + 1! Currenty, this cannot happen, because it is checked inside the function that calls this function.)
 	allwdToMs = uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1 - quorum;//((ColoredCDBG<seedlist>*) uni.getGraph())->getNbColors() - quorum;
+
+	//Testing
+	// cout << "isCovered: allwdToMs: " << allwdToMs << endl;
 
 	//Iterate over unitig's colors
 	for(UnitigColors::const_iterator i = uni.getData()->getUnitigColors(uni)->begin(uni); curID != i.getColorID(); i.nextColor()){
 		//Update current id
 		curID = i.getColorID();
-		//Decrement number of colors allowed to miss by the number of colors we have skipped
-		allwdToMs -= curID - lstID - 1;
+
+		//Testing
+		// cout << "isCovered: curID: " << curID << endl;
+		// cout << "isCovered: lstID: " << lstID << endl;
+
+		//Decrement number of colors allowed to miss by the number of colors we have skipped and check if it is exceeded
+		if((allwdToMs -= curID - lstID - 1) < 0) return false;
+
+		//Testing
+		// cout << "isCovered: allwdToMs: " << allwdToMs << endl;
 
 		//Check if the color is present on the complete unitig
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, curID)){
+			//Testing
+			// cout << "isCovered: ID is contained" << endl;
+			// cout << "isCovered: counter: " << counter << endl;
+
 			//Increment counter and check if we are done
-			if(++counter == quorum) return true;
+			if(++counter == quorum){
+				//Testing
+				// cout << "isCovered: quorum reached" << endl;
+
+				return true;
+			}
 		} else{
+			//Testing
+			// cout << "isCovered: ID is not contained" << endl;
+
 			//Decrement number of colors we are still allowed to miss and check if we can stop
-			if(--allwdToMs < 0) return false;
+			if(--allwdToMs < 0){
+				//Testing
+				// cout << "isCovered: Too many colors have been missed" << endl;
+
+				return false;
+			}
 		}
 
 		//Update last last id
 		lstID = curID;
+
+		//Testing
+		// cout << "isCovered: Updated last color id: " << lstID << endl;
 	}
 
 	return false;
