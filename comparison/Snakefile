@@ -14,9 +14,9 @@ rule plotData:
 	input:
 		expand("{tool}/runtimes/runtimes{tool}.txt", tool=config['tool'])
 	output:
-		expand("{msr}_all{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
+		expand("{msr}{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
 	shell:
-		"touch {output}"
+		"R < scripts/plot_time_mem.R --vanilla"
 
 rule aggRTs:
 	input:
