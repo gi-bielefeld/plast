@@ -6,7 +6,7 @@ from os.path import basename
 
 rule all:
 	input:
-		expand("{msr}_all{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
+		expand("{msr}{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
 
 ###Common rules###
 
@@ -20,12 +20,12 @@ rule plotData:
 
 rule aggRTs:
 	input:
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[str(s) for s in [int(t) for t in config['pangenomeSizes']] if s <= int(config['maximumAveragedSize'])]),
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [int(t) for t in config['pangenomeSizes']] if s > int(config['maximumAveragedSize'])], id=range(1,5))
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s > config['maximumAveragedSize']]),
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(1,5))
 	output:
 		"{tool}/runtimes/runtimes{tool}.txt"
 	shell:
-		"python3 scripts/mergeRTs.py {tool} {input} > {output}"
+		"python3 scripts/mergeRTs.py {wildcards.tool} {input} > {output}"
 
 rule drawLargeSubsets:
 	input:
@@ -138,7 +138,7 @@ rule runBLAST:
 		X = config['XdropParameterBits']
 	output:
 		res = temp("BLAST/results/results_{desc}.txt"),
-		rts = "BLAST/runtimes/runtimes_{desc}.txt"
+		rts = "BLAST/runtimes/runtimesBLAST_{desc}.txt"
 	shell:
 		"mkdir -p BLAST/{{results,runtimes}}; /usr/bin/time -v %s -query {input.qry} -task {params.tk} -db {input.dbBs} -word_size {params.wd} -gapopen {params.d} -gapextend {params.e} -penalty {params.pen} -reward {params.rwd} -xdrop_ungap {params.X} -xdrop_gap {params.X} -xdrop_gap_final {params.X} -num_alignments {params.maxNbRes} -num_descriptions {params.maxNbRes} -max_hsps {params.maxNbRes} > {output.res} 2> {output.rts}" %config['blastnbin']
 
@@ -174,7 +174,7 @@ rule runMMseqs2:
 	output:
 		result = temp("MMseqs2/results/results_{describtion, c[0-9a-z_]+}.txt"),
 		resFls = temp(expand("MMseqs2/results/results_{describtion}.txt{flnd}", describtion="{describtion, c[0-9a-z_]+}", flnd=config['MMseqs2ResultFileEndings'])),
-		runtime = "MMseqs2/runtimes/runtimes_{describtion, c[0-9a-z_]+}.txt"
+		runtime = "MMseqs2/runtimes/runtimesMMseqs2_{describtion, c[0-9a-z_]+}.txt"
 	shell:
 		"mkdir -p MMseqs2/{{runtimes,results}}; /usr/bin/time -v %s search {input.query} {input.target} {output.result} {input.dirct} --search-type 3 --max-seqs {params.maxSeqs} -a -e {params.eThres}  --threads {params.thrds} --seed-sub-mat {input.subMat} --gap-open {params.d} --gap-extend {params.e} --strand {params.strnd} -s {params.sens} 2> {output.runtime}" %config['mmseqs2Bin']
 

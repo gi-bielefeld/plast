@@ -33,9 +33,9 @@ level: ["", "small"]
 tool: ["PLAST", "BLAST", "MMseqs2", "UBLAST", "BLAT"]
 # tool: []
 #Pangenome sizes to test
-pangenomeSizes: ["25", "100", "200", "300", "400", "500", "1250", "2500", "3750", "5000"]
+pangenomeSizes: [25, 100, 200, 300, 400, 500, 1250, 2500, 3750, 5000]
 #Largest size we want to have averaged measures for
-maximumAveragedSize: "500"
+maximumAveragedSize: 500
 #Number of queries to use
 numberOfQueries: "100"
 #The query length
