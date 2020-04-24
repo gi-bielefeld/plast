@@ -21,7 +21,7 @@ rule plotData:
 rule aggRTs:
 	input:
 		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s > config['maximumAveragedSize']]),
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(1,5))
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(5))
 	output:
 		"{tool}/runtimes/runtimes{tool}.txt"
 	shell:
@@ -232,7 +232,7 @@ rule search:
 		config['eValueThreshold']
 	output:
 		algns = temp("UBLAST/results/resultsUBLAST_{panID}_part{nr}.aln"),
-		runtimes = "UBLAST/runtimes/runtimesUBLAST_{panID}_part{nr}.txt"
+		runtimes = temp("UBLAST/runtimes/runtimesUBLAST_{panID}_part{nr}.txt")
 	shell:
 		"mkdir -p UBLAST/{{results,runtimes}}; /usr/bin/time -v %s -ublast {input.query} -db {input.db} -alnout {output.algns} -evalue {params} -strand both 2> {output.runtimes}" %config['ublastBin']
 
