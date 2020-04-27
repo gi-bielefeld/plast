@@ -279,6 +279,47 @@ Test data is provided in the directory *testdata*.
    ./download_assemblies.sh chosen5000.txt <token>
    ```
 
+## Tool comparison
+
+A run time and memory usage comparison is documented as a 
+[snakemake](https://snakemake.readthedocs.io/en/stable/) workflow in the 
+directory 
+*comparison*.
+
+For execution of the workflow, proceed as follows:
+
+* Install all programs to be tested on your system.
+
+* Get some testing data.
+
+* Provide the workflow with the locations of your testing data and program 
+  binaries by editing the configuration file *comparison/config.yaml*:
+
+  ```
+  ...
+  # PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
+
+  #The place where the data is stored
+  dataDir: "path/to/my_testing_data_dir"
+
+  #The program binaries that shall be used
+  blastnbin: "path/to/blastn_binary"
+  makeblastdbBin: "path/to/makeblastdb_binary"
+  mmseqs2Bin: "path/to/mmseqs2_binary"
+  ublastBin: "path/to/usearch_binary"
+  #Only an absolute path will work here!
+  blatBin: "/absolute/path/to/blat_binary"
+  blat_faToTwoBit: "/absolute/path/to/faToTwoBit_binary"
+  ...
+  ```
+  
+* Change into directory *comparison* and run the workflow.
+
+  ```
+  cd comparison
+  snakemake
+  ```
+
 ## FAQ
 
 We recommend to have a look at the [FAQs of Bifrost](https://github.com/pmelsted/bifrost#faq).
