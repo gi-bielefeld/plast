@@ -13,8 +13,8 @@
 * [Requirements](https://gitlab.ub.uni-bielefeld.de/gi/plast#requirements)
 * [Compilation](https://gitlab.ub.uni-bielefeld.de/gi/plast#compilation)
 * [Usage](https://gitlab.ub.uni-bielefeld.de/gi/plast#usage)
-* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#test_data)
-* [Tool comparison](https://gitlab.ub.uni-bielefeld.de/gi/plast#tool_comparison)
+* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#testdata)
+* [Tool comparison](https://gitlab.ub.uni-bielefeld.de/gi/plast#toolcomparison)
 * [FAQ](https://gitlab.ub.uni-bielefeld.de/gi/plast#faq)
 * [Contact](https://gitlab.ub.uni-bielefeld.de/gi/plast#contact)
 * [License](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
@@ -154,7 +154,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Search -i someGraph -q myQueries.q -s mySearchSet.txt
    ```
 
-   File *mySearchSet* consists of one line per color. A color's name is identical to the corresponding input file's name. In our case, it may look like:
+   File *mySearchSet.txt* consists of one line per color. A color's name is identical to the corresponding input file's name. In our case, it may look like:
 
    ```
    genomeAssemblyA.fasta
@@ -266,7 +266,7 @@ Test data is provided in the directory *testdata*.
    
    How to get a token is described [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
    
-   File names of assemblies subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
+   File names of assembly subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
    
 4. **Salmonella pangenome from EnteroBase**
 
