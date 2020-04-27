@@ -1,16 +1,16 @@
 # PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
 
 #The place where the data is stored
-dataDir: "/mnt/volume/salmonella/Typhimurium/chosen"
+dataDir: "path/to/my_testing_data_dir"
 
 #The program binaries that shall be used
-blastnbin: "/usr/bin/blastn"
-makeblastdbBin: "/usr/bin/makeblastdb"
-mmseqs2Bin: "~/mmseqs/bin/mmseqs"
-ublastBin: "~/usearch/usearch11.0.667_i86linux32"
+blastnbin: "path/to/blastn_binary"
+makeblastdbBin: "path/to/makeblastdb_binary"
+mmseqs2Bin: "path/to/mmseqs2_binary"
+ublastBin: "path/to/usearch_binary"
 #Only an absolute path will work here!
-blatBin: "/home/ubuntu/blat/blat"
-blat_faToTwoBit: "~/blat/faToTwoBit"
+blatBin: "/absolute/path/to/blat_binary"
+blat_faToTwoBit: "/absolute/path/to/faToTwoBit_binary"
 
 ###Please change if necessary!###
 
