@@ -1,0 +1,283 @@
+configfile: 'config.yaml'
+
+from glob import glob
+from math import ceil
+from os.path import basename
+
+rule all:
+	input:
+		expand("{msr}{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
+
+###Common rules###
+
+rule plotData:
+	input:
+		expand("{tool}/runtimes/runtimes{tool}.txt", tool=config['tool'])
+	output:
+		expand("{msr}{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
+	shell:
+		"R < scripts/plot_time_mem.R --vanilla"
+
+rule aggRTs:
+	input:
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s > config['maximumAveragedSize']]),
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(5))
+	output:
+		"{tool}/runtimes/runtimes{tool}.txt"
+	shell:
+		"python3 scripts/mergeRTs.py {wildcards.tool} {input} > {output}"
+
+rule drawLargeSubsets:
+	input:
+		expand("{assembly}", assembly=glob("%s/*.fasta" %config['dataDir']))
+	output:
+		temp("%s/chosen_c{pgSz, [0-9]+}.txt" %config['dataDir'])
+	shell:
+		"python3 scripts/DrawFileNames.py {wildcards.pgSz} {input} > {output}"
+
+rule drawSmallSubsets:
+	input:
+		expand("{assembly}", assembly=glob("%s/*.fasta" %config['dataDir']))
+	params:
+		"{id}"
+	output:
+		temp("%s/chosen_c{pgSz, [0-9]+}_sub{id}.txt" %config['dataDir'])
+	shell:
+		"python3 scripts/DrawFileNames.py {wildcards.pgSz} {input} > {output}"
+
+rule genQrys:
+	input:
+		"%s/%s" %(config['dataDir'],config['referenceAssembly'])
+	params:
+		n = config['numberOfQueries'],
+		l = config['queryLength']
+	output:
+		temp("queries/randQrys_n{num, [0-9]+}_l{len, [0-9]+}.q")
+	shell:
+		"mkdir -p queries; for i in {{1..{params.n}}}; do echo '>Rand'$i; python3 scripts/QueryExtractor.py {params.l} {input}; done > {output}"
+
+rule addFileNameToHeader:
+	input:
+		"%s/{genomeid}.fasta" %config['dataDir']
+	output:
+		temp("%s/{genomeid}.fastatmp" %config['dataDir'])
+	shell:
+		"sed 's/>/>{wildcards.genomeid}./g' {input} > {output}"
+
+###PLAST rules###
+
+rule runPLAST:
+	input:
+		grph = expand("PLAST/graphs/Typh_{desc}.{flnd}", desc="{desc}", flnd=config['graphFileEndings']),
+		qry = "queries/randQrys_n%s_l%s_wtHeader.q" %(config['numberOfQueries'],config['queryLength']),
+		stat = "estParams.txt"
+	params:
+		config['maximumResultNumber']
+	output:
+		res = temp("PLAST/results/results{desc}.txt"),
+		rt = "PLAST/runtimes/runtimesPLAST_{desc}.txt"
+	shell:
+		'mkdir -p PLAST/results PLAST/runtimes; PARAMS=$(grep $(echo {input.grph} | cut -d" " -f1) {input.stat}); lambda=$(echo $PARAMS | cut -d" " -f2); C=$(echo $PARAMS | cut -d" " -f3); lambdaGap=$(echo $PARAMS | cut -d" " -f4); Cgap=$(echo $PARAMS | cut -d" " -f5); /usr/bin/time -v %s Search -i $(echo {input.grph} | cut -d" " -f1 | sed "s/.gfa//g") -q {input.qry} -n {params} -l $lambda -c $C -L $lambdaGap -C $Cgap > {output.res} 2> {output.rt}' %config['PLASTbin']
+
+rule buildLrgGraph:
+	input:
+		data = expand("{assembly}", assembly=glob("%s/*" %config['dataDir'])),
+		subs = "%s/chosen_c{pgSz}.txt" %config['dataDir']
+	output:
+		grph = temp("PLAST/graphs/Typh_c{pgSz, [0-9]+}.gfa"),
+		col = temp("PLAST/graphs/Typh_c{pgSz, [0-9]+}.bfg_colors"),
+		idx = temp("PLAST/graphs/Typh_c{pgSz, [0-9]+}.idx")
+	shell:
+		"mkdir -p PLAST PLAST/graphs; %s Build -i $(echo {output.grph} | sed 's/.gfa//g') -R $(cat {input.subs})" %config['PLASTbin']
+
+rule buildSubsetGraph:
+	input:
+		data = expand("{assembly}", assembly=glob("%s/*" %config['dataDir'])),
+		subs = "%s/chosen_c{pgSz}_sub{id}.txt" %config['dataDir']
+	params:
+		"{id}"
+	output:
+		grph = temp("PLAST/graphs/Typh_c{pgSz}_sub{id}.gfa"),
+		col = temp("PLAST/graphs/Typh_c{pgSz}_sub{id}.bfg_colors"),
+		idx = temp("PLAST/graphs/Typh_c{pgSz}_sub{id}.idx")
+	shell:
+		"mkdir -p PLAST PLAST/graphs; %s Build -i $(echo {output.grph} | sed 's/.gfa//g') -R $(cat {input.subs})" %config['PLASTbin']
+
+rule removeHeader:
+	input:
+		"queries/{qry}.q"
+	output:
+		temp("queries/{qry}_wtHeader.q")
+	shell:
+		"grep -v '>' {input} > {output}"
+
+###BLAST rules###
+
+rule mergeFASTA:
+	input:
+		data = expand("{assembly}", assembly=[i + "tmp" for i in glob("%s/*.fasta" %config['dataDir'])]),
+		subs = "%s/chosen_{desc}.txt" %config['dataDir']
+	output:
+		temp("BLAST/dbs/Typh_{desc}.fa")
+	shell:
+		"mkdir -p BLAST BLAST/dbs; cat $(cat {input.subs} | sed 's/fasta/fastatmp/g') > {output}"
+
+rule runBLAST:
+	input:
+		qry = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
+		dbBs = "BLAST/dbs/Typh_{desc}.fa",
+		dbPts = expand("BLAST/dbs/Typh_{desc}.fa.{flnd}", desc="{desc}", flnd=config['BLASTdatabaseFileSuffixes'])
+	params:
+		maxNbRes = config['maximumResultNumber'],
+		tk = config['BLASTtask'],
+		wd = config['wordSize'],
+		d = config['gapOpen'],
+		e = config['gapExtend'],
+		pen = config['mismatchScore'],
+		rwd = config['matchScore'],
+		X = config['XdropParameterBits']
+	output:
+		res = temp("BLAST/results/results_{desc}.txt"),
+		rts = "BLAST/runtimes/runtimesBLAST_{desc}.txt"
+	shell:
+		"mkdir -p BLAST/{{results,runtimes}}; /usr/bin/time -v %s -query {input.qry} -task {params.tk} -db {input.dbBs} -word_size {params.wd} -gapopen {params.d} -gapextend {params.e} -penalty {params.pen} -reward {params.rwd} -xdrop_ungap {params.X} -xdrop_gap {params.X} -xdrop_gap_final {params.X} -num_alignments {params.maxNbRes} -num_descriptions {params.maxNbRes} -max_hsps {params.maxNbRes} > {output.res} 2> {output.rts}" %config['blastnbin']
+
+rule mkBLASTdb:
+	input:
+		"BLAST/dbs/Typh_{desc}.fa"
+	params:
+		config['BLASTdatabaseType']	
+	output:
+		temp(expand("BLAST/dbs/Typh_{desc}.fa.{flnd}", desc="{desc}", flnd=config['BLASTdatabaseFileSuffixes']))
+	shell:
+		"%s -in {input} -dbtype {params}" %config['makeblastdbBin']
+
+###MMseqs2 rules###
+
+rule runMMseqs2:
+	input:
+		query = "MMseqs2/dbs/query/randQrys_n%s_l%s" %(config['numberOfQueries'],config['queryLength']),
+		qryFls = expand("MMseqs2/dbs/query/randQrys_n%s_l%s{flnd}" %(config['numberOfQueries'],config['queryLength']), flnd=config['databaseFileEndings']),
+		target = "MMseqs2/dbs/target/db_{describtion}",
+		trgtFls = expand("MMseqs2/dbs/target/db_{describtion}{flnd}", describtion="{describtion}", flnd=config['databaseFileEndings']),
+		index = "MMseqs2/dbs/target/db_{describtion}.idx",
+		dirct = "MMseqs2/tmpdir_{describtion}",
+		subMat = config['subMatrix']
+	params:
+		maxSeqs = config['maximumResultNumber'],
+		sens = config['srchSens'],
+		eThres = config['eValueThreshold'],
+		thrds = config['threads'],
+		d = config['gapOpen'],
+		e = config['gapExtend'],
+		strnd = config['MMseqs2StrandOption']
+	output:
+		result = temp("MMseqs2/results/results_{describtion, c[0-9a-z_]+}.txt"),
+		resFls = temp(expand("MMseqs2/results/results_{describtion}.txt{flnd}", describtion="{describtion, c[0-9a-z_]+}", flnd=config['MMseqs2ResultFileEndings'])),
+		runtime = "MMseqs2/runtimes/runtimesMMseqs2_{describtion, c[0-9a-z_]+}.txt"
+	shell:
+		"mkdir -p MMseqs2/{{runtimes,results}}; /usr/bin/time -v %s search {input.query} {input.target} {output.result} {input.dirct} --search-type 3 --max-seqs {params.maxSeqs} -a -e {params.eThres}  --threads {params.thrds} --seed-sub-mat {input.subMat} --gap-open {params.d} --gap-extend {params.e} --strand {params.strnd} -s {params.sens} 2> {output.runtime}" %config['mmseqs2Bin']
+
+rule createDbDir:
+	output:
+		temp(directory("MMseqs2/dbs"))
+	shell:
+		"mkdir -p MMseqs2 MMseqs2/dbs"
+
+rule makeQueryDb:
+	input:
+		qry = "queries/{qry}.q"
+	output:
+		temp(expand("MMseqs2/dbs/query/{qry}{flnd}", qry="{qry}", flnd=config['databaseFileEndings']))
+	shell:
+		"mkdir -p MMseqs2/dbs MMseqs2/dbs/query; %s createdb {input} $(echo {output} | cut -d' ' -f1)" %config['mmseqs2Bin']
+
+rule makeTargetDb:
+	input:
+		glist = "%s/chosen_{describtion}.txt" %config['dataDir'],
+		seqs = expand("{assembly}", assembly=[i + "tmp" for i in glob("%s/*.fasta" %config['dataDir'])])
+	output:
+		target = "MMseqs2/dbs/target/db_{describtion, c[0-9a-z_]+}",
+		trgtFls = temp(expand("MMseqs2/dbs/target/db_{describtion}{flnd}", describtion="{describtion, c[0-9a-z_]+}", flnd=config['databaseFileEndings']))
+	shell:
+		"mkdir -p MMseqs2/dbs MMseqs2/dbs/target; %s createdb $(cat {input.glist} | sed 's/fasta/fastatmp/g') {output.target}" %config['mmseqs2Bin']
+
+rule buildIndex:
+	input:
+		db = "MMseqs2/dbs/target/db_{describtion}",
+		subMat = config['subMatrix']
+	params:
+		maxSeqs = config['maximumResultNumber']
+	output:
+		index = temp(expand("MMseqs2/dbs/target/db_{describtion}.idx{flnd}", describtion="{describtion}", flnd=config['MMseqs2IndexFileEndings'])),
+		dirct = temp(directory("MMseqs2/tmpdir_{describtion}"))
+	shell:
+		"mkdir -p {output.dirct}; %s createindex {input.db} {output.dirct} --search-type 3 --max-seqs {params.maxSeqs} --seed-sub-mat {input.subMat}" %config['mmseqs2Bin']
+
+###UBLAST rules###
+
+rule addRTs:
+	input:
+		"UBLAST/runtimes/runtimesUBLAST_c{panID}_part1.txt"
+	output:
+		"UBLAST/runtimes/runtimesUBLAST_c{panID, [0-9_sub]+}.txt"
+	shell:
+		"python scripts/addRts.py {input} {output}"
+
+rule search:
+	input:
+		query = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
+		db = "UBLAST/dbs/{panID}_part{nr}.udb"
+	params:
+		config['eValueThreshold']
+	output:
+		algns = temp("UBLAST/results/resultsUBLAST_{panID}_part{nr}.aln"),
+		runtimes = temp("UBLAST/runtimes/runtimesUBLAST_{panID}_part{nr}.txt")
+	shell:
+		"mkdir -p UBLAST/{{results,runtimes}}; /usr/bin/time -v %s -ublast {input.query} -db {input.db} -alnout {output.algns} -evalue {params} -strand both 2> {output.runtimes}" %config['ublastBin']
+
+rule makeUdb:
+	input:
+		"%s/merged_{panID}_part{nr}.fasta" %config['dataDir']
+	output:
+		temp("UBLAST/dbs/{panID}_part{nr}.udb")
+	shell:
+		"mkdir -p UBLAST UBLAST/dbs; %s -makeudb_ublast {input} -output {output}" %config['ublastBin']
+
+rule makeChunks:
+	input:
+		glist = "%s/chosen_{panID}.txt" %config['dataDir'],
+		seqs = expand("{assembly}", assembly=[i + "tmp" for i in glob("%s/*.fasta" %config['dataDir'])])
+	output:
+		temp("%s/merged_{panID}_part{nr}.fasta" %config['dataDir'])
+	shell:
+		"python3 scripts/writeChunks.py {input.glist}"
+
+###BLAT rules###
+
+rule runBLAT:
+	input:
+		dblist = "BLAT/dbs/list_{describtion}.txt",
+		query = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
+		genomes = expand("BLAT/dbs/{genomeID}.2bit", genomeID=[basename(f).split(".fasta")[0] for f in glob("%s/*.fasta" %config['dataDir'])])
+	output:
+		runtime = "BLAT/runtimes/runtimesBLAT_{describtion}.txt",
+		results = temp("BLAT/results/resultsBLAT_{describtion}.ps1")
+	shell:
+		"mkdir -p BLAT/runtimes BLAT/results; scripts/runBlat.sh %s {input.dblist} {input.query} {output.results} {output.runtime}" %config['blatBin']
+
+rule createDB_lists:
+	input:
+		"%s/chosen_{describtion}.txt" %config['dataDir']
+	output:
+		temp("BLAT/dbs/list_{describtion}.txt")
+	shell:
+		"for g in $(cat {input}); do BASE_NAME=$(echo $g | sed 's/\// /g' | awk '{{print $NF}}' | sed 's/.fasta/.2bit/g'); echo 'BLAT/dbs/'$BASE_NAME ; done > {output}"
+
+rule makeBLATdbs:
+	input:
+		"%s/{genomeID}.fastatmp" %config['dataDir']
+	output:
+		temp("BLAT/dbs/{genomeID}.2bit")
+	shell:
+		"mkdir -p BLAT BLAT/dbs; %s {input} {output}" %config['blat_faToTwoBit']

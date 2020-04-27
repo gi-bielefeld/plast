@@ -13,19 +13,43 @@ enum SrchStrd {Plus, Minus, Both};
 
 //This function checks if a unitig fulfills a quorum completely (ATTENTION: This function does not work for a quorum of 1)
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum){
+	bool fstId = true;
 	uint16_t counter = 0;
-	size_t curID = SIZE_MAX;
+	int32_t allwdToMs;
+	size_t curID = SIZE_MAX, lstID = 0;
+
+	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
+	allwdToMs = uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1 - quorum;
 
 	//Iterate over unitig's colors
 	for(UnitigColors::const_iterator i = uni.getData()->getUnitigColors(uni)->begin(uni); curID != i.getColorID(); i.nextColor()){
 		//Update current id
 		curID = i.getColorID();
 
+		//If we are dealing with the first color there is no last one
+		if(fstId){
+			//Decrement by the number of colors we have skipped starting from 0
+			allwdToMs -= curID;
+			fstId = false;
+		} else{
+			//Decrement by the number of colors we have skipped between last and current color if they are not consecutive
+			allwdToMs -= curID - lstID - 1;
+		}
+
+		//Check if number of colors allowed to miss is exceeded
+		if(allwdToMs < 0) return false;
+
 		//Check if the color is present on the complete unitig
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, curID)){
 			//Increment counter and check if we are done
 			if(++counter == quorum) return true;
+		} else{
+			//Decrement number of colors we are still allowed to miss and check if we can stop
+			if(--allwdToMs < 0) return false;
 		}
+
+		//Update last last id
+		lstID = curID;
 	}
 
 	return false;
@@ -34,6 +58,10 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 //This function checks if a unitig fulfills the search criteria completely
 inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
 	uint16_t counter = 0;
+	uint32_t allwdToMs;
+
+	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
+	allwdToMs = srchColSet.size() - quorum;
 
 	//Go through search color set
 	for(list<pair<string, size_t>>::const_iterator col = srchColSet.begin(); col != srchColSet.end(); ++col){
@@ -41,6 +69,9 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, col->second)){
 			//Check whether our quorum is already reached
 			if(quorum == ++counter) return true;
+		} else{
+			//Decrement number of colors we are still allowed to miss and check if we can stop
+			if(allwdToMs-- == 0) return false;
 		}
 	}
 
@@ -51,6 +82,14 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
 	bool lFix, rFix;
 	int32_t lBrd, rBrd;
+
+	//If the maximum color id (+1, since ids start at 0) is already smaller than our quorum it can never be fulfilled
+	if(quorum > uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1){
+		//Save offsets
+		uni.getData()->getData(uni)->setlBrd(-1);
+		uni.getData()->getData(uni)->setrBrd(uni.size);
+		return;
+	}
 
 	//Check whether a search set is given
 	if(srchColSet.empty()){
