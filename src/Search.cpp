@@ -137,7 +137,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			
 			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
-			if(newHit.length - currSeed->len > 0 || newHit.length >  || currSeed->offsetQ + currSeed->len == q.length()){
+			if(newHit.length - currSeed->len > 0 || currSeed->offsetQ + currSeed->len == q.length()){
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, X, quorum, searchSet);
 
