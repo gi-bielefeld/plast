@@ -686,6 +686,8 @@ void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &X, const 
 		//Save new offsets in hit
 		h->offU = posU;
 		h->offQ = posQ;
+		//Save unitig we end at
+		h->origUni = currUni;
 		//Save the achieved score
 		h->score += maxBorderScore;
 		//Save the better alignment

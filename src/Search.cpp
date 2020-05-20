@@ -109,7 +109,7 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 }
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	struct Seed *currSeed;
 	Hit newHit;
 	UnitigColorMap<seedlist> currUni;
@@ -133,11 +133,11 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			startRightX_Drop(&newHit, q, X, quorum, searchSet);		
+			startRightX_Drop(&newHit, q, X, quorum, searchSet);
 			
-			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query.
+			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
-			if(newHit.length - currSeed->len > 0 || currSeed->offsetQ + currSeed->len == q.length()){
+			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, X, quorum, searchSet);
 
@@ -166,7 +166,7 @@ void extendRefSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t 
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
 //Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
-void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	bool isValid = true;
 	struct Seed *currSeed;
 	Hit newHit;
@@ -197,8 +197,8 @@ void extendRevCompSeeds(ColoredCDBG<seedlist> &cdbg, const string &q, const int1
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
 
-			//Filter out some seeds; the second condition ensures that we do not miss seeds in the end of the query and the third that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
-			if(newHit.length - currSeed->len > 0 || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
+			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match, the third condition cares about seeds in the end of the query and the fourth that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
+			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
 				//Extend hit to the left
 				startLeftX_Drop_OnRevComp(&newHit, q, X, quorum, searchSet);
 
@@ -259,6 +259,8 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const
 		bandRadius = (*it)->length / GAP_RATIO;
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
+		//Calculate gapped extension to the left
+		startLeftGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
 
 		//Check whether this is not the first hit in the result list
 		if(it != resList.begin()){
@@ -266,8 +268,8 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const
 
 			//Check for duplicates
 			while(it != iter){
-				//We assume to have a duplicate if right border offsets and unitigs are identical
-				if((*it)->offU == (*iter)->offU && (*it)->offQ == (*iter)->offQ && (*it)->origUni == (*it)->origUni && (*iter)->score == (*it)->score && (*iter)->length == (*it)->length){
+				//We assume to have a duplicate if right border offsets and unitigs are identical (it does not make sense here to consider the length as it is deprecated after gapped alignment calculation)
+				if((*it)->offU == (*iter)->offU && (*it)->offQ == (*iter)->offQ && (*it)->origUni == (*iter)->origUni && (*iter)->score == (*it)->score){
 					// cerr << "It seems that the hit going spanning from q=" << (*iter)->lSeedQoff << " to q=" << (*iter)->rSeedQoff << " is a duplicate" << endl;
 					isDupl = true;
 					break;
@@ -279,7 +281,6 @@ void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const
 
 		//We want to avoid doing left extensions for duplicates
 		if(!isDupl){
-			startLeftGappedAlignment(*it, q, X, bandRadius, quorum, searchSet);
 			//Recalculate e-value
 			(*it)->eval = calcEVal((*it)->score, lambda, C, q.length());
 		} else{
@@ -340,10 +341,10 @@ void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const i
 	cout << "Extending seeds" << endl;
 
 	//Extend seeds lying on the reference strand if demanded
-	if(strand != Minus) extendRefSeeds(cdbg, q, X, hitArr, quorum, searchColors);
+	if(strand != Minus) extendRefSeeds(cdbg, q, minSeedLength, X, hitArr, quorum, searchColors);
 
 	//Extend seeds lying on the reverse complementary strand if demanded
-	if(strand != Plus) extendRevCompSeeds(cdbg, q, X, hitArr, quorum, searchColors);
+	if(strand != Plus) extendRevCompSeeds(cdbg, q, minSeedLength, X, hitArr, quorum, searchColors);
 
 	//Measure and output current runtime if demanded
 	if(calcRT){

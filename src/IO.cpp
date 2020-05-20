@@ -66,6 +66,13 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				break;
 			case 'w':
 				s = atoi(optarg);
+
+				//Check if minimal seed length is negative
+				if(s < 0){
+					cerr << "ERROR: Minimal seed length should be a positive number" << endl;
+					return false;
+				}
+
 				break;
 			case 'k':
 				k = atoi(optarg);

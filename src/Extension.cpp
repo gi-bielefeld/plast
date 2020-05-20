@@ -919,36 +919,28 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 	return score;
 }
 
-//This function checks if a hit's start offset for the gapped extension lies inside the overlap of a unitig sequence's end. If so it tries to move the start position on a unitig where it is not inside the overlap anymore. If this is not possible the hit is marked as invalid by setting its score to 0.
+//This function checks if a hit's start offset for the gapped extension lies inside the overlap of a unitig sequence's end. If so it moves the start position to a unitig where it is not inside the overlap anymore.
 void mvStartToValUni(Hit* h, list<uint16_t>& lExtPth){
-	//If we want to switch unitigs the right extension path must not be empty
-	if(h->rExt.nbElem > 0){
-		//Decompress right extension path
-		list<uint16_t> rExtPth = decmprExtPth(h->rExt);
+	list<uint16_t> rExtPth;
 
-		//Switch unitigs
-		switUni(h->offU, h->origUni, lExtPth, rExtPth);
+	//Check if there is exists a right extension path to follow when switching unitigs and decompress it
+	if(h->rExt.nbElem > 0) rExtPth = decmprExtPth(h->rExt);
 
-		//Check if unitig switching was successful
-		if(h->offU <= h->origUni.size - h->origUni.getGraph()->getK()){
-			//Compress right extension path again
-			h->rExt = cmprExtPth(rExtPth);
-			return;
-		}
-	}
+	//Switch unitigs
+	switUni(h->offU, h->origUni, lExtPth, rExtPth);
 
-	//Mark hit as invalid
-	h->score = 0;
+	//If there is still a right extension path it needs to be compressed again
+	if(h->rExt.nbElem > 0) h->rExt = cmprExtPth(rExtPth);
 }
 
-//This function moves an offset from a given unitig to its successor if there is any while keeping left and right extension paths updated. If the offset at the successive unitig lies inside the overlap at the unitig sequence's end the function calls itself recursively rExtPth must not be empty
+//This function moves an offset from a given unitig to its successor while keeping left and right extension paths updated. If the offset at the successive unitig lies inside the overlap at the unitig sequence's end the function calls itself recursively
 void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t> &lExtPth, list<uint16_t> &rExtPth){
 	uint16_t sucCount = 1, predCount = 1;
 
 	//Traverse successors of the current unitig
 	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> suc = currUni.getSuccessors().begin(); suc != currUni.getSuccessors().end(); ++suc, ++sucCount){
-		//Check if we have found the required successor
-		if(sucCount < rExtPth.front()) continue;
+		//Check if we have found the required successor (if such exists)
+		if(!rExtPth.empty() && sucCount < rExtPth.front()) continue;
 
 		//Iterate over predecessors of found successor
 		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> pred = suc->getPredecessors().begin(); pred != suc->getPredecessors().end(); ++pred, ++predCount){
@@ -958,8 +950,9 @@ void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t>
 
 		//Save count in left extension path
 		lExtPth.push_front(predCount);
-		//Delete successor from right extension path
-		rExtPth.pop_front();
+		//Delete successor from right extension path if such exists
+		if(!rExtPth.empty()) rExtPth.pop_front();
+
 		//Update offset
 		offset -= currUni.len;
 		//Update current unitig
@@ -968,8 +961,8 @@ void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t>
 		break;
 	}
 
-	//Check if it is necessary and possible to go on
-	if(rExtPth.empty() || offset <= currUni.size - currUni.getGraph()->getK()) return;
+	//Check if it is not necessary to go on anymore (which is the case if either 1. the current unitig has no successor or 2. the offset is not inside the overlap anymore)
+	if(!currUni.getSuccessors().hasSuccessors() || offset <= currUni.size - currUni.getGraph()->getK()) return;
 
 	//Move to next unitig
 	switUni(offset, currUni, lExtPth, rExtPth);

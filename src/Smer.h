@@ -1,6 +1,7 @@
 #ifndef SMER_HPP
 #define SMER_HPP
 
+//Default minimal seed length; should always be positive
 #define DEFAULT_S 11
 
 //Data structure to store a s-mer's position

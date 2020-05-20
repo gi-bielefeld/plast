@@ -337,10 +337,10 @@ inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const
 void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq);
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
-void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
 void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C);
