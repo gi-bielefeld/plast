@@ -238,7 +238,7 @@ rule search:
 
 rule makeUdb:
 	input:
-		"%s/merged_{panID}_part{nr}.fasta" %config['dataDir']
+		"%s/merged_{panID}_part{nr}.fa" %config['dataDir']
 	output:
 		temp("UBLAST/dbs/{panID}_part{nr}.udb")
 	shell:
@@ -249,7 +249,7 @@ rule makeChunks:
 		glist = "%s/chosen_{panID}.txt" %config['dataDir'],
 		seqs = expand("{assembly}", assembly=[i + "tmp" for i in glob("%s/*.fasta" %config['dataDir'])])
 	output:
-		temp("%s/merged_{panID}_part{nr}.fasta" %config['dataDir'])
+		temp("%s/merged_{panID}_part{nr}.fa" %config['dataDir'])
 	shell:
 		"python3 scripts/writeChunks.py {input.glist}"
 
