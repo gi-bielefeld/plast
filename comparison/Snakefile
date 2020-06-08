@@ -20,8 +20,8 @@ rule plotData:
 
 rule aggRTs:
 	input:
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s > config['maximumAveragedSize']]),
-		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool=config['tool'], pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(5))
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}.txt", tool='{tool}', pgSz=[s for s in [t for t in config['pangenomeSizes']] if s > config['maximumAveragedSize']]),
+		expand("{tool}/runtimes/runtimes{tool}_c{pgSz}_sub{id}.txt", tool='{tool}', pgSz=[s for s in [t for t in config['pangenomeSizes']] if s <= config['maximumAveragedSize']], id=range(5))
 	output:
 		"{tool}/runtimes/runtimes{tool}.txt"
 	shell:
@@ -122,7 +122,7 @@ rule mergeFASTA:
 	shell:
 		"mkdir -p BLAST BLAST/dbs; cat $(cat {input.subs} | sed 's/fasta/fastatmp/g') > {output}"
 
-rule runBLAST:
+rule runBLASTonSubsets:
 	input:
 		qry = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
 		dbBs = "BLAST/dbs/Typh_{desc}.fa",
@@ -137,8 +137,28 @@ rule runBLAST:
 		rwd = config['matchScore'],
 		X = config['XdropParameterBits']
 	output:
-		res = temp("BLAST/results/results_{desc}.txt"),
-		rts = "BLAST/runtimes/runtimesBLAST_{desc}.txt"
+		res = temp("BLAST/results/results_{desc, c[0-9]+_sub[0-9]+}.txt"),
+		rts = "BLAST/runtimes/runtimesBLAST_{desc, c[0-9]+_sub[0-9]+}.txt"
+	shell:
+		"mkdir -p BLAST/{{results,runtimes}}; /usr/bin/time -v %s -query {input.qry} -task {params.tk} -db {input.dbBs} -word_size {params.wd} -gapopen {params.d} -gapextend {params.e} -penalty {params.pen} -reward {params.rwd} -xdrop_ungap {params.X} -xdrop_gap {params.X} -xdrop_gap_final {params.X} -num_alignments {params.maxNbRes} -num_descriptions {params.maxNbRes} -max_hsps {params.maxNbRes} > {output.res} 2> {output.rts}" %config['blastnbin']
+
+rule runBLAST:
+	input:
+		qry = "queries/randQrys_n%s_l%s.q" %(config['numberOfQueries'],config['queryLength']),
+		dbBs = "BLAST/dbs/Typh_{desc}.fa",
+		dbPts = expand("BLAST/dbs/Typh_{desc}.fa.00.{flnd}", desc="{desc}", flnd=config['BLASTdatabaseFileSuffixes'])
+	params:
+		maxNbRes = config['maximumResultNumber'],
+		tk = config['BLASTtask'],
+		wd = config['wordSize'],
+		d = config['gapOpen'],
+		e = config['gapExtend'],
+		pen = config['mismatchScore'],
+		rwd = config['matchScore'],
+		X = config['XdropParameterBits']
+	output:
+		res = temp("BLAST/results/results_{desc, c[0-9]+}.txt"),
+		rts = "BLAST/runtimes/runtimesBLAST_{desc, c[0-9]+}.txt"
 	shell:
 		"mkdir -p BLAST/{{results,runtimes}}; /usr/bin/time -v %s -query {input.qry} -task {params.tk} -db {input.dbBs} -word_size {params.wd} -gapopen {params.d} -gapextend {params.e} -penalty {params.pen} -reward {params.rwd} -xdrop_ungap {params.X} -xdrop_gap {params.X} -xdrop_gap_final {params.X} -num_alignments {params.maxNbRes} -num_descriptions {params.maxNbRes} -max_hsps {params.maxNbRes} > {output.res} 2> {output.rts}" %config['blastnbin']
 
@@ -149,6 +169,16 @@ rule mkBLASTdb:
 		config['BLASTdatabaseType']	
 	output:
 		temp(expand("BLAST/dbs/Typh_{desc}.fa.{flnd}", desc="{desc}", flnd=config['BLASTdatabaseFileSuffixes']))
+	shell:
+		"%s -in {input} -dbtype {params}" %config['makeblastdbBin']
+
+rule mkBLASTdbSubsets:
+	input:
+		"BLAST/dbs/Typh_c{desc}.fa"
+	params:
+		config['BLASTdatabaseType']	
+	output:
+		temp(expand("BLAST/dbs/Typh_c{desc}.fa.00.{flnd}", desc="{desc, [0-9]+}", flnd=config['BLASTdatabaseFileSuffixes']))
 	shell:
 		"%s -in {input} -dbtype {params}" %config['makeblastdbBin']
 

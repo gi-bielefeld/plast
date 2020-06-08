@@ -26,7 +26,7 @@ for f in sys.argv[2:]:
 	for l in rtFile:
 		if l.find("User") >= 0:
 			data[(nbColors, subsetID)] = [float(l.split(' ')[3])]
-		elif l.find("Max") >= 0:
+		elif l.find("Maximum r") >= 0:
 			data[(nbColors, subsetID)].append(int(l.split(' ')[5]))
 
 	rtFile.close()
