@@ -24,10 +24,9 @@
 PLAST builds a **compacted, colored de Bruijn graph** from given input genomes using the API of [Bifrost](https://github.com/pmelsted/bifrost). Apart from the requirements of Bifrost (c++ and cmake), there are no further strict dependencies.
 
 Parameter estimations for alignment statistics can be done using a workflow that
-requires a running version of 
-[snakemake](https://snakemake.readthedocs.io/en/stable/) and the Python
-packages [matplotlib](https://matplotlib.org) and 
-[scipy](https://www.scipy.org).
+requires [snakemake](https://snakemake.readthedocs.io/en/stable/) (version 
+5.20.1 or higher) and the Python packages [matplotlib](https://matplotlib.org) 
+and [scipy](https://www.scipy.org).
 
 A provided tool comparison workflow additionally requires the package 
 [Biopython](https://biopython.org) to be installed on your system.
