@@ -15,7 +15,7 @@ for n in rtfilenames:
 	for l in rtfile:
 		if l.find("User") >= 0:
 			compRt += float(l.split(' ')[3])
-		elif l.find("Max") >= 0:
+		elif l.find("Maximum") >= 0:
 			maxMem = max(maxMem, int(l.split(' ')[5]))
 
 	rtfile.close()

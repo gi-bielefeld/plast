@@ -8,7 +8,7 @@ rule all:
 	input:
 		expand("{msr}{lv}.pdf", msr=config['measure'], lv=["_" + i if i != "" else i for i in config['level']])
 	shell:
-		"rm %s/merged_c* BLAST/dbs/*" %config['dataDir']
+		"rm -rf %s/merged_c* BLAST/dbs/* MMseqs2/dbs" %config['dataDir']
 
 ###Common rules###
 
@@ -192,7 +192,7 @@ rule runMMseqs2:
 		qryFls = expand("MMseqs2/dbs/query/randQrys_n%s_l%s{flnd}" %(config['numberOfQueries'],config['queryLength']), flnd=config['databaseFileEndings']),
 		target = "MMseqs2/dbs/target/db_{describtion}",
 		trgtFls = expand("MMseqs2/dbs/target/db_{describtion}{flnd}", describtion="{describtion}", flnd=config['databaseFileEndings']),
-		index = "MMseqs2/dbs/target/db_{describtion}.idx",
+		index = "MMseqs2/dbs/target/db_{describtion}.idx.index",
 		dirct = "MMseqs2/tmpdir_{describtion}",
 		subMat = config['subMatrix']
 	params:
@@ -207,6 +207,7 @@ rule runMMseqs2:
 		result = temp("MMseqs2/results/results_{describtion, c[0-9a-z_]+}.txt"),
 		resFls = temp(expand("MMseqs2/results/results_{describtion}.txt{flnd}", describtion="{describtion, c[0-9a-z_]+}", flnd=config['MMseqs2ResultFileEndings'])),
 		runtime = "MMseqs2/runtimes/runtimesMMseqs2_{describtion, c[0-9a-z_]+}.txt"
+	threads: workflow.cores * 1.0
 	shell:
 		"mkdir -p MMseqs2/{{runtimes,results}}; /usr/bin/time -v %s search {input.query} {input.target} {output.result} {input.dirct} --search-type 3 --max-seqs {params.maxSeqs} -a -e {params.eThres}  --threads {params.thrds} --seed-sub-mat {input.subMat} --gap-open {params.d} --gap-extend {params.e} --strand {params.strnd} -s {params.sens} 2> {output.runtime}" %config['mmseqs2Bin']
 

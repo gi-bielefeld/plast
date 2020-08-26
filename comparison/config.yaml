@@ -31,7 +31,6 @@ measure: ["runtime", "memory"]
 level: ["", "small"]
 #Tools to compare
 tool: ["PLAST", "BLAST", "MMseqs2", "UBLAST", "BLAT"]
-# tool: []
 #Pangenome sizes to test
 pangenomeSizes: [25, 100, 200, 300, 400, 500, 1250, 2500, 3750, 5000]
 #Largest size we want to have averaged measures for
@@ -88,6 +87,6 @@ databaseFileEndings: ["", ".dbtype", ".index", ".lookup", ".source", "_h", "_h.d
 #File endings of MMseq2's result files
 MMseqs2ResultFileEndings: ["", ".dbtype", ".index"]
 #File endings of MMseqs2's index files
-MMseqs2IndexFileEndings: ["", ".dbtype", ".index"]
+MMseqs2IndexFileEndings: [.dbtype", ".index"]
 # #File endings of MMseqs2's query dbs
 # queryDatabaseFileEndings: ["", ".dbtype", ".index", ".lookup", ".source", "_h", "_h.dbtype", "_h.index"]
