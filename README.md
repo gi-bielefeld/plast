@@ -131,8 +131,8 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    The graph is build using default _k_-mer size of 31. This may be changed using option `-k <KMER-LENGTH>`.
 
-   **ATTENTION:** Be aware that for using values of _k_ > 31 your Bifrost libraries 
-   have to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
+   **ATTENTION:** Be aware that for using values of _k_ > 31 your Bifrost library 
+   has to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
    CFLAGS in PLAST's makefile before compilation!
 
 2. **Indexing of an existing graph**
@@ -164,7 +164,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    The command
 
    ```
-   PLAST Search -i ebolaPangenome -q unknownQueries.q -w -r -s searchSet.txt
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -r -s searchSet.txt
    ```
 
    now reveals alignments completely covered by the second sample but lower scores.
@@ -174,7 +174,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    The command 
 
    ```
-   PLAST Search -i ebolaPangenome -q unknownQueries.q -m 80
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -m 80
    ```
 
    allows to find all alignments supported by at least 50% of all samples of our Ebola graph.
