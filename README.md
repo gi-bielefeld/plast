@@ -156,9 +156,9 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    Alignment results are outputted on the command line seperately for each query. They reveal a perfect match for each query and various suboptimal ones. 
    
-   Repeating the search a second time using parameter `-r` allows us to get information about the individual samples from the graph involved in each alignment. Both perfect matches are completely covered by a sample of Marburg virus and partially by a second sample as well.
+   Repeating the search a second time using parameter `-r` allows us to get information about the individual samples from the graph involved in each alignment. Both perfect matches (first result for each query) are completely covered by a sample of Marburg virus and partially by a second sample (*NC_001608v3*) as well.
 
-   Assuming we are particularly interested in how alignments look for this second sample, we could specify a *search set* for our search. It allows to focus alignment searches inside the graph exclusively to sequences from certain samples. A search set may be passed to the algorithm using a text file with one *sample id* per line. A sample id here means the sample's file path used for graph building.
+   Assuming we are particularly interested in how alignments look for NC_001608v3, we could specify a *search set* for our search. It allows to focus alignment searches inside the graph exclusively to sequences from certain samples. A search set may be passed to the algorithm using a text file with one *sample id* per line. A sample id here means the sample's file path used for graph building.
    A search set for our current use case may be found below the *testdata* directory, too.
 
    The command
@@ -167,7 +167,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -r -s searchSet.txt
    ```
 
-   now reveals alignments completely covered by the second sample but lower scores.
+   now reveals alignments completely covered by NC_001608v3 but lower scores.
 
    Otherwise, we could also be interested only in alignments that involve at least a certain amount of all samples. This may be realized using a *quorum*.
    
@@ -223,8 +223,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       ...
       ```
    
-   3. Run the workflow by typing `snakemake`. Depending on your graph, simulations might take a while. Use the option `--cores` to run simulations on many
-      cores in parallel.
+   3. Run the workflow by typing `snakemake`. Depending on your graph, simulations might take a while. Use the option `--cores` to specify the number of cores the simulation shall be performed on in parallel.
    
       ```
       snakemake --cores <Nb_cores>
