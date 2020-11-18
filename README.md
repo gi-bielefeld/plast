@@ -143,7 +143,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Build -i ebolaPangenome -w 12
    ```
 
-   recalculates an index for our Ebola graph (`-i anotherGraph`) using a minimal seed length of 12 (`-w 12`). It automatically overwrites the old index file.
+   recalculates an index for our Ebola graph (`-i ebolaPangenome`) using a minimal seed length of 12 (`-w 12`). It automatically overwrites the old index file.
 
 3. **Searching**
 
