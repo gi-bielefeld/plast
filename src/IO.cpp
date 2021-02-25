@@ -3,7 +3,7 @@
 #include "IO.h"
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, int16_t& X, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -19,15 +19,20 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"threads",        optional_argument,  0, 't'},
         {"query",          optional_argument,  0, 'q'},
         {"search-set",     optional_argument,  0, 's'},
-        {"quorum",         optional_argument,  0, 'm'},
+        {"quorum",         optional_argument,  0, 'Q'},
         {"X-dropoff",      optional_argument,  0, 'X'},
         {"max-results",    optional_argument,  0, 'n'},
-        {"strand",         optional_argument,  0, 'd'},
+        {"strand",         optional_argument,  0, 'o'},
         {"lambda",         optional_argument,  0, 'l'},
         {"lambda-gap",     optional_argument,  0, 'L'},
         {"stat-C",         optional_argument,  0, 'c'},
         {"stat-C-gap",     optional_argument,  0, 'C'},
-        {"e-value",        optional_argument,  0, 'e'},
+        {"e-val-thres",    optional_argument,  0, 'T'},
+        {"mismatch",       optional_argument,  0, 'm'},
+        {"match",          optional_argument,  0, 'M'},
+        {"gap-open",       optional_argument,  0, 'd'},
+        {"gap-extension",  optional_argument,  0, 'e'},
+        {"advanced-index", no_argument,        0, 'a'},
         {"report-colors",  no_argument,        0, 'r'},
         {"sim-run",        no_argument,        0, 'u'},
         {0,                0,                  0,  0 }
@@ -96,7 +101,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 's':
 				c = optarg;
 				break;
-			case 'm':
+			case 'Q':
 				//A quorum has to be positive
 				if(atoi(optarg) <= 0){
 					cerr << "ERROR: Quorum parameter has to be a positive number" << endl;
@@ -130,7 +135,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'r':
 				r = true;
 				break;
-			case 'd':
+			case 'o':
 				if(*optarg == PLUS_STRAND){
 					strd = Plus;
 				} else if(*optarg == MINUS_STRAND){
@@ -184,7 +189,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				}
 
 				break;
-			case 'e':
+			case 'T':
 				//Try to read e-value threshold
 				eValLim = strtod(optarg, NULL);
 
@@ -195,8 +200,55 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				}
 
 				break;
+			case 'a':
+				advIdx = true;
+				break;
 			case 'u':
 				isSim = true;
+				break;
+			case 'd':
+				gOpen = atoi(optarg);
+
+				//Check if score is negative
+				if(gOpen >= 0){
+					cerr << "ERROR: Gap open scores should be negative" << endl;
+					return false;
+				}
+
+				break;
+			case 'e':
+				gExt = atoi(optarg);
+
+				//TODO: This should be uncommented as soon as affine gap scores become possible!
+
+				// //Check if score is negative
+				// if(gExt >= 0){
+				// 	cerr << "ERROR Gap extension scores should be negative" << endl;
+				// 	return false
+				// }
+
+				//TODO: This warning should be removed as soon as affine gap costs are supported
+				cerr << "WARNING: Affine gap scores are not supported yet! Setting this parameter has no effect" << endl;
+				break;
+			case 'M':
+				mscore = atoi(optarg);
+
+				//Check if score is not positive
+				if(atoi(optarg) <= 0){
+					cerr << "ERROR: Match scores should be positive" << endl;
+					return false;
+				}
+
+				break;
+			case 'm':
+				mmscore = atoi(optarg);
+
+				//Check if score is not negative
+				if(mmscore >= 0){
+					cerr << "ERROR: Mismatch scores should be negative" << endl;
+					return false;
+				}
+
 				break;
 			default:
 				break;
@@ -211,6 +263,13 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 	//The search command additionally needs a query sequence
 	if(prepros < 0 && !strcmp(qFile.c_str(), "")) return false;
+
+	//TODO This has to be inserted into the code as soon as affine gap scores are possible!
+	// //Check if gap open scores are smaller than gap extension scores
+	// if(gOpen < gExt){
+	// 	cerr << "ERROR: Using gap open scores smaller than gap extension scores makes no sense" << endl;
+	// 	return false;
+	// }
 
 	return true;
 }
@@ -328,7 +387,7 @@ void repAlgn(const Hit *res){
 }
 
 //This function outputs the color sets of a given result
-void outpColSets(ColoredCDBG<seedlist> &cdbg, const Hit *res){
+void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 	bool identical = false;
 	string kmerSeq = string(res->origUni.getGraph()->getK(), 'A');
 
@@ -341,7 +400,7 @@ void outpColSets(ColoredCDBG<seedlist> &cdbg, const Hit *res){
 	vector<string> colors;
 	vector<string>::iterator colIt;
 	Kmer currK;
-	UnitigColorMap<seedlist> uni;
+	UnitigColorMap<UnitigInfo> uni;
 	ColSet curColSet = ColSet(0, colors);
 
 	//Go through graph alignment sequence

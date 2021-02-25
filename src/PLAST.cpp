@@ -30,12 +30,26 @@ int main(int argc, char **argv){
 	bool repCols = REPORT_COLORS_FLAG_DEFAULT;
 	//A flag indicating whether this run is only a simulation run
 	bool isSim = SIM_RUN_FLAG_DEFAULT;
+	//A flag indicating if quorum information should be added to index during construction
+	bool advIdx = ADVANCED_INDEX_FLAG_DEFAULT;
 	//A flag indicating whether we have to build a graph and an index before actually searching for the query
 	int16_t prep = PREPROS_FLAG_DEFAULT;
 	//Determine the X-drop parameter
 	int16_t X = DEFAULT_X;
+	//Mismatch score
+	int16_t mmscr = USCORE_MISMATCH;
 	//Determine number of results we want to get in the end
 	uint16_t nRes = DEFAULT_NB_RES;
+	//Match score
+	uint16_t mscr = USCORE_MATCH;
+	//Gap open score
+	int32_t goscr = GAP_OPEN_SCORE;
+	//Gap extension score
+	int32_t gescr = GAP_EXT_SCORE;
+	//Size of s-mer profile
+	uint32_t profileSize;
+	//s-mer profile
+	uint32_t *qProfile;
 	//Setting k and g
 	int32_t kMerLength = DEFAULT_GRAPH_K;
 	int32_t miniLength = DEFAULT_GRAPH_G;
@@ -47,6 +61,10 @@ int main(int argc, char **argv){
 	uint32_t quorum = DEFAULT_QUORUM;
 	//Query counter
 	uint32_t qCounter = 0;
+	//Number of colors in potential search set
+	uint32_t nbColors;
+	//Number of seeds in the graph
+	size_t numSmers = 0;
 	//Lambda needed for alignment statistic
 	double lambda = DEFAULT_LAMBDA;
 	//Gapped lambda needed for alignment statistic
@@ -67,29 +85,24 @@ int main(int argc, char **argv){
 	string graphFilePref;
 	//File name of search color set
 	string sColFile;
+	//Color id and name mapping
+	list<pair<string, size_t>> searchColors;
+	//Pos array
+	struct S_mer_pos *posArray;
 	//Building options for graph building
 	CCDBG_Build_opt bOpt;
+	//Unitig array
+	UnitigColorMap<UnitigInfo> *uArr;
 
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, X, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, mscr, mmscr, X, goscr, gescr, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim, advIdx)){
 		//Display help message
 		dispHelp();
 		return 1;
 	}
 
-	const uint32_t profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
-
-	uint32_t *qProfile = (uint32_t*) calloc(profileSize, sizeof(uint32_t));
-
-	size_t numSmers = 0;
-	struct s_mer_pos *posArray;
-	UnitigColorMap<seedlist> *uArr;
-	list<pair<string, size_t>> searchColors;
-	//Variables needed for the seed detection
-	uint32_t nbColors;
-
 	//Initialize the graph
-	ColoredCDBG<seedlist> cdbg(kMerLength, miniLength);
+	ColoredCDBG<UnitigInfo> cdbg(kMerLength, miniLength);
 
 	//Check whether a graph has to be built
 	if(prep > 0){
@@ -109,10 +122,10 @@ int main(int argc, char **argv){
 		}
 
 		//Save the graph
-		cdbg.write(graphFilePref, 1, true);
+		cdbg.write(graphFilePref, nb_threads, true);
 	} else{
 		//Load graph
-		if(!cdbg.read(graphFilePref + GFA_FILE_ENDING, graphFilePref + COLOR_FILE_ENDING, true)){
+		if(!cdbg.read(graphFilePref + GFA_FILE_ENDING, graphFilePref + COLOR_FILE_ENDING, nb_threads, false)){
 			cerr << "ERROR: Graph could not be loaded" << endl;
 			exit(EXIT_FAILURE);
 		}
@@ -123,7 +136,15 @@ int main(int argc, char **argv){
 		/*Building the q-gram index*/
 		cout << "Building q-gram index" << endl;
 
+		//Calculate profile size
+		profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
+		//Initialize profile
+		qProfile = (uint32_t*) calloc(profileSize, sizeof(uint32_t));
+		//Build index
 		buildIndex(cdbg, minSeedLength, qProfile, numSmers, profileSize, posArray, uArr);
+
+		//Calculate quorum information if needed for the index
+		if(advIdx) calcQrms(cdbg);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){
@@ -138,12 +159,12 @@ int main(int argc, char **argv){
 		}
 
 		//Save indexes
-		saveIndexBin((graphFilePref + INDEX_FILE_ENDING).c_str(), profileSize, qProfile, cdbg.size(), uArr, posArray, numSmers, kMerLength);
+		saveIndexBin((graphFilePref + INDEX_FILE_ENDING).c_str(), minSeedLength, profileSize, qProfile, cdbg.size(), uArr, posArray, numSmers, kMerLength, advIdx);
 
 		return 0;
 	} else {
 		//Load indexes
-		loadIndexesBin((graphFilePref + INDEX_FILE_ENDING).c_str(), profileSize, qProfile, cdbg, uArr, numSmers, posArray);
+		loadIndexesBin((graphFilePref + INDEX_FILE_ENDING).c_str(), minSeedLength, profileSize, qProfile, cdbg, uArr, numSmers, posArray, advIdx);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){
@@ -186,7 +207,7 @@ int main(int argc, char **argv){
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, X, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, mscr, mmscr, X, goscr, gescr, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim, advIdx);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){
@@ -200,6 +221,13 @@ int main(int argc, char **argv){
 			startTime = std::chrono::system_clock::now();
 		}
 	}
+
+	//Free pos array
+	free(posArray);
+	//Free profile
+	free(qProfile);
+	//Free unitig array
+	free(uArr);
 
 	return 0;
 }

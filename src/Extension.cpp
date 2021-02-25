@@ -1,10 +1,10 @@
 #include "Extension.h"
 #include "Hit.h"
 #include "Search.h"
-#include "Seedlist.cpp"
+#include "UnitigInfo.cpp"
 
 //This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
-int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t sucID;
 	uint32_t tmpHitLen = 0;
 	int32_t maxScore = 0, currScore;
@@ -21,13 +21,13 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<seedlist>, DataStorage
 	sucID = 0;
 
 	//Iterate over successors
-	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 		//Temporary extention path
 		list<uint16_t> tmpPth;
 		//Note which successor we are on
 		++sucID;
 		//Calculate the score of an extension of a successor
-		currScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, X, lastExtSeedTmpScore, uniPos, tmpPth, explCount, quorum, searchSet);
+		currScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, lastExtSeedTmpScore, uniPos, tmpPth, explCount, quorum, searchSet, advIdx);
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -46,7 +46,7 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<seedlist>, DataStorage
 }
 
 //This function  initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
-int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t sucID;
 	uint32_t tmpHitLen = 0;
 	int32_t maxScore = 0, currScore;
@@ -58,13 +58,13 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<seedlist>, D
 	sucID = 0;
 
 	//Iterate over successors
-	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 		//Temporary extention path
 		list<uint16_t> tmpPth;
 		//Note which successor we are on
 		++sucID;
 		//Calculate the score of an extension of a successor
-		currScore = contRightX_Drop_OnRevComp(nI, iniQoff, tmpHitLen, extLen, q, X, lastExtSeedTmpScore, tmpPth, explCount, quorum, searchSet);
+		currScore = contRightX_Drop_OnRevComp(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, lastExtSeedTmpScore, tmpPth, explCount, quorum, searchSet, advIdx);
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -83,20 +83,20 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<seedlist>, D
 }
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
-void startRightX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpSeedLen = hit->length;
 	uint32_t overlap = 0;
 	uint32_t iniUniPos;
-	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, hit->length, true);
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, hit->length, true, advIdx);
 	//Counter to count tries to explore a further unitig
 	uint32_t explCount;
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
 
 	//Calculate hit's initial score
-	hit->score = hit->length;//TODO If we want to use an arbitrary cost function this has to be changed first!
+	hit->score = hit->length * mscore;
 
 	//Check how far we should explore the unitig's sequence
 	if(hit->origUni.getSuccessors().hasSuccessors()) overlap = hit->origUni.getGraph()->getK() - 1;
@@ -109,7 +109,7 @@ void startRightX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_
 			if(checkedPos == 0) break;
 
 			//Check whether the score of our extension is positive
-			if((tmpScore += compUScore(uSeq[hit->offU + tmpSeedLen], q[hit->offQ + tmpSeedLen])) > 0){//TODO Change to calculate arbitrary score functions
+			if((tmpScore += compUScore(uSeq[hit->offU + tmpSeedLen], q[hit->offQ + tmpSeedLen], mscore, mmscore)) > 0){
 				//Update the seed info
 				hit->score += tmpScore;
 				hit->length = tmpSeedLen + 1;//+1 because we haven't increased tmpSLen yet
@@ -130,7 +130,7 @@ void startRightX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_
 				//Initialize explCount
 				explCount = 0;
 				//Explore unitig's successors
-				hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet);
+				hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -142,7 +142,7 @@ void startRightX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_
 }
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
-void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpSeedLen = hit->length;
@@ -152,9 +152,9 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, con
 	list<uint16_t> extPth;
 
 	//Get the number of checked positions considering that we do not start in the sequence's very end
-	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU + hit->length, 1, hit->origUni.size, false), false);
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU + hit->length, 1, hit->origUni.size, false), false, advIdx);
 	//Calculate hit's initial score
-	hit->score = hit->length;//TODO If we want to use an arbitrary cost function this has to be changed first!
+	hit->score = hit->length * mscore;
 
 	//We are done if we have reached the end of the query
 	while(hit->offQ + tmpSeedLen < q.length()){
@@ -164,7 +164,7 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, con
 			if(checkedPos == 0) break;
 
 			//Check whether the score of our extension is positive
-			if((tmpScore += compUScore(uSeq[hit->offU + tmpSeedLen], q[hit->offQ + tmpSeedLen])) > 0){//TODO Change to calculate arbitrary score functions
+			if((tmpScore += compUScore(uSeq[hit->offU + tmpSeedLen], q[hit->offQ + tmpSeedLen], mscore, mmscore)) > 0){
 				//Update the seed info
 				hit->score += tmpScore;
 				hit->length = tmpSeedLen + 1;//+1 because we haven't increased tmpSLen yet
@@ -183,7 +183,7 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, con
 				//Initialize explCount
 				explCount = 0;
 				//Explore unitig's successors
-				hit->score += extendAtNextUnitig_OnRevComp(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, X, tmpScore, extPth, explCount, quorum, searchSet);
+				hit->score += extendAtNextUnitig_OnRevComp(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -195,13 +195,13 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, con
 }
 
 //This function continues an extension to the right on a successive unitig of a seed lying on the query's reference strand considering a quorum and a search color set. Returns the maximum score reached.
-int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	int32_t tmpScore, progress, score = 0;
 	int32_t overlap = sucUnitig->getGraph()->getK() - 1;
 	uint32_t iniSeqPos;
 	uint32_t tmpSLen;
 	//Even if we are on the reverse complementary strand and no position is covered on this unitig, because we have checked the first k - 1 position on the last unitig already
-	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand);
+	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand, advIdx);
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed;
 
@@ -227,7 +227,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 			checkedPos -= progress;
 
 			//If we have reached a seed check if it suffices to get a positive tempScore
-			if((tmpScore += progress) > 0){//TODO This needs to be changed as soon as we want to use a non-unit score!
+			if((tmpScore += progress * mscore) > 0){
 				//Update hit's length
 				hitLen = extLen + tmpSLen;
 				//Check if there is another seed to reach
@@ -281,7 +281,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 				if(checkedPos <= 0) break;
 
 				//Check whether the score of our extension is positive
-				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen])) > 0){
+				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
 					//Update score
 					score += tmpScore;
 					//Update hit's length
@@ -303,7 +303,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 					//Calculate the position in the next unitig's sequence we have to start with
 					uniSeqPos = uniSeqPos - sucUnitig->size + overlap;
 					//Check out next unitig
-					score += extendAtNextUnitig(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, X, tmpScore, uniSeqPos, extPth, explCount, quorum, searchSet);
+					score += extendAtNextUnitig(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, mscore, mmscore, X, tmpScore, uniSeqPos, extPth, explCount, quorum, searchSet, advIdx);
 				}
 
 				break;
@@ -315,14 +315,14 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStora
 }
 
 //This function continues an extension to the right on a successive unitig of a seed lying on the query's reverse complement considering a quorum and a search color set. Returns the maximum score reached.
-int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	int32_t tmpScore, progress, score = 0;
 	//Since we consider the overlap in the sequence's beginning for seed's on the reverse complementary strand the initial unitig position is always the same
 	uint32_t iniSeqPos = sucUnitig->getGraph()->getK() - 1;
 	uint32_t uniSeqPos = iniSeqPos;
 	uint32_t tmpSLen;
 	//Get the number of covered positions
-	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand);
+	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand, advIdx);
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed;
 
@@ -346,7 +346,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 			checkedPos -= progress;
 
 			//If we have reached a seed check if it suffices to get a positive tempScore
-			if((tmpScore += progress) > 0){//TODO This needs to be changed as soon as we want to use a non-unit score!
+			if((tmpScore += progress * mscore) > 0){
 				//Update hit's length
 				hitLen = extLen + tmpSLen;
 
@@ -396,7 +396,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 				if(checkedPos <= 0) break;
 
 				//Check whether the score of our extension is positive
-				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen])) > 0){
+				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
 					//Update score
 					score += tmpScore;
 					//Update hit's length
@@ -416,7 +416,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 				//Check if the current unitig has successors
 				if(sucUnitig->getSuccessors().hasSuccessors()){
 					//Calculate extension on successive unitigs
-					score += extendAtNextUnitig_OnRevComp(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, X, tmpScore, extPth, explCount, quorum, searchSet);
+					score += extendAtNextUnitig_OnRevComp(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
 				}
 
 				break;
@@ -428,7 +428,7 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<seedlist>,
 }
 
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one
-int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t predID = 0;
 	uint32_t tmpHitLen, maxHitLen = hitLen;
 	int32_t maxScore = 0, currScore;
@@ -442,7 +442,7 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<seedlist>, DataStorag
 	}
 
 	//Iterate over all predecessors
-	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = bwIter.begin(); nI != bwIter.end(); ++nI){
+	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = bwIter.begin(); nI != bwIter.end(); ++nI){
 		//Temporary extension path
 		list<uint16_t> tmpPth;
 		//Note which predecessor we are on
@@ -451,7 +451,7 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<seedlist>, DataStorag
 		tmpHitLen = hitLen + tmpExtLen;
 
 		//Calculate the score of an extension of a successor
-		currScore = contLeftX_Drop(nI, qPos, tmpHitLen, q, X, lastExtSeedTmpScore, tmpPth, explCount, quorum, searchSet);
+		currScore = contLeftX_Drop(nI, qPos, tmpHitLen, q, mscore, mmscore, X, lastExtSeedTmpScore, tmpPth, explCount, quorum, searchSet, advIdx);
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -474,7 +474,7 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<seedlist>, DataStorag
 }
 
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
-int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, DataStorage<seedlist>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, const uint32_t &lead, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, const uint32_t &lead, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t predID = 0;
 	uint32_t tmpHitLen, maxHitLen = hitLen;
 	int32_t maxScore = 0, currScore;
@@ -486,7 +486,7 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, D
 	}
 
 	//Iterate over all predecessors
-	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> nI = bwIter.begin(); nI != bwIter.end(); ++nI){
+	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = bwIter.begin(); nI != bwIter.end(); ++nI){
 		//Temporary extension path
 		list<uint16_t> tmpPth;
 		//Note which predecessor we are on
@@ -494,7 +494,7 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, D
 		//Set tmpHitLen
 		tmpHitLen = hitLen + tmpExtLen;
 		//Calculate the score of an extension of a successor
-		currScore = contLeftX_DropOnRevComp(nI, qPos, tmpHitLen, q, X, lastExtSeedTmpScore, tmpPth, nI->size - lead, explCount, quorum, searchSet);
+		currScore = contLeftX_DropOnRevComp(nI, qPos, tmpHitLen, q, mscore, mmscore, X, lastExtSeedTmpScore, tmpPth, nI->size - lead, explCount, quorum, searchSet, advIdx);
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -516,14 +516,14 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<seedlist>, D
 }
 
 //This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color set
-void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpExtLen = 1, progress, posU = hit->offU, posQ = hit->offQ;
 	//Counter to count tries to explore a further unitig
 	uint32_t explCount;
 	//Get the number of covered positions coming from the sequence's end considering that we do not start in the very end
-	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, posU - tmpExtLen, false);
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, posU - tmpExtLen, false, advIdx);
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
 	struct Seed *nearestSeed, *prevSeed = NULL;
@@ -543,7 +543,7 @@ void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t
 			checkedPos -= progress;
 
 			//Check if our temporary score becomes positive using this hit
-			if((tmpScore += progress) > 0){//TODO Change this as soon as we use something else than a unit score!
+			if((tmpScore += progress * mscore) > 0){
 				//Update hit length
 				hit->length += tmpExtLen - 1;
 				//Update hit's score
@@ -577,7 +577,7 @@ void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t
 			if(checkedPos == 0) break;
 
 			//Compare the next two bases and check whether this changes temporary score's sign
-			if((tmpScore += compUScore(uSeq[posU - tmpExtLen], q[posQ - tmpExtLen])) > 0){
+			if((tmpScore += compUScore(uSeq[posU - tmpExtLen], q[posQ - tmpExtLen], mscore, mmscore)) > 0){
 				//Update hit length
 				hit->length += tmpExtLen;
 				//Update hit's score
@@ -603,7 +603,7 @@ void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t
 				//Initialize explCount
 				explCount = 0;
 				//Continue the extension on the predecessive unitig
-				hit->score += extendAtPrevUnitig(hit->origUni.getPredecessors(), posQ - tmpExtLen, hit->length, tmpExtLen, q, X, tmpScore, extPth, explCount, quorum, searchSet);
+				hit->score += extendAtPrevUnitig(hit->origUni.getPredecessors(), posQ - tmpExtLen, hit->length, tmpExtLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -615,13 +615,13 @@ void startLeftX_Drop(Hit* hit, const string &q, const int16_t &X, const uint32_t
 }
 
 //This function starts the left extension for seeds lying on the query's reverse complement considering a quorum and a search color set
-void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
 	uint32_t tmpExtLen = 1, progress, overlap = 0;
 	//Counter to count tries to explore a further unitig
 	uint32_t explCount;
-	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU - tmpExtLen, 1, hit->origUni.size, false), true);
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU - tmpExtLen, 1, hit->origUni.size, false), true, advIdx);
 	uint32_t k = hit->origUni.getGraph()->getK();
 	list<uint16_t> extPth;
 	string uSeq = hit->origUni.mappedSequenceToString();
@@ -645,7 +645,7 @@ void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, cons
 			checkedPos -= progress;
 
 			//Check if our temporary score becomes positive using this hit
-			if((tmpScore += progress) > 0){//TODO Change this as soon as we use something else than a unit score!
+			if((tmpScore += progress * mscore) > 0){
 				//Update hit length
 				hit->length += tmpExtLen - 1;
 				//Update hit's score
@@ -679,7 +679,7 @@ void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, cons
 			if(checkedPos <= 0) break;
 
 			//Compare the next two bases and check whether this changes temporary score's sign
-			if((tmpScore += compUScore(uSeq[hit->offU - tmpExtLen], q[hit->offQ - tmpExtLen])) > 0){
+			if((tmpScore += compUScore(uSeq[hit->offU - tmpExtLen], q[hit->offQ - tmpExtLen], mscore, mmscore)) > 0){
 				//Update hit length
 				hit->length += tmpExtLen;
 				//Update hit's score
@@ -706,7 +706,7 @@ void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, cons
 				//Initialize explCount
 				explCount = 0;
 				//Continue the extension on the predecessive unitig
-				hit->score += extendAtPrevUnitigOnRevComp(hit->origUni.getPredecessors(), hit->offQ - tmpExtLen, hit->length, tmpExtLen, q, X, tmpScore, extPth, overlap - (hit->offU - tmpExtLen), explCount, quorum, searchSet);
+				hit->score += extendAtPrevUnitigOnRevComp(hit->origUni.getPredecessors(), hit->offQ - tmpExtLen, hit->length, tmpExtLen, q, mscore, mmscore, X, tmpScore, extPth, overlap - (hit->offU - tmpExtLen), explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -721,13 +721,13 @@ void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const int16_t &X, cons
 }
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and a search color set and returns the achieved score
-int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t contLeftX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//bool inSeedList;
 	int32_t tmpScore, score = 0;
 	uint32_t tmpExtLen = 1;
 	//Calculate our offset position inside the unitig sequence (+1, because otherwise it is not possible to calculate the correct gain if reaching a seed)
 	uint32_t uPos= prevUni->size - prevUni->getGraph()->getK() + 1;
-	int32_t checkedPos = getSrchCritCov(*prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni->size, prevUni->strand), !prevUni->strand);
+	int32_t checkedPos = getSrchCritCov(*prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni->size, prevUni->strand), !prevUni->strand, advIdx);
 	string prevUniSeq = prevUni->mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed = NULL;
 
@@ -741,7 +741,7 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 		//Check whether we have reached a nearest seed
 		if(nearestSeed != NULL && qPos - tmpExtLen <= nearestSeed->offsetQ + nearestSeed->len - 1){
 			//Update the temporary score
-			tmpScore += qPos - tmpExtLen - nearestSeed->offsetQ + 1;//TODO Change this as soon as we want to allow more than only unit score!
+			tmpScore += (qPos - tmpExtLen - nearestSeed->offsetQ + 1) * mscore;
 			//Calculate the gain we have by incorporating the seed into our extension and update the temporary extension length
 			tmpExtLen = qPos - nearestSeed->offsetQ + 1;
 			//Adjust number of remaining covered positions
@@ -781,7 +781,7 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 			if(checkedPos <= 0) break;
 
 			//Compare the next two bases and check whether our temporary score is becoming > 0 by this
-			if((tmpScore += compUScore(prevUniSeq[uPos - tmpExtLen], q[qPos - tmpExtLen])) > 0){
+			if((tmpScore += compUScore(prevUniSeq[uPos - tmpExtLen], q[qPos - tmpExtLen], mscore, mmscore)) > 0){
 				//Update positions in q and the unitig
 				uPos -= tmpExtLen;
 				qPos -= tmpExtLen;
@@ -806,7 +806,7 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 			//Check if this unitig has a predecessor
 			if(prevUni->getPredecessors().hasPredecessors()){
 				//Try to continue the extension on the predecessive unitigs
-				score += extendAtPrevUnitig(prevUni->getPredecessors(), qPos - tmpExtLen, hitLen, tmpExtLen, q, X, tmpScore, extPth, explCount, quorum, searchSet);
+				score += extendAtPrevUnitig(prevUni->getPredecessors(), qPos - tmpExtLen, hitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -817,11 +817,11 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<seedlist>, DataStorag
 }
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reverse complement considering a quorum and a search color set and returns the achieved score
-int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t uPos, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t uPos, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	int32_t tmpScore, score = 0;
 	uint32_t tmpExtLen = 1, overlap = 0;
 
-	int32_t checkedPos = getSrchCritCov(*prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni->size, prevUni->strand), !prevUni->strand);
+	int32_t checkedPos = getSrchCritCov(*prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni->size, prevUni->strand), !prevUni->strand, advIdx);
 	uint32_t k = prevUni->getGraph()->getK();
 	uint32_t progress;
 	string prevUniSeq = prevUni->mappedSequenceToString();
@@ -843,7 +843,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 			//Calculate the progress with have by incorporating the seed
 			progress = qPos - tmpExtLen - nearestSeed->offsetQ + 1;
 			//Update the temporary score
-			tmpScore += progress;//TODO Change this as soon as we want to allow more than only unit score!
+			tmpScore += progress * mscore;
 			//Calculate the gain we have by incorporating the seed into our extension and update the temporary extension length
 			tmpExtLen = qPos - nearestSeed->offsetQ + 1;
 
@@ -884,7 +884,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 			if(checkedPos <= 0) break;
 
 			//Compare the next two bases and check whether our temporary score is becoming > 0 by this
-			if((tmpScore += compUScore(prevUniSeq[uPos - tmpExtLen], q[qPos - tmpExtLen])) > 0){
+			if((tmpScore += compUScore(prevUniSeq[uPos - tmpExtLen], q[qPos - tmpExtLen], mscore, mmscore)) > 0){
 				//Update positions in q and the unitig
 				uPos -= tmpExtLen;
 				qPos -= tmpExtLen;
@@ -909,7 +909,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<seedlist>, D
 			//Check if this unitig has a predecessor
 			if(overlap != 0){
 				//Try to continue the extension on the predecessive unitigs
-				score += extendAtPrevUnitigOnRevComp(prevUni->getPredecessors(), qPos - tmpExtLen, hitLen, tmpExtLen, q, X, tmpScore, extPth, overlap - (uPos - tmpExtLen), explCount, quorum, searchSet);
+				score += extendAtPrevUnitigOnRevComp(prevUni->getPredecessors(), qPos - tmpExtLen, hitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, extPth, overlap - (uPos - tmpExtLen), explCount, quorum, searchSet, advIdx);
 			}
 
 			break;
@@ -934,16 +934,16 @@ void mvStartToValUni(Hit* h, list<uint16_t>& lExtPth){
 }
 
 //This function moves an offset from a given unitig to its successor while keeping left and right extension paths updated. If the offset at the successive unitig lies inside the overlap at the unitig sequence's end the function calls itself recursively
-void switUni(uint32_t &offset, UnitigColorMap<seedlist> &currUni, list<uint16_t> &lExtPth, list<uint16_t> &rExtPth){
+void switUni(uint32_t &offset, UnitigColorMap<UnitigInfo> &currUni, list<uint16_t> &lExtPth, list<uint16_t> &rExtPth){
 	uint16_t sucCount = 1, predCount = 1;
 
 	//Traverse successors of the current unitig
-	for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> suc = currUni.getSuccessors().begin(); suc != currUni.getSuccessors().end(); ++suc, ++sucCount){
+	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> suc = currUni.getSuccessors().begin(); suc != currUni.getSuccessors().end(); ++suc, ++sucCount){
 		//Check if we have found the required successor (if such exists)
 		if(!rExtPth.empty() && sucCount < rExtPth.front()) continue;
 
 		//Iterate over predecessors of found successor
-		for(neighborIterator<DataAccessor<seedlist>, DataStorage<seedlist>, false> pred = suc->getPredecessors().begin(); pred != suc->getPredecessors().end(); ++pred, ++predCount){
+		for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> pred = suc->getPredecessors().begin(); pred != suc->getPredecessors().end(); ++pred, ++predCount){
 			//Check if we have found the unitig we came from
 			if(*pred == currUni) break;
 		}

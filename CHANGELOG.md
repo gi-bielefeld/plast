@@ -18,3 +18,10 @@
     length is always positive.
   - Seeds that could not be extended without gaps are no longer discarded if 
     they are longer than the minimal seed length.
+  - Quorum precalculation is now possible during index building. Information is
+    saved as part of the index
+  - Introduced a new index format to enable storage of quorum information.
+  - Enabled multi-threaded graph loading
+  - Closed some smaller memory leaks.
+  - Disabled verbose mode for graph reading and removed some logging info.
+  - Some refactoring.

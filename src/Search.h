@@ -11,8 +11,24 @@
 //All variations of strands we may perform a search
 enum SrchStrd {Plus, Minus, Both};
 
+//This function counts the number of colors present on every k-mer of a unitig
+inline uint32_t cntClrs(const UnitigColorMap<UnitigInfo> &u){
+	uint32_t cnt = 0;
+	size_t curID = SIZE_MAX;
+
+	//Iterate over unitig's colors
+	for(UnitigColors::const_iterator i = u.getData()->getUnitigColors(u)->begin(u); curID != i.getColorID(); i.nextColor()){
+		curID = i.getColorID();
+
+		//We iterate over all colors present on the reference unitig. Thus, we have to check whether the current color is also present at every k-mer of the given unitig mapping
+		if(u.getData()->getUnitigColors(u)->contains(u, curID)) ++cnt;
+	}
+
+	return cnt;
+}
+
 //This function checks if a unitig fulfills a quorum completely (ATTENTION: This function does not work for a quorum of 1)
-inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum){
+inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quorum){
 	bool fstId = true;
 	uint16_t counter = 0;
 	int32_t allwdToMs;
@@ -48,7 +64,7 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 			if(--allwdToMs < 0) return false;
 		}
 
-		//Update last last id
+		//Update last id
 		lstID = curID;
 	}
 
@@ -56,7 +72,7 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 }
 
 //This function checks if a unitig fulfills the search criteria completely
-inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
 	uint16_t counter = 0;
 	uint32_t allwdToMs;
 
@@ -78,8 +94,8 @@ inline bool isCovered(const UnitigColorMap<seedlist> &uni, const uint32_t &quoru
 	return false;
 }
 
-//This functions checks up to which offsets search criteria are fulfilled for a unitig and saves the result in the unitig's seedlist. If even the first k-mer from either side is not covered by the search criteria positions are set to -1 and unitig length respectively
-inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+//This functions checks up to which offsets search criteria are fulfilled for a unitig and saves the result in the unitig's unitig info. If even the first k-mer from either side is not covered by the search criteria positions are set to -1 and unitig length respectively
+inline void calcSrchCritBrds(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
 	bool lFix, rFix;
 	int32_t lBrd, rBrd;
 
@@ -113,7 +129,7 @@ inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quoru
 		lBrd = 0;
 		rBrd = uni.size - uni.getGraph()->getK();
 		//Make a copy of our unitig so that we can check both sides at the same time
-		UnitigColorMap<seedlist> uniCpy = uni;
+		UnitigColorMap<UnitigInfo> uniCpy = uni;
 		//Set unitig offset
 		uniCpy.dist = rBrd;
 		//Set unitig's lengths to 1 k-mer
@@ -167,7 +183,7 @@ inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quoru
 		lBrd = 0;
 		rBrd = uni.size - uni.getGraph()->getK();
 		//Make a copy of our unitig so that we can check both sides at the same time
-		UnitigColorMap<seedlist> uniCpy = uni;
+		UnitigColorMap<UnitigInfo> uniCpy = uni;
 		//Set unitig offset
 		uniCpy.dist = rBrd;
 		//Set unitig's lengths to 1 k-mer
@@ -220,8 +236,173 @@ inline void calcSrchCritBrds(UnitigColorMap<seedlist> uni, const uint32_t &quoru
 	}
 }
 
+//This functions checks up to which offsets search criteria are fulfilled for a unitig using precalculated quorum information if possible and saves the result in the unitig's unitig info. If even the first k-mer from either side is not covered by the search criteria, positions are set to -1 and unitig length respectively
+inline void calcBrdsFrmPrecQrms(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+	bool lFix, rFix;
+	int32_t lBrd, rBrd;
+
+	//Check if precalculated quorum values allow no search criteria fulfillment at all
+	if(quorum > uni.getData()->getData(uni)->getLBrdQrm() && quorum > uni.getData()->getData(uni)->getRBrdQrm()){
+		//Save offsets
+		uni.getData()->getData(uni)->setlBrd(-1);
+		uni.getData()->getData(uni)->setrBrd(uni.size);
+		return;
+	}
+
+	//Check whether a search set is given
+	if(srchColSet.empty()){
+		//Check if the minimum quorum on the unitig is large enough to stop here
+		if(quorum <= uni.getData()->getData(uni)->getGlobQrm()){
+			//Save offsets
+			uni.getData()->getData(uni)->setlBrd(uni.size);
+			uni.getData()->getData(uni)->setrBrd(0);
+			return;
+		}
+
+		//Check if precalculated left border quorum is not large enough
+		if(quorum > uni.getData()->getData(uni)->getLBrdQrm()){
+			lBrd = 0;
+			lFix = true;
+		} else{
+			//Set border to the point from which we have to start checking
+			lBrd = uni.getData()->getData(uni)->getPrecLBrd();
+			lFix = false;
+		}
+
+		//Check if precalculated right border quorum is not large enough
+		if(quorum > uni.getData()->getData(uni)->getRBrdQrm()){
+			rBrd = uni.size;
+			rFix = true;
+		} else{
+			//Set border to the point from which we have to start checking
+			rBrd = uni.getData()->getData(uni)->getPrecRBrd();
+			rFix = false;
+		}
+
+		//Make a copy of our unitig so that we can check both sides at the same time
+		UnitigColorMap<UnitigInfo> uniCpy = uni;
+		//Set unitig offsets
+		uni.dist = lBrd;
+		uniCpy.dist = rBrd;
+		//Set unitig's lengths to 1 k-mer
+		uni.len = 1;
+		uniCpy.len = 1;
+
+		//Check every position iteratively until both borders cannot be moved anymore (they cannot reach each other in this case, because otherwise or minimum quorum would be larger)
+		while(!lFix || !rFix){
+			//Check if we can move the left border
+			if(!lFix && isCovered(uni, quorum)){
+				//Move it
+				++lBrd;
+			} else{
+				//Report border as fixed
+				lFix = true;
+			}
+
+			//Check if we can move the right border
+			if(!rFix && isCovered(uniCpy, quorum)){
+				//Move it
+				--rBrd;
+			} else{
+				//Report border as fixed
+				rFix = true;
+			}
+
+			//Adjust unitigs
+			uni.dist = lBrd;
+			uniCpy.dist = rBrd;
+		}
+	} else{
+		//Check the complete unitig
+		if(isCovered(uni, quorum, srchColSet)){
+			//Save offsets
+			uni.getData()->getData(uni)->setlBrd(uni.size);
+			uni.getData()->getData(uni)->setrBrd(0);
+			return;
+		}
+
+		//Check if an iterative check makes no sense
+		if(uni.len == 1){
+			//Save offsets
+			uni.getData()->getData(uni)->setlBrd(-1);
+			uni.getData()->getData(uni)->setrBrd(uni.size);
+			return;
+		}
+
+		//Check if precalculated left border quorum is not large enough
+		if(quorum > uni.getData()->getData(uni)->getLBrdQrm()){
+			lBrd = 0;
+			lFix = true;
+		} else{
+			//We always have to start checking right from the beginning
+			lBrd = 0;
+			lFix = false;
+		}
+
+		//Check if precalculated right border quorum is not large enough
+		if(quorum > uni.getData()->getData(uni)->getRBrdQrm()){
+			rBrd = uni.size;
+			rFix = true;
+		} else{
+			//We always have to start checking right from the end
+			rBrd = uni.size - uni.getGraph()->getK();
+			rFix = false;
+		}
+
+		//Make a copy of our unitig so that we can check both sides at the same time
+		UnitigColorMap<UnitigInfo> uniCpy = uni;
+		//Set unitig offset
+		uniCpy.dist = rBrd;
+		//Set unitigs' lengths to 1 k-mer
+		uni.len = 1;
+		uniCpy.len = 1;
+
+		//Check every position iteratively until either both borders cannot be moved anymore or have reached each other
+		while((!lFix || !rFix) && lBrd <= rBrd){
+			//Check if we can move the left border
+			if(!lFix && isCovered(uni, quorum, srchColSet)){
+				//Move it
+				++lBrd;
+			} else{
+				//Report border as fixed
+				lFix = true;
+			}
+
+			if(!rFix && isCovered(uniCpy, quorum, srchColSet)){
+				//Move it
+				--rBrd;
+			} else{
+				//Report border as fixed
+				rFix = true;
+			}
+
+			//Adjust unitigs
+			uni.dist = lBrd;
+			uniCpy.dist = rBrd;
+		}
+	}
+
+	//Check if left border could be moved at all
+	if(lBrd != 0){
+		//If the first position is fulfilled the next k-1 are too
+		uni.getData()->getData(uni)->setlBrd(lBrd + uni.getGraph()->getK() - 1);
+	} else{
+		//Save offset
+		uni.getData()->getData(uni)->setlBrd(-1);
+	}
+
+	//Check if right border could be moved at all
+	if(rBrd < (int32_t) uni.size - uni.getGraph()->getK()){
+		//Save offset
+		uni.getData()->getData(uni)->setrBrd(rBrd);
+	} else{
+		//This is needed to avoid that left and right border might overlap accidently which would cause false positives
+		uni.getData()->getData(uni)->setrBrd(uni.size);
+	}
+}
+
 //ATTENTION: This function only works correctly if a non-empty search color set is given (Why should that be?)
-inline bool quorumFulfilled(UnitigColorMap<seedlist> uni, const uint32_t posU, size_t uniLen, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
+inline bool quorumFulfilled(UnitigColorMap<UnitigInfo> uni, const uint32_t posU, size_t uniLen, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
 	size_t ccount = 0, curID = 0;
 
 	//Check to which side we want to calculate an alignment
@@ -267,11 +448,20 @@ inline bool quorumFulfilled(UnitigColorMap<seedlist> uni, const uint32_t posU, s
 }
 
 //This function looks up the number of positions which fulfill the search criteria depending at which offset we want to start and into which direction we extend with regard to the reference strand
-inline int32_t getSrchCritCov(UnitigColorMap<seedlist> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchCols, const uint32_t &offset, const bool &toRightOnRef){
+inline int32_t getSrchCritCov(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchCols, const uint32_t &offset, const bool &toRightOnRef, const bool& advIdx){
 	int32_t brd;
 
 	//Check if search criteria have already been checked for this unitig and check if necessary
-	if(!uni.getData()->getData(uni)->srchCritChckd()) calcSrchCritBrds(uni, quorum, srchCols);
+	if(!uni.getData()->getData(uni)->srchCritChckd()){
+		//Check if we can make use of any precalculated quorum information
+		if(advIdx){
+			//Check search criteria fulfillment using precalculated quorums
+			calcBrdsFrmPrecQrms(uni, quorum, srchCols);
+		} else{
+			//Check search criteria fullfillment without precalculated information
+			calcSrchCritBrds(uni, quorum, srchCols);
+		}
+	}
 
 	//Check if search criteria are not fulfilled at all on this unitig
 	if(uni.getData()->getData(uni)->getlBrd() < 0 && uni.getData()->getData(uni)->getrBrd() == (int32_t) uni.size) return 0;
@@ -321,8 +511,11 @@ inline int32_t getSrchCritCov(UnitigColorMap<seedlist> uni, const uint32_t &quor
 	}
 }
 
+//This function calculates quorums for every unitig of the given graph and stores it as unitig info
+void calcQrms(ColoredCDBG<UnitigInfo> &cdbg);
+
 //This function checks if the search criteria are fulfilled for a region on a unitig starting at some offset and having a certain length
-bool vfySrchCrit(UnitigColorMap<seedlist> unitig, const uint32_t &offset, const int32_t &length, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet);
+bool vfySrchCrit(UnitigColorMap<UnitigInfo> unitig, const uint32_t &off, const int32_t &len, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet, const bool& advIdx);
 
 //This function calculates the correct offset position depending on which strand we are
 inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const uint32_t &seqLen, const bool &onRefStrand){
@@ -334,19 +527,19 @@ inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const
 }
 
 //This function performs the seed detection if a search color set is given
-void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool isRefSeq);
+void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool& isRefSeq, const bool& advIdx);
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
-void extendRevCompSeeds(const ColoredCDBG<seedlist> &cdbg, const string &q, const int32_t &minSdLen, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet);
+void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<seedlist> &cdbg, list<Hit*> &resList, const string &q, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C);
+void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C, const bool& advIdx);
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<seedlist> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<seedlist> *uArr, const struct s_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const int16_t &X, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim);
+void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx);
 
 //This function frees all memory additionally allocated for an hit array
 void freeHitArray(Hit *arr, uint32_t &arrLen);

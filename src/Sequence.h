@@ -61,7 +61,7 @@ inline char rr(const char &c){
 }
 
 //This function takes a DNA sequence and compresses it s.t. each base is stored using only 2 bit
-inline const char* cmprSeq(const string seq, const uint8_t &size){
+inline char* cmprSeq(const string seq, const uint8_t &size){
 	char c = 0;
 	uint8_t pos = 0;
 	//Allocate memory
@@ -92,7 +92,7 @@ inline const char* cmprSeq(const string seq, const uint8_t &size){
 }
 
 //This function takes a compressed DNA sequence and decompesses it
-inline const char* decmprSeq(const char* cSeq, const uint8_t seqLen){
+inline char* decmprSeq(const char* cSeq, const uint8_t seqLen){
 	unsigned char c;
 	uint16_t i = 0, j;
 	//Allocate memory
