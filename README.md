@@ -17,7 +17,7 @@
 * [Tool comparison](https://gitlab.ub.uni-bielefeld.de/gi/plast#tool-comparison)
 * [FAQ](https://gitlab.ub.uni-bielefeld.de/gi/plast#faq)
 * [Contact](https://gitlab.ub.uni-bielefeld.de/gi/plast#contact)
-* [License](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
+* [Licenses](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
 
 ## Requirements
 
