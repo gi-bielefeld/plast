@@ -40,7 +40,7 @@ inline void dispHelp(){
 	cerr << "   -g   --min-length    Length of minimizers in a newly built graph (default is 23)" << endl;
 	cerr << "   -S   --input-seqs    Names of raw input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)" << endl;
 	cerr << "   -R   --input-refs    Names of reference input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)" << endl;
-	cerr << "   -t   --threads       Number of threads to be used for graph construction (default is 1)" << endl << endl;
+	cerr << "   -t   --threads       Number of threads to be used for graph construction and loading (default is 1)" << endl << endl;
 	cerr << "   >Optional without argument:" << endl << endl;
 	cerr << "   -a   --advanced-index   Construct advanced index for faster quorum searches" << endl << endl;
 	cerr << "[COMMAND_PARAMETERS]: Search" << endl << endl;

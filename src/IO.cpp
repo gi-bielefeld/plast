@@ -81,6 +81,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				break;
 			case 'k':
 				k = atoi(optarg);
+				gOpt.k = k;
 
 				//Check if k exceeds maximum
 				if(MAX_KMER_SIZE <= k){
@@ -91,6 +92,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				break;
 			case 'g':
 				g = atoi(optarg);
+				gOpt.g = g;
+
 				break;
 			case 't':
 				t = atoi(optarg);
