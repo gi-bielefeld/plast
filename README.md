@@ -13,7 +13,8 @@
 * [Requirements](https://gitlab.ub.uni-bielefeld.de/gi/plast#requirements)
 * [Compilation](https://gitlab.ub.uni-bielefeld.de/gi/plast#compilation)
 * [Usage](https://gitlab.ub.uni-bielefeld.de/gi/plast#usage)
-* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#testdata)
+* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#test-data)
+* [Tool comparison](https://gitlab.ub.uni-bielefeld.de/gi/plast#tool-comparison)
 * [FAQ](https://gitlab.ub.uni-bielefeld.de/gi/plast#faq)
 * [Contact](https://gitlab.ub.uni-bielefeld.de/gi/plast#contact)
 * [License](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
@@ -23,10 +24,12 @@
 PLAST builds a **compacted, colored de Bruijn graph** from given input genomes using the API of [Bifrost](https://github.com/pmelsted/bifrost). Apart from the requirements of Bifrost (c++ and cmake), there are no further strict dependencies.
 
 Parameter estimations for alignment statistics can be done using a workflow that
-requires a running version of 
-[snakemake](https://snakemake.readthedocs.io/en/stable/) and the additional
-packages [matplotlib](https://matplotlib.org) and
-[scipy](https://www.scipy.org).
+requires [snakemake](https://snakemake.readthedocs.io/en/stable/) (version 
+5.20.1 or higher) and the Python packages [matplotlib](https://matplotlib.org) 
+and [scipy](https://www.scipy.org).
+
+A provided tool comparison workflow additionally requires the package 
+[Biopython](https://biopython.org) to be installed on your system.
 
 ## Compilation
 
@@ -38,14 +41,14 @@ make
 By default, the installation creates:
 * a binary (*PLAST*)
 
-You may want to make the binary (*PLAST*) accessible via your (*PATH*) variable.
+You may want to make the binary accessible via your *PATH* variable.
 
 Please note the installation instructions regarding the default maximum *k*-mer size of Bifrost from its README.
-E.g., if your Bifrost libraries have been compiled to support a *k*-mer length of up to 63, change the PLAST 
+If your Bifrost libraries have been compiled for 64 bit, change the PLAST 
 makefile accordingly (add `-DMAX_KMER_SIZE=64` to CFLAGS).
 
 If during the compilation, the bifrost library files are not found, make sure that the corresponding folder is found as include path by the C++ compiler. You may have to add
-`-I/usr/local/include` (with the corresponding folder) to the CFLAGS in the makefile.
+`-I/usr/local/include` (with the corresponding folder) to CFLAGS in the makefile.
 
 ## Usage:
 
@@ -73,13 +76,9 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    -w   --seed-length   Minimal seed length an index is built for (default is 11)
    -k   --kmer-length   Length of k-mers in a newly built graph (default is 31)
    -g   --min-length    Length of minimizers in a newly built graph (default is 23)
-   -S   --input-seqs    Names of raw input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)
-   -R   --input-refs    Names of reference input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)
-   -t   --threads       Number of threads to be used for graph construction and loading (default is 1)
-
-   >Optional without argument:
-
-   -a   --advanced-index   Construct advanced index for faster quorum searches
+   -S   --input-seqs    Names of raw input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences of a file will share a color in the graph)
+   -R   --input-refs    Names of reference input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences of a file will share a color in the graph)
+   -t   --threads       Number of threads to be used for graph construction (default is 1)
 
 [COMMAND_PARAMETERS]: Search
 
@@ -92,19 +91,15 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    -w   --seed-length    Minimal seed length (default is 11)
    -s   --search-set     Search color set file with one color name per line to consider during the search (default is all colors)
-   -Q   --quorum         Absolute quorum (default is 1 color)
-   -m   --mismatch       Mismatch score used (default is -1)
-   -M   --match          Match score used (default is 1)
+   -m   --quorum         Quorum (absolute value)
    -X   --X-dropoff      X-dropoff value
-   -d   --gap-open       Gap open score used for gapped alignment (default is -2)
-   -e   --gap-extension  Gap extension score used for gapped alignment (default is -2)
    -n   --max-results    Maximum number of alignments to be outputted (default is 250)
-   -o   --strand         DNA strands to consider during search. Can be '+','-' (default is both)
+   -d   --strand         DNA strands to consider during search. Can be '+','-' (default is both)
    -l   --lambda         Statistical value lambda for ungapped extension
    -L   --lambda-gap     Statistical value lambda for gapped extension
    -c   --stat-C         Statistical value C for ungapped extension
    -C   --stat-C-gap     Statistical value C for gapped extension
-   -T   --e-val-thres    Expectation value threshold for a hit to be considered (default is 10)
+   -e   --e-value        Expectation value threshold for a hit to be considered (default is 10)
 
    >Optional without argument:
 
@@ -113,68 +108,76 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
 ### Examples
 
+1. **Get some testing data**
+
+   You may want to get some toy data first to try out the program.
+
+   ```
+   wget 'ftp://hgdownload.cse.ucsc.edu/goldenPath/eboVir3/bigZips/160sequences.tar.gz'
+   tar xvzf 160sequences.tar.gz
+   ```
+
+   These commands let you download and unpack a small dataset of 160 individual samples of different Ebola virus subspecies.
+
 1. **Graph building and indexing**
 
-   If a graph has to be built and indexed from scratch, a call might look like
+   In order to build a graph from this input data and indexing it, a call might look like
 
    ```
-   PLAST Build -i someGraph -R genomeAssemblyA.fasta genomeAssemblyB.fasta -S genomeReadsC.fasta genomeReadsD.fasta -t 4
+   PLAST Build -i ebolaPangenome -R *.fa -t 4
    ```
 
-   The colored de-Bruijn graph is built with Bifrost using 4 threads (`-t 4`) from assemblies *genomeAssemblyA.fasta* and *genomeAssemblyB.fasta* (`-R`) and read datasets *genomeReadsC.fasta* and *genomeReadsD.fasta* (`-S`). Graph, color information and index are saved as *someGraph.{gfa,bfg_colors,idx}* (`-i someGraph`).
+   The above command builds a colored de-Bruijn graph via the Bifrost library using 4 threads (`-t 4`) from all Ebola sequences. Graph, color information and index are saved as *ebolaPangenome.{gfa,bfg_colors,idx}* (`-i ebolaPangenome`). Note that our whole dataset consists of already assembled data. Thus, they are passed to the program using `-R`. Assuming we would deal with raw read data here, you would rather want to use `-S` to allow some quality filtering during graph construction. Even a combination of these two parameters is possible if dealing with both kinds of data.
 
-2. **Indexing of existing graph**
+   The graph is build using default _k_-mer size of 31. This may be changed using option `-k <KMER-LENGTH>`.
 
-   If a colored de-Bruijn graph has already been built using Bifrost, it can just be indexed by
+   **ATTENTION:** Be aware that for using values of _k_ > 31 your Bifrost library 
+   has to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
+   CFLAGS in PLAST's makefile before compilation!
+
+2. **Indexing of an existing graph**
+
+   The above command has built an index using the default minimal seed length of 11. Assuming we would want to use a different minimal seed length from now on, a new index may also be calculated for an already existing Bifrost graph. The command
 
    ```
-   PLAST Build -i anotherGraph -k 25 -g 18 -w 12
+   PLAST Build -i ebolaPangenome -w 12
    ```
 
-   The index is built using the graph saved as *anotherGraph.{gfa,bfg_colors}* 
-   (`-i anotherGraph`) which has been built with a k-mer length of 25 (`-k 25`) 
-   and minimizer length of 18 (`-g 18`) for a minimal seed length of 12 
-   (`-w 12`). The index is saved as *anotherGraph.idx*.
-   
-   **ATTENTION:** Be aware that for using values of k > 31 your Bifrost libraries 
-   have to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
-   the CFLAGS in PLAST's makefile before compilation!
+   recalculates an index for our Ebola graph (`-i ebolaPangenome`) using a minimal seed length of 12 (`-w 12`). It automatically overwrites the old index file.
 
 3. **Searching**
 
-   A basic search may look like this:
+   Inside the directory `testdata`, you may find a file containing two _unknown_ sequences (one sequence per line). 
+   A basic search for these sequences inside the Ebola graph would look like
 
    ```
-   PLAST Search -i someGraph -q myQueries.q
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12
    ```
 
-   We want to search three queries stored in *myQueries.q* (one query per line) within the graph *someGraph.{gfa,bfg_colors,idx}* (see Example 1).
+   Alignment results are outputted on the command line seperately for each query. They reveal a perfect match for each query and various suboptimal ones. 
+   
+   Repeating the search a second time using parameter `-r` allows us to get information about the individual samples from the graph involved in each alignment. Both perfect matches (first result for each query) are completely covered by a sample of Marburg virus and partially by a second sample (*NC_001608v3*) as well.
 
-   Assuming we are only interested in alignments to genomic sequences of either 
-   *genomeAssemblyA.fasta*, *genomeAssemblyB.fasta* or *genomeReadsC.fasta*. In 
-   the context of a colored de-Bruijn graph, sequences from these input files 
-   each have their own color in the graph. We have to specify the colors in a 
-   search set file (`-s mySearchSet.txt`):
+   Assuming we are particularly interested in how alignments look for NC_001608v3, we could specify a *search set* for our search. It allows to focus alignment searches inside the graph exclusively to sequences from certain samples. A search set may be passed to the algorithm using a text file with one *sample id* per line. A sample id here means the sample's file path used for graph building.
+   A search set for our current use case may be found below the *testdata* directory, too.
 
-   ```
-   PLAST Search -i someGraph -q myQueries.q -s mySearchSet.txt
-   ```
-
-   File *mySearchSet* consists of one line per color. A color's name is identical to the corresponding input file's name. In our case, it may look like:
+   The command
 
    ```
-   genomeAssemblyA.fasta
-   genomeAssemblyB.fasta
-   genomeReadsC.fasta
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -r -s searchSet.txt
    ```
 
-   If we additionally want to require that sequences of at least two colors 
-   should support each alignment that we want to find, we have to specify this 
-   by a quorum (`-m 2`):
+   now reveals alignments completely covered by NC_001608v3 but lower scores.
+
+   Otherwise, we could also be interested only in alignments that involve at least a certain amount of all samples. This may be realized using a *quorum*.
+   
+   The command 
 
    ```
-   PLAST Search -i someGraph -q myQueries.q -s mySearchSet.txt -m 2
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -m 80
    ```
+
+   allows to find all alignments supported by at least 50% of all samples of our Ebola graph.
 
 4. **Alignment statistic parameter estimation**
    
@@ -198,7 +201,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    2. Before executing the workflow, it requires the location of a graph
       parameters have to be
       estimated for. Add the graph's path to the configuration file
-      (*config.yaml*). You may need to change graph properties (*k*-mer and/or
+      (*config.yaml*). You may need to change graph properties (_k_-mer and/or
       minimizer length) or the minimal seed length your graph was indexed for if
       they are different from default.
 
@@ -207,7 +210,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       ```
       ...
       #Path to the pangenome graph (please insert here!)
-      gPathPref: "/path/to/myGraph.gfa"
+      gPathPref: "/path/to/graph.gfa"
       
       #Graph and index properties (please change if non-default!)
 
@@ -220,8 +223,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       ...
       ```
    
-   3. Run the workflow by typing `snakemake`. Depending on your graph, simulations might take a while. Use the option `--cores` to run simulations on many
-      cores in parallel.
+   3. Run the workflow by typing `snakemake`. Depending on your graph, simulations might take a while. Use the option `--cores` to specify the number of cores the simulation shall be performed on in parallel.
    
       ```
       snakemake --cores <Nb_cores>
@@ -245,7 +247,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
       minimal seed length (`-w`) may follow using the appropriate flag.
 
       ```
-      ./estParams.sh /path/to/myOtherGraph.gfa -k <my_k> -g <my_minimizer_length> -w <my_min_seed_length>
+      ./estParams.sh /path/to/graph.gfa -k 31 -g 23 -w 11
       ```
       
    3. Simulation results for gapped and ungapped alignment parameters can be
@@ -272,7 +274,7 @@ Test data is provided in the directory *testdata*.
    
    How to get a token is described [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
    
-   File names of assemblies subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
+   File names of assembly subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
    
 4. **Salmonella pangenome from EnteroBase**
 
@@ -286,6 +288,47 @@ Test data is provided in the directory *testdata*.
    ./download_assemblies.sh chosen5000.txt <token>
    ```
 
+## Tool comparison
+
+A run time and memory usage comparison is documented as a 
+[snakemake](https://snakemake.readthedocs.io/en/stable/) workflow in the 
+directory 
+*comparison*.
+
+For execution of the workflow, proceed as follows:
+
+* Install all programs to be tested on your system.
+
+* Get some testing data.
+
+* Provide the workflow with the locations of your testing data and program 
+  binaries by editing the configuration file *comparison/config.yaml*:
+
+  ```
+  ...
+  # PLEASE ADJUST THE FOLLOWING PARAMETERS --------------------------------------
+
+  #The place where the data is stored
+  dataDir: "path/to/my_testing_data_dir"
+
+  #The program binaries that shall be used
+  blastnbin: "path/to/blastn_binary"
+  makeblastdbBin: "path/to/makeblastdb_binary"
+  mmseqs2Bin: "path/to/mmseqs2_binary"
+  ublastBin: "path/to/usearch_binary"
+  #Only an absolute path will work here!
+  blatBin: "/absolute/path/to/blat_binary"
+  blat_faToTwoBit: "/absolute/path/to/faToTwoBit_binary"
+  ...
+  ```
+  
+* Change into directory *comparison* and run the workflow.
+
+  ```
+  cd comparison
+  snakemake
+  ```
+
 ## FAQ
 
 We recommend to have a look at the [FAQs of Bifrost](https://github.com/pmelsted/bifrost#faq).
@@ -295,7 +338,7 @@ We recommend to have a look at the [FAQs of Bifrost](https://github.com/pmelsted
 
 For any question, feedback or problem, please feel free to file an issue on this Git repository or contact the developers and we will get back to you as soon as possible.
 
-## License
+## Licenses
 
 * The hash function library xxHash is BSD licensed (https://github.com/Cyan4973/xxHash)
 
