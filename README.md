@@ -44,7 +44,7 @@ By default, the installation creates:
 You may want to make the binary accessible via your *PATH* variable.
 
 Please note the installation instructions regarding the default maximum *k*-mer size of Bifrost from its README.
-If your Bifrost libraries have been compiled for 64 bit, change the PLAST 
+E.g., if your Bifrost libraries have been compiled to support a *k*-mer length of up to 63, change the PLAST 
 makefile accordingly (add `-DMAX_KMER_SIZE=64` to CFLAGS).
 
 If during the compilation, the bifrost library files are not found, make sure that the corresponding folder is found as include path by the C++ compiler. You may have to add
@@ -76,9 +76,13 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    -w   --seed-length   Minimal seed length an index is built for (default is 11)
    -k   --kmer-length   Length of k-mers in a newly built graph (default is 31)
    -g   --min-length    Length of minimizers in a newly built graph (default is 23)
-   -S   --input-seqs    Names of raw input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences of a file will share a color in the graph)
-   -R   --input-refs    Names of reference input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences of a file will share a color in the graph)
-   -t   --threads       Number of threads to be used for graph construction (default is 1)
+   -S   --input-seqs    Names of raw input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)
+   -R   --input-refs    Names of reference input sequence file(s) (FASTA/FASTQ) to build a new graph from (all sequences from the same file will share a color in the graph)
+   -t   --threads       Number of threads to be used for graph construction and loading (default is 1)
+
+   >Optional without argument:
+
+   -a   --advanced-index   Construct advanced index for faster quorum searches
 
 [COMMAND_PARAMETERS]: Search
 
@@ -91,15 +95,19 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
 
    -w   --seed-length    Minimal seed length (default is 11)
    -s   --search-set     Search color set file with one color name per line to consider during the search (default is all colors)
-   -m   --quorum         Quorum (absolute value)
+   -Q   --quorum         Absolute quorum (default is 1 color)
+   -m   --mismatch       Mismatch score used (default is -1)
+   -M   --match          Match score used (default is 1)
    -X   --X-dropoff      X-dropoff value
+   -d   --gap-open       Gap open score used for gapped alignment (default is -2)
+   -e   --gap-extension  Gap extension score used for gapped alignment (default is -2)
    -n   --max-results    Maximum number of alignments to be outputted (default is 250)
-   -d   --strand         DNA strands to consider during search. Can be '+','-' (default is both)
+   -o   --strand         DNA strands to consider during search. Can be '+','-' (default is both)
    -l   --lambda         Statistical value lambda for ungapped extension
    -L   --lambda-gap     Statistical value lambda for gapped extension
    -c   --stat-C         Statistical value C for ungapped extension
    -C   --stat-C-gap     Statistical value C for gapped extension
-   -e   --e-value        Expectation value threshold for a hit to be considered (default is 10)
+   -T   --e-val-thres    Expectation value threshold for a hit to be considered (default is 10)
 
    >Optional without argument:
 
