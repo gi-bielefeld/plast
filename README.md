@@ -140,8 +140,8 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    The graph is build using default _k_-mer size of 31. This may be changed using option `-k <KMER-LENGTH>`.
 
    **ATTENTION:** Be aware that for using values of _k_ > 31 your Bifrost library 
-   has to be compiled for 64 bit and `-DMAX_KMER_SIZE=64` has to be added to 
-   CFLAGS in PLAST's makefile before compilation!
+   has to be compiled using the option `-DMAX_KMER_SIZE=x`, where *x* has to be a multiple of 32. The option has to be added to 
+   CFLAGS in PLAST's makefile before compilation, too!
 
 2. **Indexing of an existing graph**
 
