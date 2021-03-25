@@ -182,7 +182,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    The command 
 
    ```
-   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -m 80
+   PLAST Search -i ebolaPangenome -q unknownQueries.q -w 12 -Q 80
    ```
 
    allows to find all alignments supported by at least 50% of all samples of our Ebola graph.
