@@ -9,6 +9,9 @@ void replWorseRes(list<Hit*> &hList, Hit* hit){
 		if((*i)->score < hit->score){
 			//Insert hit
 			hList.insert(i, hit);
+			//Remove extension paths
+			frExtPth(hList.back()->rExt);
+			frExtPth(hList.back()->lExt);
 			//Remove worst hit
 			hList.pop_back();
 			return;
@@ -40,12 +43,19 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
 
 	//Get number of elements in our path
 	ePath.nbElem = extPth.size();
-	//Calculate how many bytes we need to save the path
-	nbBytes = (ePath.nbElem / SUCCESSORS_PER_BYTE) + ((ePath.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);
-	//Allocate space for compressed path
-	ePath.path = (unsigned char*) malloc(nbBytes);
-	//Make all bits in the first byte zero
-	*ePath.path = 0;
+
+	//Check if we have to allocate memory for path compression
+	if(ePath.nbElem){
+		//Testing
+		// cout << "ePath.nbElem: " << ePath.nbElem << endl;
+
+		//Calculate how many bytes we need to save the path
+		nbBytes = (ePath.nbElem / SUCCESSORS_PER_BYTE) + ((ePath.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);
+		//Allocate space for compressed path
+		ePath.path = (unsigned char*) malloc(nbBytes);
+		//Make all bits in the first byte zero
+		*ePath.path = 0;
+	}
 
 	//Walk through extension path
 	for(list<uint16_t>::const_iterator j = extPth.begin(); j != extPth.end(); ++j){
@@ -105,7 +115,8 @@ const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
 		++cmpSucs;
 	}
 
-	//Free memory of compressed path
-	free(cmpPth.path);
+	//Free memory of compressed path if existing
+	if(nbBytes) free(cmpPth.path);
+	
 	return path;
 }

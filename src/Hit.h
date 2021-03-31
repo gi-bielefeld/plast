@@ -27,7 +27,7 @@ class Hit {
 	public:
 		
 		//Default constructor
-		Hit () { lExt.path = NULL; rExt.path = NULL; }
+		Hit () {}
 
 		//Copy constructor
 		Hit (const Hit &h) {
@@ -52,7 +52,7 @@ class Hit {
 		//The hit's e-value
 		double eval;
 		//Initial unitig the extension was started
-		UnitigColorMap<seedlist> origUni;
+		UnitigColorMap<UnitigInfo> origUni;
 		//Left-side extension path of extended seed
 		struct ExtPth lExt;
 		//Right-side extension path of extended seed
@@ -83,5 +83,8 @@ const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);
 
 //This function compares two hits based on their e-values. Returns true if fh is smaller than sh.
 inline bool compEvals(const Hit *fh, const Hit *sh){ return (fh->eval < sh->eval); };
+
+//This function frees the memory allocated for an extension path if it is not empty
+inline void frExtPth(const struct ExtPth &ePth){ if(ePth.nbElem) free(ePth.path); };
 
 #endif

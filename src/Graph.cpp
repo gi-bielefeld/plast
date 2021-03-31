@@ -1,7 +1,7 @@
 #include "Graph.h"
 
 //This function builds a graph
-void genGraph(ColoredCDBG<seedlist> &cdbg, CCDBG_Build_opt &cdbgOpt){
+void genGraph(ColoredCDBG<UnitigInfo> &cdbg, CCDBG_Build_opt &cdbgOpt){
 	//Setting build options
 
 	//Print information messages during execution if true. Default is false.
@@ -16,7 +16,7 @@ void genGraph(ColoredCDBG<seedlist> &cdbg, CCDBG_Build_opt &cdbgOpt){
 }
 
 //This function assigns color ids from the graph to color names in the color set
-void mapColorIds(list<pair<string, size_t>>& colorSet, const ColoredCDBG<seedlist>& g){
+void mapColorIds(list<pair<string, size_t>>& colorSet, const ColoredCDBG<UnitigInfo>& g){
 	//Get number of colors in the graph
 	size_t totCol = g.getNbColors();
 
