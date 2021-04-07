@@ -9,7 +9,8 @@
     which allows to terminate checks also if too many colors have been missed 
     already.
 
-* v0.2.0 (03-31-2021)
+* v0.2.0 (04-07-2021)
+  - Usage of arbitrary scores is now enabled.
   - Hits with invalid offsets are now moved to successive unitigs and kept even 
     though they do not have a right extension path.
   - The unitig on which a left, gapped extension ends is now saved for each hit 
