@@ -3,6 +3,7 @@
 
 #include "Search.h"
 
+
 #define MIN_PARAM_NB 4
 #define OPTIONS "i:s:w:k:g:S:R:t:q:c:Q:m:M:X:e:n:o:d:l:L:C:T:aru"
 #define BUILD_COMMAND "Build"
@@ -19,8 +20,11 @@
 #define GAP '-'
 #define REPORT_COLORS_FLAG_DEFAULT false
 
-//This function reads in a file in which colors are stored the search will be based on
-const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols);
+//This function reads in a search color set and maps its colors to the colors of the graph. It terminates the program with error state if either
+//	1. the search color set file cannot be loaded,
+//	2. the search color set file is empty or
+//	3. a color specified in the search color set does not exist in the graph
+const list<pair<string, size_t>> loadSearchColors(const char* filename, const vector<string> &gClrs);
 
 //This function parses the program parameters. Returns false if given arguments are not valid
 const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx);

@@ -26,3 +26,7 @@
   - Closed some smaller memory leaks.
   - Disabled verbose mode for graph reading and removed some logging info.
   - Some refactoring.
+
+* vX.X.X (XX-XX-XXXX)
+  - Colors not present in the graph can no longer be specified in search color
+    sets.

@@ -188,9 +188,9 @@ int main(int argc, char **argv){
 	//Check whether a search color set is given
 	if(!sColFile.empty()){
 		//Read in color names to search for
-		searchColors = loadSearchColors(sColFile.c_str(), nbColors);
-		//Map color ids to color names
-		mapColorIds(searchColors, cdbg);
+		searchColors = loadSearchColors(sColFile.c_str(), cdbg.getColorNames());
+		//Get number of colors in search set
+		nbColors = searchColors.size();
 
 		//Check whether set quorum exceeds the number of colors in search set
 		if(quorum > nbColors){
