@@ -150,7 +150,7 @@ void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, uint
 
 	//Make sure this index is not deprecated
 	if(strcmp(memBlock, INDEX_VERSION)){
-		cerr << "ERROR: Index version is deprecated" << "Please create a new one!" << endl;
+		cerr << "ERROR: Index version is deprecated" << endl << "Please create a new one!" << endl;
 		exit(EXIT_FAILURE);
 	}
 
