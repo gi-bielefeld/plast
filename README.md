@@ -8,7 +8,7 @@
 * Customized focus on parts of the graph
 * Color coverage output per alignment on demand
 
-## Publications
+### Publication
 
 Schulz, T., Wittler, R., Rahmann, S., Hach, F., Stoye, J.: [Detecting High Scoring Local Alignments in Pangenome Graphs.](https://doi.org/10.1093/bioinformatics/btab077). Bioinformatics. (2021)
 
