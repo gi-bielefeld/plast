@@ -1,6 +1,8 @@
 #ifndef IO_HPP
 #define IO_HPP
 
+#include <sys/stat.h>
+
 #include "Search.h"
 
 #define MIN_PARAM_NB 4
@@ -18,6 +20,7 @@
 #define BASES_PER_LINE 60
 #define GAP '-'
 #define REPORT_COLORS_FLAG_DEFAULT false
+#define BIFROST_VERBOSE_MODE false
 
 //This function reads in a file in which colors are stored the search will be based on
 const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols);
@@ -98,6 +101,12 @@ inline const vector<string> formColSet(ColoredCDBG<UnitigInfo> &cdbg, const Unit
 	}
 
 	return set;
+}
+
+inline bool fileExists(const string& name){
+	struct stat buffer;
+
+	return (stat(name.c_str(), &buffer) == 0); 
 }
 
 #endif

@@ -83,6 +83,10 @@ int main(int argc, char **argv){
 	SrchStrd strand = SEARCH_STRAND_DEFAULT;
 	//The file prefices of the graph and index files
 	string graphFilePref;
+	//The input graph's complete file name
+	string igraph;
+	//The graph color file's complete name
+	string graphColorFile;
 	//File name of search color set
 	string sColFile;
 	//Color id and name mapping
@@ -124,8 +128,20 @@ int main(int argc, char **argv){
 		//Save the graph
 		cdbg.write(graphFilePref, nb_threads, true);
 	} else{
+		//Find out graph file suffixes
+		graphColorFile = graphFilePref + ".color.bfg";
+		igraph = graphFilePref + ".gfa.gz";
+
+		if(!fileExists(igraph)){
+			igraph = graphFilePref + ".gfa";
+
+			if(!fileExists(igraph)){
+				igraph = graphFilePref + ".bfi";
+			}
+		}
+
 		//Load graph
-		if(!cdbg.read(graphFilePref + GFA_FILE_ENDING, graphFilePref + COLOR_FILE_ENDING, nb_threads, false)){
+		if(!cdbg.read(igraph, graphColorFile, nb_threads, BIFROST_VERBOSE_MODE)){
 			cerr << "ERROR: Graph could not be loaded" << endl;
 			exit(EXIT_FAILURE);
 		}
