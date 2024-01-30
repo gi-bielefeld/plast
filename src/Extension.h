@@ -4,7 +4,7 @@
 #include "Hit.h"
 
 //Maximum recursion depth we want to allow for an extension
-#define MAXRECURSIONDEPTH 1000 //Raising this constant might slightly change the quality of results in very large and complex graphs, but might affect the runtime as well
+#define MAXRECURSIONDEPTH 250 //Raising this constant might slightly change the quality of results in very large and complex graphs, but might affect the runtime as well
 //Scores for matches and mismatches in unit score system
 #define USCORE_MATCH 1
 #define USCORE_MISMATCH -1
