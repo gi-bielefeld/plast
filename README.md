@@ -8,6 +8,10 @@
 * Customized focus on parts of the graph
 * Color coverage output per alignment on demand
 
+### Publication
+
+Schulz, T., Wittler, R., Rahmann, S., Hach, F., Stoye, J.: [Detecting High Scoring Local Alignments in Pangenome Graphs.](https://doi.org/10.1093/bioinformatics/btab077). Bioinformatics. (2021)
+
 ## Table of Contents
 
 * [Requirements](https://gitlab.ub.uni-bielefeld.de/gi/plast#requirements)
@@ -273,28 +277,14 @@ Test data is provided in the directory *testdata*.
    
 3. **PARA C**
 
-   All assembly barcodes of the Para C dataset published [here](https://genome.cshlp.org/content/28/9/1395.short) are listed in *ParaCcomplete220.txt*. In combination with an access token, they can be downloaded from 
-   [EnteroBase](https://enterobase.warwick.ac.uk) using the the provided download script:
-   
-   ```
-   ./download_assemblies.sh ParaCcomplete220.txt <token>
-   ```
-   
-   How to get a token is described [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
+   All assembly barcodes of the Para C dataset published [here](https://genome.cshlp.org/content/28/9/1395.short) are listed in *ParaCcomplete220.txt*. Data are provided from 
+   [EnteroBase](https://enterobase.warwick.ac.uk). The exact sequences used in our publication can also be downloaded [here](https://gitlab.ub.uni-bielefeld.de/gi/parac).
    
    File names of assembly subsets of sizes 12 and 75 can be found in *ParaCsubset12.txt* and *ParaCsubset75.txt*.
    
 4. **Salmonella pangenome from EnteroBase**
 
-   A pangenome of 5000 *Salmonella typhimurium* assemblies from [EnteroBase](https://enterobase.warwick.ac.uk). A list of all 5000 assembly
-   barcodes can be used to download the data from EnteroBase. For this, an access token is required. How to get a token is described
-   [here](https://bitbucket.org/enterobase/enterobase-web/wiki/Getting%20started%20with%20Enterobase%20API).
-   
-   Use the provided script for downloading the assemblies:
-   
-   ```
-   ./download_assemblies.sh chosen5000.txt <token>
-   ```
+   A pangenome of 5000 *Salmonella typhimurium* assemblies from [EnteroBase](https://enterobase.warwick.ac.uk) can be downloaded [here](https://gitlab.ub.uni-bielefeld.de/gi/typhimurium). A list of the exact 5000 assemblies we used in our publication can be found in *chosen5000.txt*.
 
 ## Tool comparison
 
