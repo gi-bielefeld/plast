@@ -14,14 +14,14 @@ Schulz, T., Wittler, R., Rahmann, S., Hach, F., Stoye, J.: [Detecting High Scori
 
 ## Table of Contents
 
-* [Requirements](https://gitlab.ub.uni-bielefeld.de/gi/plast#requirements)
-* [Compilation](https://gitlab.ub.uni-bielefeld.de/gi/plast#compilation)
-* [Usage](https://gitlab.ub.uni-bielefeld.de/gi/plast#usage)
-* [Test data](https://gitlab.ub.uni-bielefeld.de/gi/plast#test-data)
-* [Tool comparison](https://gitlab.ub.uni-bielefeld.de/gi/plast#tool-comparison)
-* [FAQ](https://gitlab.ub.uni-bielefeld.de/gi/plast#faq)
-* [Contact](https://gitlab.ub.uni-bielefeld.de/gi/plast#contact)
-* [Licenses](https://gitlab.ub.uni-bielefeld.de/gi/plast#license)
+* [Requirements](https://github.com/gi-bielefeld/plast#requirements)
+* [Compilation](https://github.com/gi-bielefeld/plast#compilation)
+* [Usage](https://github.com/gi-bielefeld/plast#usage)
+* [Test data](https://github.com/gi-bielefeld/plast#test-data)
+* [Tool comparison](https://github.com/gi-bielefeld/plast#tool-comparison)
+* [FAQ](https://github.com/gi-bielefeld/plast#faq)
+* [Contact](https://github.com/gi-bielefeld/plast#contact)
+* [Licenses](https://github.com/gi-bielefeld/plast#license)
 
 ## Requirements
 
@@ -334,7 +334,7 @@ We recommend to have a look at the [FAQs of Bifrost](https://github.com/pmelsted
 
 ## Contact
 
-For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/tischulz1/plast) or [contact](mailto:plast-service@cebitec.uni-bielefeld.de) the developers and we will get back to you as soon as possible.
+For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/gi-bielefeld/plast) or [contact](mailto:plast-service@cebitec.uni-bielefeld.de) the developers and we will get back to you as soon as possible.
 
 PLAST is provided as a service of the [German Network for Bioinformatics Infrastructure (de.NBI)](https://www.denbi.de/). We would appriciate if you would participate in the evaluation of PLAST by completing this [very short survey](https://www.surveymonkey.de/r/denbi-service?sc=bigi&tool=plast).
 
@@ -353,4 +353,4 @@ PLAST is provided as a service of the [German Network for Bioinformatics Infrast
 
 * Bifrost is BSD-2 licensed (https://github.com/pmelsted/bifrost)
 
-* PLAST is GNU GPLv3 licensed [LICENSE](https://gitlab.ub.uni-bielefeld.de/gi/plast/blob/master/LICENSE)
+* PLAST is GNU GPLv3 licensed [LICENSE](https://github.com/gi-bielefeld/plast/blob/master/LICENSE)
