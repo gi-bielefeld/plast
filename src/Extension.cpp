@@ -1,7 +1,13 @@
+#include <stack>
+#include <deque>
+
 #include "Extension.h"
 #include "Hit.h"
 #include "Search.h"
 #include "UnitigInfo.cpp"
+
+//Testing
+// extern bool report = false;
 
 //This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
@@ -10,7 +16,7 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	int32_t maxScore = 0, currScore;
 	
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
+	if(++explCount > EXPLORED_UNITIGS_MAX){
 		//Report this incident
 		//cerr << "Maximum recursion depth reached during extension. Position in q: " << iniQoff << endl;
 		//Terminate this extension
@@ -20,14 +26,27 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	maxScore = 0;
 	sucID = 0;
 
+	//Testing
+	// if(report){
+	// 	cout << "extendAtNextUnitig: Iterate over successors" << endl;
+	// 	cout << "extendAtNextUnitig: sucIter.begin()->mappedSequenceToString(): " << sucIter.begin()->mappedSequenceToString() << endl;
+	// }
+
 	//Iterate over successors
 	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 		//Temporary extention path
 		list<uint16_t> tmpPth;
 		//Note which successor we are on
 		++sucID;
+
+		//Testing
+		// if(report) cout << "extendAtNextUnitig: Continue extension on unitig " << nI->mappedSequenceToString() << endl;
+
 		//Calculate the score of an extension of a successor
 		currScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, lastExtSeedTmpScore, uniPos, tmpPth, explCount, quorum, searchSet, advIdx);
+
+		//Testing
+		// if(report) cout << "extendAtNextUnitig: Return from extension on unitig " << nI->mappedSequenceToString() << endl;
 
 		//Check whether the score of the current successors extension is the best one found so far
 		if(currScore > maxScore){
@@ -52,7 +71,7 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>,
 	int32_t maxScore = 0, currScore;
 	
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH) return 0;//Terminate this extension
+	if(++explCount > EXPLORED_UNITIGS_MAX) return 0;//Terminate this extension
 
 	maxScore = 0;
 	sucID = 0;
@@ -82,7 +101,104 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>,
 	return maxScore;
 }
 
-//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
+//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
+//search color set using an iterative approach
+void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	//The rank of a successor of a leading unitig (used to construct the extension path)
+	uint16_t nr;
+	//The last position in a unitig's sequence that needs to be compared with
+	uint32_t lastSeqPos;
+	//The length of the currently explored extension on the leading unitig
+	uint32_t extLen;
+	//The number of times we have already switched unitigs during this extension
+	uint32_t uniSwtchCnt = 0;
+	//The k value are using
+	int K = hit->origUni.getGraph().getK();
+	//The remaining number of positions on the leading unitig fulfilling the search criteria
+	int32_t remCovPos;
+	//The leading unitig's sequence
+	string uSeq;
+	//An extension we are dealing with
+	Ext currExt;
+	//A vector of extensions to be continued on a successor of a leading unitig//TODO: This is only an artificial detour to allow 
+	//the reproduction of results of the old recursive PLAST version for testing purposes. As soon as we are sure that the iterative
+	// version of PLAST works this should be removed!
+	vector<Ext> newExts;
+	//Initialize DFS stack
+	stack<Ext> exts;//TODO: We use a deque here as the container for the stack, because intuitively it sounds more efficient (e.g. compared to a vector). At some point we should try to verify this by a test!
+
+	//Create the first extension right after the hit's end
+	exts.push(Ext(offsetU = hit->offU + hit->length, offsetQ = hit->offQ + hit->length, ldUni = hit->origUni));
+
+	while(!exts.empty()){
+		//Get first extension on stack
+		currExt = exts.top();
+		//Remove first extension on stack
+		exts.pop();
+
+		//Try to extend current extension on the leading unitig as far as possible//
+
+		//If the current unitig has successors we do not need to compare the k-1 overlap//TODO: Would not it actually be better to compare it on this unitig rather than first move to the next one?
+		lastSeqPos = currExt.ldUni.size - (currExt.ldUni.getSuccessors().hasSuccessors() ? K : 1);
+		//Set extension length on leading unitig
+		extLen = 0;
+		//Get the leading unitig's sequence
+		uSeq = currExt.ldUni.mappedSequenceToString();
+		//Compute the number of positions on which search criteria are fulfilled	
+		remCovPos = getSrchCritCov(currExt.ldUni, quorum, searchSet, currExt.offsetU, true, advIdx);
+
+		//We are done if we have reached the end of the query or search criteria are no longer fulfilled
+		while(remCovPos-- > 0 && currExt.offsetQ + extLen < q.length()){
+			//Check if there is still sequence left to compare on the leading unitig
+			if(currExt.offsetU + extLen <= lastSeqPos){
+				//Check if the score of our extension is positive
+				if((currExt.tmpScore += compUScore(uSeq[currExt.offsetU + extLen], q[currExt.offsetQ + extLen], mscore, mmscore)) > 0){
+					//Update extension information
+					currExt.offsetU += extLen;
+					currExt.offsetQ += extLen;
+					currExt.score += currExt.tmpScore;
+					//Reset extension length and not yet extension score
+					extLen = 0;
+					currExt.tmpScore = 0;
+				//Terminate exploration if the score has become too bad
+				} else if(currExt.tmpScore < -X) break;
+
+				//Explore further
+				++extLen;
+			} else{
+				//Check if leading unitig has successors (probably cheaper than to call hasSuccessors()) and if we have not yet 
+				//reached the the maximum number of unitig switches during this extension
+				if(lastSeqPos ==  currExt.ldUni.size - K && ++uniSwtchCnt < EXPLORED_UNITIGS_MAX){
+					//Iterate over successors
+					for(auto n = ext.ldUni.getSuccessors().begin(), nr = 0; n != ext.ldUni.getSuccessors().end(); ++n, ++nr){
+						//Copy current extension
+						Ext newExt = Ext(currExt);
+						//On the next unitig we start at sequence position 0
+						newExt.offsetU = 0;
+						//Set tmpQoff correctly
+						newExt.tmpQoff = newExt.offsetQ + extLen;
+						//Update leading unitig
+						newExt.ldUni = *n;
+						//Extend extension path by new leading unitig
+						newExt.extPth.push_back(nr);
+						//Add the new extension to the auxiliar vector to preserve the correct order
+						newExts.push_front(newExt);
+					}
+
+					//Push the new extensions to the stack in the correct order
+					for(vector::const_iterator vi = newExts.begin(); vi != newExts.end(); ++vi) exts.push(*vi);
+
+					//Clear vector
+					
+				}
+			}
+		}
+	}
+}
+
+//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
+//search color set using recursive function calls
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
 	int32_t tmpScore = 0;
@@ -94,6 +210,9 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 	uint32_t explCount;
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
+
+	//Testing
+	// if(report) cout << "startRightX_Drop: Start extension to the right" << endl;
 
 	//Calculate hit's initial score
 	hit->score = hit->length * mscore;
@@ -129,6 +248,10 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 				iniUniPos = hit->offU + tmpSeedLen - hit->origUni.size + overlap;
 				//Initialize explCount
 				explCount = 0;
+
+				//Testing
+				// if(report) cout << "startRightX_Drop: Continue extension on successors" << endl;
+
 				//Explore unitig's successors
 				hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 			}
@@ -136,6 +259,9 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 			break;
 		}
 	}
+
+	//Testing
+	// if(report) cout << "startRightX_Drop: Terminating right extension" << endl;
 
 	//Compress extension path
 	hit->rExt = cmprExtPth(extPth);
@@ -205,6 +331,17 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed;
 
+	//Testing
+	// if(report){
+	// 	cout << "contRightX_Drop: Continue extension on unitig " << sucUniSeq << endl;
+	// 	cout << "contRightX_Drop: iniQoff: " << iniQoff << " hitLen: " << hitLen << " extLen: " << extLen << " lastSeedTmpScore: " << lastSeedTmpScore;
+	// 	cout << " uniSeqPos: " << uniSeqPos << " explCount: " << explCount << endl;
+	// 	UnitigColorMap<UnitigInfo> probUni = sucUnitig->getGraph()->find(Kmer("GCTATTGGCACACCAATCTATTCACCAGCAGATGG"));
+	// 	cout << "contRightX_Drop: probUni.getSuccessors().hasSuccessors(): " << probUni.getSuccessors().hasSuccessors() << endl;
+	// 	cout << "contRightX_Drop: sucUnitig->getSuccessors().hasSuccessors(): " << sucUnitig->getSuccessors().hasSuccessors() << endl;
+	// 	// report = true;
+	// }
+
 	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
 	iniSeqPos = uniSeqPos;
 	//Find the nearest seed that we might be able to reach during our extension
@@ -213,10 +350,25 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 	tmpScore = lastSeedTmpScore;
 	tmpSLen = 0;
 
+	//Testing
+	// if(report){
+	// 	cout << "contRightX_Drop: Nearest neighbor search done" << endl;
+	// }
+
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
+		//Testing
+		// if(report) cout << "contRightX_Drop: Current position in query is " << iniQoff + extLen + tmpSLen << endl;
+
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
+			//Testing
+			// if(report){
+			// 	cout << "contRightX_Drop: We have reached a seed" << endl;
+			// 	cout << "contRightX_Drop: nearestSeed->offsetQ: " << nearestSeed->offsetQ << " iniQoff + extLen + tmpSLen: ";
+			// 	cout << iniQoff + extLen + tmpSLen << endl;
+			// }
+
 			//Calculate the gain we get by incorporating the reached seed
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
 			//Update temporary seed length
@@ -270,13 +422,26 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 				}
 			}
 		} else{
+			//Testing
+			// if(report){
+			// 	cout << "contRightX_Drop: We have not reached a seed" << endl;
+			// 	cout << "contRightX_Drop: sucUnitig->getSuccessors().hasSuccessors(): " << sucUnitig->getSuccessors().hasSuccessors() << endl;
+			// 	cout << "contRightX_Drop: sucUnitig->mappedSequenceToString(): " << sucUnitig->mappedSequenceToString() << endl;
+			// }
+
 			//Check up to which point we have to compare the unitig sequence
 			if(!sucUnitig->getSuccessors().hasSuccessors()){
 				overlap = 0;
 			}
 
+			//Testing
+			// if(report) cout << "contRightX_Drop: Sequence overlap check done" << endl;
+
 			//Check whether we have reached the end of the unitig's sequence
 			if(uniSeqPos < sucUnitig->size - overlap){
+				//Testing
+				// if(report) cout << "contRightX_Drop: We have not yet reached the unitig's sequence end" << endl;
+
 				//Are search criteria still fulfilled?
 				if(checkedPos <= 0) break;
 
@@ -298,10 +463,17 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 				++uniSeqPos;
 				--checkedPos;
 			} else{
+				//Testing
+				// if(report) cout << "contRightX_Drop: We have reached the unitig's sequence end" << endl;
+
 				//Check if the current unitig has successors
 				if(overlap != 0){
 					//Calculate the position in the next unitig's sequence we have to start with
 					uniSeqPos = uniSeqPos - sucUnitig->size + overlap;
+
+					//Testing
+					// if(report) cout << "contRightX_Drop: Continue extension on successors" << endl;
+
 					//Check out next unitig
 					score += extendAtNextUnitig(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, mscore, mmscore, X, tmpScore, uniSeqPos, extPth, explCount, quorum, searchSet, advIdx);
 				}
@@ -310,6 +482,9 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 			}
 		}
 	}
+
+	//Testing
+	// if(report) cout << "contRightX_Drop: Extension done" << endl;
 
 	return score;
 }
@@ -434,7 +609,7 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStor
 	int32_t maxScore = 0, currScore;
 
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
+	if(++explCount > EXPLORED_UNITIGS_MAX){
 		//Report this incident//TODO: If this happens the condition that an extended seed cannot be reached anymore is violated. Implement a procedure after the extension that merges such seeds with other seeds that would have reached them!
 		//cerr << "Maximum recursion depth reached during extension" << endl;
 		//Terminate this extension
@@ -480,7 +655,7 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>,
 	int32_t maxScore = 0, currScore;
 
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
+	if(++explCount > EXPLORED_UNITIGS_MAX){
 		//Terminate this extension
 		return 0;
 	}

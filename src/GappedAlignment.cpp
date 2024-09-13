@@ -464,7 +464,7 @@ bool contGappedOnSuccUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth
 	ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = uni.getSuccessors();
 
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
+	if(++explCount > EXPLORED_UNITIGS_MAX){
 		//Report this incident
 		//cerr << "Maximum recursion depth reached during extension. Position in q: " << qOff << endl;
 		//Terminate this extension
@@ -545,7 +545,7 @@ bool contGappedOnPredUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth
 	BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> predIter = uni.getPredecessors();
 
 	//Check whether we have reached the maximum recursion depth of an extension
-	if(++explCount > MAXRECURSIONDEPTH){
+	if(++explCount > EXPLORED_UNITIGS_MAX){
 		//Report this incident
 		//cerr << "Maximum recursion depth reached during extension. Position in q: " << qOff << endl;
 		//Terminate this extension

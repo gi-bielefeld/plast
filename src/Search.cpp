@@ -205,19 +205,36 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 		//Get the first seed
 		currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
 
+		//Testing
+		// if(!i->mappedSequenceToString().compare("TAATGGTGATTTTGTAAATGGTTGGAAATTCATTGAA")){
+		// 	report = true;
+		// 	cout << "extendRefSeeds: Processing seeds on unitig " << i->mappedSequenceToString() << endl;
+		// }
+
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
+			//Testing
+			// if(report){
+			// 	cout << "extendRefSeeds: Next seed to be extended offsetU: " << currSeed->offsetU << " offsetQ: ";
+			// 	cout << currSeed->offsetQ << " len: " << currSeed->len << " score: " << currSeed->score << endl;
+			// }
+
 			//Extract seed from the list
 			currUni.getData()->getData(currUni)->setSeed(currSeed->nextSeed, currUni.strand);
 			//Setup initial hit infos
-			newHit.score = 0;
+			newHit.score = currSeed->len * mscore;
 			newHit.length = currSeed->len;
 			newHit.offU = currSeed->offsetU;
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
+
+			// startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+
+			//Testing
+			// if(report) cout << "extendRefSeeds: Right extension done" << endl;
 			
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
@@ -239,6 +256,9 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
 				}
 			}
+
+			//Testing
+			// if(report) cout << "extendRefSeeds: Left extension done" << endl;
 
 			//Delete the extended seed
 			free(currSeed);
@@ -424,7 +444,10 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 	cout << "Extending seeds" << endl;
 
 	//Extend seeds lying on the reference strand if demanded
-	if(strand != Minus) extendRefSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);
+	if(strand != Minus) extendRefSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);//TODO: This function still needs to be tested!
+
+	//Testing
+	// cout << "searchQuery: Seed extension done for seeds on reference strand" << endl;
 
 	//Extend seeds lying on the reverse complementary strand if demanded
 	if(strand != Plus) extendRevCompSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);

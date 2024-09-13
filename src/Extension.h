@@ -3,18 +3,70 @@
 
 #include "Hit.h"
 
-//Maximum recursion depth we want to allow for an extension
-#define MAXRECURSIONDEPTH 250 //Raising this constant might slightly change the quality of results in very large and complex graphs, but might affect the runtime as well
+//Maximum number of unitig switches during a single extension. Raising this constant might slightly change the quality of results in
+// very large and complex graphs, but might affect the runtime as well
+#define EXPLORED_UNITIGS_MAX 1000
 //Scores for matches and mismatches in unit score system
 #define USCORE_MATCH 1
 #define USCORE_MISMATCH -1
 //Default value for X in X-drop algorithm
 #define DEFAULT_X 3
 
+//A hit's extension in the graph
+class Ext {
+
+	public:
+		
+		Ext(): offsetU(0), offsetQ(0), tmpQoff(0), score(0), tmpScore(0) {}//TODO: This function still needs to be tested!
+
+		Ext(const uint32_t& offsetU, const uint32_t& offsetQ, const uint32_t& tmpQoff, const int32_t& score, const int32_t& tmpScore
+			, const UnitigColorMap<UnitigInfo>& ldUni, const list<uint16_t>& pth){//TODO: This function still needs to be tested!
+			this.offsetU = offsetU;
+			this.offsetQ = offsetQ;
+			this.tmpQoff = tmpQoff;
+			this.score = score;
+			this.tmpScore = tmpScore;
+			this.ldUni = ldUni;
+			this.pth = pth;
+		}
+
+		//Copy constructor
+		Ext(const Ext& e){//TODO: This function still needs to be tested!
+			offsetU = e.offsetU;
+			offsetQ = e.offsetQ;
+			tmpQoff = e.tmpQoff;
+			score = e.score;
+			tmpScore = e.tmpScore;
+			ldUni = e.ldUni;
+			pth = e.pth;
+		}
+
+		//Offset in leading unitig
+		uint32_t offsetU;
+		//Offset in query
+		uint32_t offsetQ;
+		//Offset in query in the last not yet accepted exploration
+		uint32_t tmpQoff;
+		//The extension's score
+		int32_t score;
+		//The score of the last not yet accepted exploration
+		int32_t tmpScore;
+		//The leading unitig
+		UnitigColorMap<UnitigInfo> ldUni;
+		//The extension's path
+		list<uint16_t> pth;
+};
+
 //This function simply calculates the unity score for two bases ((mis)match = (-)1)
 inline int32_t compUScore(const char &q, const char &u, const uint16_t &mscore, const int16_t &mmscore){ return (q == u ? mscore : mmscore); }
 
-//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set
+//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
+//search color set using an iterative approach
+void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+
+//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
+//search color set using recursive function calls
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set

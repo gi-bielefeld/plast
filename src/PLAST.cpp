@@ -98,6 +98,21 @@ int main(int argc, char **argv){
 	//Unitig array
 	UnitigColorMap<UnitigInfo> *uArr;
 
+	//Testing
+	// const rlim_t kStackSize = 16 * 1024 * 1024;   // min stack size = 16 MB
+    // struct rlimit rl;
+    // int result;
+    // result = getrlimit(RLIMIT_STACK, &rl);
+    // if(result == 0){
+    //     if(rl.rlim_cur < kStackSize){
+    //         rl.rlim_cur = kStackSize;
+    //         result = setrlimit(RLIMIT_STACK, &rl);
+    //         if(result != 0){
+    //             fprintf(stderr, "setrlimit returned result = %d\n", result);
+    //         }
+    //     }
+    // }
+
 	//Parse arguments
 	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, mscr, mmscr, X, goscr, gescr, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim, advIdx)){
 		//Display help message
@@ -217,6 +232,12 @@ int main(int argc, char **argv){
 
 	//Load query sequences
 	loadQueries(qFile, qList);
+
+	//Testing
+	// UnitigColorMap<UnitigInfo> probUni = cdbg.find(Kmer("GCTATTGGCACACCAATCTATTCACCAGCAG"));
+	// cout << "main: Found unitig is " << probUni.mappedSequenceToString() << endl;
+	// cout << "main: probUni.getSuccessors().hasSuccessors(): " << probUni.getSuccessors().hasSuccessors() << endl;
+	// return 0;
 
 	//Search each query
 	for(vector<string>::const_iterator q = qList.begin(); q != qList.end(); ++q){

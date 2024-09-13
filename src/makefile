@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -march=native -lbifrost -pthread -lz -lpthread -std=c++11 -Wall -O3
+CFLAGS = -lbifrost -pthread -lz -lpthread -std=c++11 -Wall -O3
 
 all:
-	$(CC) PLAST.cpp $(CFLAGS) -o PLAST
+	$(CC) MyTest.cpp $(CFLAGS) -o MyTest
