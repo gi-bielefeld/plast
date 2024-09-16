@@ -19,15 +19,15 @@ class Ext {
 		
 		Ext(): offsetU(0), offsetQ(0), tmpQoff(0), score(0), tmpScore(0) {}//TODO: This function still needs to be tested!
 
-		Ext(const uint32_t& offsetU, const uint32_t& offsetQ, const uint32_t& tmpQoff, const int32_t& score, const int32_t& tmpScore
-			, const UnitigColorMap<UnitigInfo>& ldUni, const list<uint16_t>& pth){//TODO: This function still needs to be tested!
-			this.offsetU = offsetU;
-			this.offsetQ = offsetQ;
-			this.tmpQoff = tmpQoff;
-			this.score = score;
-			this.tmpScore = tmpScore;
-			this.ldUni = ldUni;
-			this.pth = pth;
+		Ext(const uint32_t& offsetU = 0, const uint32_t& offsetQ = 0, const uint32_t& tmpQoff = 0, const int32_t& score = 0, const int32_t& tmpScore = 0
+			, const UnitigColorMap<UnitigInfo>& ldUni = UnitigColorMap<UnitigInfo>(), const list<uint16_t>& pth = list<uint16_t>()){//TODO: This function still needs to be tested!
+			this->offsetU = offsetU;
+			this->offsetQ = offsetQ;
+			this->tmpQoff = tmpQoff;
+			this->score = score;
+			this->tmpScore = tmpScore;
+			this->ldUni = ldUni;
+			this->pth = pth;
 		}
 
 		//Copy constructor
@@ -56,6 +56,20 @@ class Ext {
 		//The extension's path
 		list<uint16_t> pth;
 };
+
+//This function encapsulates part of the X-drop algorithm used during an extension. It updates the given extension and exploration 
+//length depending on whether the temporary score became positive by adding the given score
+inline void updateExtension(Ext& ext, const int32_t& expScr, uint32_t& expLen){
+	if((ext.tmpScore += expScr) > 0){
+		//Update extension information
+		ext.offsetU += expLen;
+		ext.offsetQ = ext.tmpQoff + expLen;
+		ext.score += ext.tmpScore;
+		//Reset exploration length and temporary score
+		expLen = 0;
+		ext.tmpScore = 0;
+	}
+}
 
 //This function simply calculates the unity score for two bases ((mis)match = (-)1)
 inline int32_t compUScore(const char &q, const char &u, const uint16_t &mscore, const int16_t &mmscore){ return (q == u ? mscore : mmscore); }

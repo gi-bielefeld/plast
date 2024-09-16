@@ -227,6 +227,8 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			newHit.offU = currSeed->offsetU;
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
+			newHit.lExt.path = NULL;
+			newHit.rExt.path = NULL;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
 			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
