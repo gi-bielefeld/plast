@@ -19,14 +19,14 @@ class Ext {
 		
 		Ext(): offsetU(0), offsetQ(0), tmpQoff(0), score(0), tmpScore(0) {}//TODO: This function still needs to be tested!
 
-		Ext(const uint32_t& offsetU = 0, const uint32_t& offsetQ = 0, const uint32_t& tmpQoff = 0, const int32_t& score = 0, const int32_t& tmpScore = 0
-			, const UnitigColorMap<UnitigInfo>& ldUni = UnitigColorMap<UnitigInfo>(), const list<uint16_t>& pth = list<uint16_t>()){//TODO: This function still needs to be tested!
-			this->offsetU = offsetU;
-			this->offsetQ = offsetQ;
-			this->tmpQoff = tmpQoff;
-			this->score = score;
-			this->tmpScore = tmpScore;
-			this->ldUni = ldUni;
+		Ext(const int32_t& offU, const int32_t& offQ, const int32_t& tQoff, const int32_t& scr, const int32_t& tScr, const 
+		UnitigColorMap<UnitigInfo>& lUni, const list<uint16_t>& pth){//TODO: This function still needs to be tested!
+			offsetU = offU;
+			offsetQ = offQ;
+			tmpQoff = tQoff;
+			score = scr;
+			tmpScore = tScr;
+			ldUni = lUni;
 			this->pth = pth;
 		}
 
@@ -42,11 +42,11 @@ class Ext {
 		}
 
 		//Offset in leading unitig
-		uint32_t offsetU;
+		int32_t offsetU;
 		//Offset in query
-		uint32_t offsetQ;
+		int32_t offsetQ;
 		//Offset in query in the last not yet accepted exploration
-		uint32_t tmpQoff;
+		int32_t tmpQoff;
 		//The extension's score
 		int32_t score;
 		//The score of the last not yet accepted exploration
@@ -106,6 +106,11 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStor
 
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
 int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, const uint32_t &lead, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+
+//This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color 
+//set using an iterative approach
+void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color set
 void startLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);

@@ -242,7 +242,9 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
 				//Extend hit to the left
-				startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
+
+				// startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 				//Check whether we have created a hit for this query position already
 				if(hitArr[newHit.offQ].length == 0){

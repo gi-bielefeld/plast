@@ -127,12 +127,12 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 	//A vector of extensions to be continued on a successor of a leading unitig//TODO: This is only an artificial detour to allow 
 	//the reproduction of results of the old recursive PLAST version for testing purposes. As soon as we are sure that the iterative
 	// version of PLAST works this should be removed!
-	vector<Ext> newExts;
+	stack<Ext> newExts;
 	//Initialize DFS stack
 	stack<Ext> exts;//TODO: We use a deque here as the container for the stack, because intuitively it sounds more efficient (e.g. compared to a vector). At some point we should try to verify this by a test!
 
 	//Create the first extension right after the hit's end
-	exts.push(Ext(offsetU = hit->offU + hit->length, offsetQ = hit->offQ + hit->length, ldUni = hit->origUni));
+	exts.push(Ext(hit->offU + hit->length, hit->offQ + hit->length, 0, 0, 0, hit->origUni, list<uint16_t>()));
 
 	while(!exts.empty()){
 		//Get first extension on stack
@@ -153,7 +153,7 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 			currExt.ldUni.strand), currExt.ldUni.strand, advIdx);
 		//Search for a seed we could reach during this extension
 		nearestSeed = searchRightNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand), 
-			currExt.tmpQoff, extLen, currExt.offsetU, prevSeed);
+			(uint32_t) currExt.tmpQoff, extLen, (uint32_t) currExt.offsetU, prevSeed);//TODO: As soon as the iterative extension is completely implemented, it might be possible to modify input parameter types of searchRightNeighbor() to avoid the necessity of these casts
 
 		//We are done if we have reached the end of the query or search criteria are no longer fulfilled
 		while(remCovPos-- > 0 && currExt.offsetQ + extLen < q.length()){
@@ -177,7 +177,7 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 					free(nearestSeed);
 					//Search for another neighbor
 					nearestSeed = searchRightNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand)
-						, currExt.offsetQ, extLen, currExt.offsetU, prevSeed);
+						, (uint32_t) currExt.offsetQ, extLen, (uint32_t) currExt.offsetU, prevSeed);
 				} else{
 					//Make seed's successor the head of the seed list
 					currExt.ldUni.getData()->getData(currExt.ldUni)->setSeed(nearestSeed->nextSeed, currExt.ldUni.strand);
@@ -200,9 +200,12 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 			} else{
 				//Check if leading unitig has successors (probably cheaper than to call hasSuccessors()) and if we have not yet 
 				//reached the the maximum number of unitig switches during this extension
-				if(lastSeqPos ==  currExt.ldUni.size - K && ++uniSwtchCnt < EXPLORED_UNITIGS_MAX){
+				if(lastSeqPos ==  currExt.ldUni.size - K && uniSwtchCnt++ < EXPLORED_UNITIGS_MAX){
+					//Reset successor's rank
+					nr = 0;
+
 					//Iterate over successors
-					for(auto n = ext.ldUni.getSuccessors().begin(), nr = 0; n != ext.ldUni.getSuccessors().end(); ++n, ++nr){
+					for(auto n = currExt.ldUni.getSuccessors().begin(); n != currExt.ldUni.getSuccessors().end(); ++n, ++nr){
 						//Copy current extension
 						Ext newExt = Ext(currExt);
 						//On the next unitig we start at sequence position 0
@@ -212,16 +215,16 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 						//Update leading unitig
 						newExt.ldUni = *n;
 						//Extend extension path by new leading unitig
-						newExt.extPth.push_back(nr);
+						newExt.pth.push_back(nr);
 						//Add the new extension to the auxiliar vector to preserve the correct order
-						newExts.push_front(newExt);
+						newExts.push(newExt);
 					}
 
 					//Push the new extensions to the stack in the correct order
-					for(vector::const_iterator vi = newExts.begin(); vi != newExts.end(); ++vi) exts.push(*vi);
-
-					//Clear vector
-					newExts.clear();
+					while(!newExts.empty()){
+						exts.push(newExts.top());
+						newExts.pop();
+					}
 				}
 
 				//Terminate current extension
@@ -236,11 +239,11 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 			//Update max score found
 			hit->score = currExt.score;
 			//Recalculate hit's length
-			hit->length = currExt.offsetQ - hit->offQ + 1;
+			hit->length = (uint32_t) currExt.offsetQ - hit->offQ + 1;//TODO: We should think about whether it would not also make sense to change the type of offets inside the Hit Class
 			//Clear extension path if it already exists
 			decmprExtPth(hit->rExt);
 			//Copy extension path
-			hit->rExt.path = cmprExtPth(ext.extPth);
+			hit->rExt = cmprExtPth(currExt.pth);
 		}
 	}
 }
@@ -736,6 +739,38 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>,
 	hitLen = maxHitLen;	
 	//Return score
 	return maxScore;
+}
+
+//This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color 
+//set using an iterative approach
+void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	//The rank of a predecessor of a leading unitig (used to construct the extension path)
+	uint16_t nr;
+	//The length of the currently explored extension on the leading unitig
+	uint32_t extLen;
+	//The number of times we have already switched unitigs during this extension
+	uint32_t uniSwtchCnt = 0;
+	//The remaining number of positions on the leading unitig fulfilling the search criteria
+	int32_t remCovPos;
+	//The progress we achieve due to reaching a seed
+	int32_t progress;
+	//The leading unitig's sequence
+	string uSeq;
+	struct Seed *nearestSeed, *prevSeed;
+	//An extension we are dealing with
+	Ext currExt;
+	//A vector of extensions to be continued on a predecessor of a leading unitig//TODO: This is only an artificial detour to allow 
+	//the reproduction of results of the old recursive PLAST version for testing purposes. As soon as we are sure that the iterative
+	// version of PLAST works this should be removed!
+	stack<Ext> newExts;
+	//Initialize DFS stack
+	stack<Ext> exts;//TODO: We use a deque here as the container for the stack, because intuitively it sounds more efficient (e.g. compared to a vector). At some point we should try to verify this by a test!
+
+	//Create the first extension right in front of the hit's start
+	exts.push(Ext(-1 + hit->offU, -1 + hit->offQ, 0, 0, 0, hit->origUni, list<uint16_t>()));
+
+	//
 }
 
 //This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color set
