@@ -760,9 +760,11 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 	//The rank of a predecessor of a leading unitig (used to construct the extension path)
 	uint16_t nr;
 	//The length of the currently explored extension on the leading unitig
-	uint32_t extLen;
+	int32_t extLen;
 	//The number of times we have already switched unitigs during this extension
 	uint32_t uniSwtchCnt = 0;
+	//The k value are using
+	int K = hit->origUni.getGraph()->getK();
 	//A number of positions on the leading unitig fulfilling the search criteria
 	int32_t nbffPos;
 	//The progress we achieve due to reaching a seed
