@@ -109,16 +109,19 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 	uint16_t nr;
 	//The last position in a unitig's sequence that needs to be compared with
 	uint32_t lastSeqPos;
-	//The length of the currently explored extension on the leading unitig
-	uint32_t extLen;
 	//The number of times we have already switched unitigs during this extension
 	uint32_t uniSwtchCnt = 0;
 	//The k value are using
 	int K = hit->origUni.getGraph()->getK();
-	//The remaining number of positions on the leading unitig fulfilling the search criteria
-	int32_t remCovPos;
+	//The length of the currently explored extension on the leading unitig
+	int32_t extLen;
+	//A number of positions on the leading unitig fulfilling the search criteria
+	int32_t nbffPos;
 	//The progress we achieve due to reaching a seed
 	int32_t progress;
+	//The initial query position at the beginning of an exploration on the current leading unitig (might be different from 
+	//currExt.offsetQ right after switching unitigs)
+	int32_t posQ;
 	//The leading unitig's sequence
 	string uSeq;
 	struct Seed *nearestSeed, *prevSeed;
@@ -132,12 +135,12 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 	stack<Ext> exts;//TODO: We use a deque here as the container for the stack, because intuitively it sounds more efficient (e.g. compared to a vector). At some point we should try to verify this by a test!
 
 	//Create the first extension right after the hit's end
-	exts.push(Ext(hit->offU + hit->length, hit->offQ + hit->length, 0, 0, 0, hit->origUni, list<uint16_t>()));
+	exts.push(Ext(hit->offU + hit->length, hit->offQ + hit->length, hit->offQ + hit->length, 0, 0, hit->origUni, list<uint16_t>()));
 
 	while(!exts.empty()){
 		//Get first extension on stack
 		currExt = exts.top();
-		//Remove first extension on stack
+		//Remove first extension from stack
 		exts.pop();
 
 		//Try to extend current extension on the leading unitig as far as possible//
@@ -149,25 +152,30 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 		//Get the leading unitig's sequence
 		uSeq = currExt.ldUni.mappedSequenceToString();
 		//Compute the number of positions on which search criteria are fulfilled	
-		remCovPos = getSrchCritCov(currExt.ldUni, quorum, searchSet, compOffset(currExt.offsetU, 1, currExt.ldUni.size, 
+		nbffPos = getSrchCritCov(currExt.ldUni, quorum, searchSet, compOffset(currExt.offsetU, 1, currExt.ldUni.size, 
 			currExt.ldUni.strand), currExt.ldUni.strand, advIdx);
-		//Search for a seed we could reach during this extension
+		//Search for a seed we could reach during this extension (tmpQoff has to be used here to match with offsetU, because offsetQ
+		// is only updated after an explored continuation of an extension is also accepted due to a positive score which might not 
+		//be the case when switching to the next unitig whereas offsetU is always updated when switching)
 		nearestSeed = searchRightNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand), 
-			(uint32_t) currExt.tmpQoff, extLen, (uint32_t) currExt.offsetU, prevSeed);//TODO: As soon as the iterative extension is completely implemented, it might be possible to modify input parameter types of searchRightNeighbor() to avoid the necessity of these casts
+			(uint32_t) currExt.tmpQoff, (uint32_t) extLen, (uint32_t) currExt.offsetU, prevSeed);//TODO: As soon as the iterative extension is completely implemented, it might be possible to modify input parameter types of searchRightNeighbor() to avoid the necessity of these casts
+		//The initial query position is always identical to currExt.tmpQoff in the beginning, but this might change during the ex-
+		//tension on the leading unitig
+		posQ = currExt.tmpQoff;
 
 		//We are done if we have reached the end of the query or search criteria are no longer fulfilled
-		while(remCovPos-- > 0 && currExt.offsetQ + extLen < q.length()){
+		while(nbffPos-- > 0 && posQ + extLen < q.length()){
 			//Check if we have reached the next seed
-			if(nearestSeed != NULL && currExt.offsetQ + extLen >= nearestSeed->offsetQ){
+			if(nearestSeed != NULL && posQ + extLen >= nearestSeed->offsetQ){
 				//Calculate the number of positions on the unitig we do not need to compare
-				progress = nearestSeed->offsetQ + nearestSeed->len - (currExt.offsetQ + extLen);
+				progress = nearestSeed->offsetQ + nearestSeed->len - (posQ + extLen);
 				//Update extension length
 				extLen += progress;
-				//Update remCovPos (We can just do this because search criteria have been checked during seed detection already; -1 
-				//because we have already decremented remCovPos during the check of the while loop)
-				remCovPos -= progress - 1;
-				//Update extension with information about the reached seed
-				updateExtension(currExt, progress * mscore, extLen);//TODO: This function still needs to be tested!
+				//Update nbffPos
+				nbffPos -= progress;
+				//Update extension with information about the reached seed (the score has to be increased by 1, because progress 
+				//does not consider that we have just moved forward in the beginning of this iteration)
+				updateExtension(currExt, posQ, (progress + 1) * mscore, extLen, true);//TODO: This function still needs to be tested!
 
 				//Check if there is another seed to reach
 				if(prevSeed != NULL){
@@ -177,7 +185,8 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 					free(nearestSeed);
 					//Search for another neighbor
 					nearestSeed = searchRightNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand)
-						, (uint32_t) currExt.offsetQ, extLen, (uint32_t) currExt.offsetU, prevSeed);
+						, (uint32_t) posQ, (uint32_t) extLen, (uint32_t) currExt.offsetU, prevSeed)
+					;
 				} else{
 					//Make seed's successor the head of the seed list
 					currExt.ldUni.getData()->getData(currExt.ldUni)->setSeed(nearestSeed->nextSeed, currExt.ldUni.strand);
@@ -186,20 +195,23 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 					//Reset nearestSeed
 					nearestSeed = NULL;
 				}
+
+				//Possibly this has to be done after the nearest neighbor search
+				++extLen;
 			//Check if there is still sequence left to compare on the leading unitig
 			} else if(currExt.offsetU + extLen <= lastSeqPos){
 				//Update extension with information about the next two compared positions
-				updateExtension(currExt, compUScore(uSeq[currExt.offsetU + extLen], q[currExt.offsetQ + extLen], mscore, mmscore), 
-					extLen);
+				updateExtension(currExt, posQ, compUScore(uSeq[currExt.offsetU + extLen], q[posQ + extLen], mscore, mmscore), 
+					extLen, true);
 
 				//Terminate exploration if the score has become too bad
 				if(currExt.tmpScore < -X) break;
 
-				//Explore further
+				//Move on
 				++extLen;
 			} else{
-				//Check if leading unitig has successors (probably cheaper than to call hasSuccessors()) and if we have not yet 
-				//reached the the maximum number of unitig switches during this extension
+				//Check if leading unitig has successors (the way it is done is probably cheaper than to call hasSuccessors()) and 
+				//if we have not yet reached the maximum number of unitig switches during this extension
 				if(lastSeqPos ==  currExt.ldUni.size - K && uniSwtchCnt++ < EXPLORED_UNITIGS_MAX){
 					//Reset successor's rank
 					nr = 0;
@@ -208,10 +220,10 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 					for(auto n = currExt.ldUni.getSuccessors().begin(); n != currExt.ldUni.getSuccessors().end(); ++n, ++nr){
 						//Copy current extension
 						Ext newExt = Ext(currExt);
-						//On the next unitig we start at sequence position 0
+						//Calculate sequence position at which we start on the next unitig
 						newExt.offsetU = currExt.offsetU + extLen - lastSeqPos;
 						//Set tmpQoff correctly
-						newExt.tmpQoff = newExt.offsetQ + extLen;
+						newExt.tmpQoff = posQ + extLen;
 						//Update leading unitig
 						newExt.ldUni = *n;
 						//Extend extension path by new leading unitig
@@ -751,10 +763,13 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 	uint32_t extLen;
 	//The number of times we have already switched unitigs during this extension
 	uint32_t uniSwtchCnt = 0;
-	//The remaining number of positions on the leading unitig fulfilling the search criteria
-	int32_t remCovPos;
+	//A number of positions on the leading unitig fulfilling the search criteria
+	int32_t nbffPos;
 	//The progress we achieve due to reaching a seed
 	int32_t progress;
+	//The initial query position at the beginning of an exploration on the current leading unitig (might be different from 
+	//currExt.offsetQ right after switching unitigs)
+	int32_t posQ;
 	//The leading unitig's sequence
 	string uSeq;
 	struct Seed *nearestSeed, *prevSeed;
@@ -768,9 +783,123 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 	stack<Ext> exts;//TODO: We use a deque here as the container for the stack, because intuitively it sounds more efficient (e.g. compared to a vector). At some point we should try to verify this by a test!
 
 	//Create the first extension right in front of the hit's start
-	exts.push(Ext(-1 + hit->offU, -1 + hit->offQ, 0, 0, 0, hit->origUni, list<uint16_t>()));
+	exts.push(Ext(-1 + hit->offU, -1 + hit->offQ, -1 + hit->offQ, hit->score, 0, hit->origUni, list<uint16_t>()));
 
-	//
+	//Perform DFS through the graph while extending the seed
+	while(!exts.empty()){
+		//Get first extension on stack
+		currExt = exts.top();
+		//Remove first extension from stack
+		exts.pop();
+
+		//Try to extend current extension on the leading unitig as far as possible//
+
+		//Set extension length on leading unitig
+		extLen = 0;
+		//Get the leading unitig's sequence
+		uSeq = currExt.ldUni.mappedSequenceToString();
+		//Compute the number of positions on which search criteria are fulfilled	
+		nbffPos = getSrchCritCov(currExt.ldUni, quorum, searchSet, compOffset(currExt.offsetU, 1, currExt.ldUni.size, 
+			currExt.ldUni.strand), !currExt.ldUni.strand, advIdx);
+		//Search for a seed we could reach during this extension (tmpQoff has to be used here to match with offsetU, because offsetQ
+		// is only updated after an explored continuation of an extension is also accepted due to a positive score which might not 
+		//be the case when switching to the next unitig whereas offsetU is always updated when switching)
+		nearestSeed = searchLeftNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand), (uint32_t) 
+			currExt.tmpQoff, (uint32_t) currExt.offsetU, prevSeed);//TODO: As soon as the iterative extension is completely implemented, it might be possible to modify input parameter types of searchLeftNeighbor() to avoid the necessity of these casts
+		//The initial query position is always identical to currExt.tmpQoff in the beginning, but this might change during the ex-
+		//tension on the leading unitig
+		posQ = currExt.tmpQoff;
+
+		//Go through the query up to the beginning or until search criteria are no longer fulfilled
+		while(nbffPos-- > 0 && posQ >= extLen){
+			//Check if we have reached the next seed
+			if(nearestSeed != NULL && posQ - extLen < nearestSeed->offsetQ + nearestSeed->len){
+				//Calculate the number of positions on the unitig we do not need to compare
+				progress = posQ - extLen - nearestSeed->offsetQ;
+				//Update extension length
+				extLen += progress;
+				//Update nbffPos
+				nbffPos -= progress;
+				//Update extension with information about the reached seed (the score has to be increased by 1, because progress 
+				//does not consider that we have just moved forward in the beginning of this iteration)
+				updateExtension(currExt, posQ, (progress + 1) * mscore, extLen, false);
+
+				//Exclude reached seed from seed list
+				if(prevSeed != NULL){
+					//Link predecessor and successor of the reached seed
+					prevSeed->nextSeed = nearestSeed->nextSeed;
+				} else{
+					//Set the reached seed's successor as head of the seed list
+					currExt.ldUni.getData()->getData(currExt.ldUni)->setSeed(nearestSeed->nextSeed, currExt.ldUni.strand);
+				}
+
+				//Delete the reached seed
+				free(nearestSeed);
+				//Reset prevSeed
+				prevSeed = NULL;
+				//Search for next seed
+				nearestSeed = searchLeftNeighbor(currExt.ldUni.getData()->getData(currExt.ldUni)->getSeed(currExt.ldUni.strand), (uint32_t) posQ, (uint32_t) currExt.offsetU, prevSeed);
+				//Extend further
+				++extLen;
+			//Make sure there is still unitig sequence left to compare
+			} else if(currExt.offsetU >= extLen){
+				//Update extension with information about the next two compared positions
+				updateExtension(currExt, posQ, compUScore(uSeq[currExt.offsetU - extLen], q[posQ - extLen], mscore, mmscore), extLen, false);
+
+				//Terminate exploration if the score has become too bad
+				if(currExt.tmpScore < -X) break;
+
+				//Move on
+				++extLen;
+			} else{
+				//Check if the leading unitig has predecessors and make sure we do not exceed the maximum number of unitig switches 
+				//during this extension
+				if(currExt.ldUni.getPredecessors().hasPredecessors() && uniSwtchCnt++ < EXPLORED_UNITIGS_MAX){
+					//Reset predecessor's rank
+					nr = 0;
+
+					//Iterate over predecessors
+					for(auto n = currExt.ldUni.getPredecessors().begin(); n != currExt.ldUni.getPredecessors().end(); ++n, ++nr){
+						//Copy current extension
+						Ext newExt = Ext(currExt);
+						//Calculate sequence position at which we start on the next unitig
+						newExt.offsetU = n->size - K;
+						//Set tmpQoff correctly
+						newExt.tmpQoff = posQ - extLen;
+						//Update leading unitig
+						newExt.ldUni = *n;
+						//Extend extension path by new leading unitig
+						newExt.pth.push_back(nr);
+						//Add the new extension to the auxiliar vector to preserve the correct order
+						newExts.push(newExt);
+					}
+
+					//Push the new extensions to the stack in the correct order
+					while(!newExts.empty()){
+						exts.push(newExts.top());
+						newExts.pop();
+					}
+				}
+
+				//Terminate current extension
+				break;
+			}
+		}
+
+		//Update info about the best extension found so far//
+
+		//Check if the score of the current extension is better than what we found so far
+		if(currExt.score > hit->score){
+			//Update max score found
+			hit->score = currExt.score;
+			//Recalculate hit's length
+			hit->length += hit->offQ - currExt.offsetQ;//TODO: We should think about whether it would not also make sense to change the type of offets inside the Hit Class
+			//Clear extension path if it already exists
+			decmprExtPth(hit->lExt);
+			//Copy extension path
+			hit->lExt = cmprExtPth(currExt.pth);
+		}
+	}
 }
 
 //This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color set

@@ -59,14 +59,25 @@ class Ext {
 
 //This function encapsulates part of the X-drop algorithm used during an extension. It updates the given extension and exploration 
 //length depending on whether the temporary score became positive by adding the given score
-inline void updateExtension(Ext& ext, const int32_t& expScr, uint32_t& expLen){
+inline void updateExtension(Ext& ext, int32_t& posQ , const int32_t& expScr, int32_t& expLen, const bool& isRightExt){
 	if((ext.tmpScore += expScr) > 0){
 		//Update extension information
-		ext.offsetU += expLen;
-		ext.offsetQ = ext.tmpQoff + expLen;
 		ext.score += ext.tmpScore;
-		//Reset exploration length and temporary score
+
+		//If we extend to the right we have to add and otherwise substract the extension length
+		if(isRightExt){
+			ext.offsetU += expLen;
+			ext.offsetQ = posQ + expLen;
+		} else{
+			ext.offsetU -= expLen;
+			ext.offsetQ = posQ - expLen;
+		}
+		
+		//Update posQ
+		posQ = ext.offsetQ;
+		//Reset exploration length, temporary offset in query and temporary score
 		expLen = 0;
+		ext.tmpQoff = 0;
 		ext.tmpScore = 0;
 	}
 }

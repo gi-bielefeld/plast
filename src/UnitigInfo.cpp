@@ -8,7 +8,7 @@ struct Seed* searchRightNeighbor(struct Seed* sLSeed, const uint32_t &iniExtSeed
 	prevSeed = NULL;
 
 	//Find the nearest seed that we might be able to reach during our extension
-	while(sLSeed != NULL){
+	while(sLSeed != NULL){//TODO: Check whether it might be that we do not always find the closest seed first using this procedure and, thus, miss some reachable seeds!
 		//Since our seed lists are decreasingly ordered by their offset in q we only need to search for a reachable seed as long as the current seed's q offset is not smaller than the q offset of the seed we are just trying to extend
 		if(iniExtSeedOffsQ >= sLSeed->offsetQ){
 			return nearestSeed;

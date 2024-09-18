@@ -77,9 +77,9 @@ class UnitigInfo : public CCDBG_Data_t<UnitigInfo> {
 		struct Seed *nextSeedRcomp;
 		struct Seed *frstSeedRcomp;
 
-		//The lowest offset position in the unitig at which search criteria are not fulfilled anymore
+		//The smallest offset position in the unitig at which search criteria are not fulfilled anymore
 		int32_t lBrd;
-		//The highest offset position in the unitig at which search criteria are not fulfilled anymore
+		//The largest offset position in the unitig at which search criteria are not fulfilled anymore
 		int32_t rBrd;
 		//Precalculated minimum quorum of any k-mer on this unitig
 		uint16_t globQrm;
