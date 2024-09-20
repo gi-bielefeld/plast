@@ -342,6 +342,8 @@ void perfRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore
 	int32_t extLen;
 	//A number of positions on the leading unitig fulfilling the search criteria
 	int32_t nbffPos;
+	//The progress we achieve due to reaching a seed
+	int32_t progress;
 	//The initial query position at the beginning of an exploration on the current leading unitig (might be different from 
 	//currExt.offsetQ right after switching unitigs)
 	int32_t posQ;
