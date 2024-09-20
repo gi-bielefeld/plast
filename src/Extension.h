@@ -85,14 +85,18 @@ inline void updateExtension(Ext& ext, int32_t& posQ , const int32_t& expScr, int
 //This function simply calculates the unity score for two bases ((mis)match = (-)1)
 inline int32_t compUScore(const char &q, const char &u, const uint16_t &mscore, const int16_t &mmscore){ return (q == u ? mscore : mmscore); }
 
-//The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
-//search color set using an iterative approach
+//The good old X-drop algorithm (extension to the right) considering quorum and search color set using an iterative approach
 void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
-	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& onRefStrnd);
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
 //search color set using recursive function calls
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+
+//The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and 
+//search color set, and using an iterative procedure
+void perfRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const 
+	uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set
 void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
