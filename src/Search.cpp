@@ -231,7 +231,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			newHit.rExt.path = NULL;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, true);//TODO: This function still needs to be tested!
+			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
 
 			// startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
@@ -302,14 +302,16 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			newHit.nextHit = NULL;
 
 			//Extend hit to the right
-			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, false);//TODO: This function still need to be tested!
+			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still need to be tested!
 
 			// startRightX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match, the third condition cares about seeds in the end of the query and the fourth that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
 				//Extend hit to the left
-				startLeftX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+				
+				// startLeftX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 				//Check whether we have created a hit for this query position already
 				if(hitArr[newHit.offQ].length != 0){

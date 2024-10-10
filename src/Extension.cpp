@@ -146,7 +146,7 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 		//Try to extend current extension on the leading unitig as far as possible//
 
 		//If the current unitig has successors and we are on the reference strand we do not need to compare the k-1 overlap//TODO: Would not it actually be better to compare it on this unitig rather than first move to the next one? -> Yes, but how to deal with seeds in this area?
-		lastUniPos = currExt.ldUni.size - (onRefStrnd && currExt.ldUni.getSuccessors().hasSuccessors() ? K : 1);
+		lastUniPos = currExt.ldUni.size - (currExt.ldUni.strand && currExt.ldUni.getSuccessors().hasSuccessors() ? K : 1);
 		//Set extension length on leading unitig
 		extLen = 0;
 		//Get the leading unitig's sequence
@@ -907,18 +907,19 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>,
 	return maxScore;
 }
 
-//This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color 
-//set using an iterative approach
+//This function starts the left extension considering a quorum and a search color set using an iterative approach
 void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
 	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//The rank of a predecessor of a leading unitig (used to construct the extension path)
 	uint16_t nr;
-	//The length of the currently explored extension on the leading unitig
-	int32_t extLen;
+	//The last position in a unitig's sequence that needs to be compared with
+	uint32_t lastUniPos;
 	//The number of times we have already switched unitigs during this extension
 	uint32_t uniSwtchCnt = 0;
 	//The k value are using
 	int K = hit->origUni.getGraph()->getK();
+	//The length of the currently explored extension on the leading unitig
+	int32_t extLen;
 	//A number of positions on the leading unitig fulfilling the search criteria
 	int32_t nbffPos;
 	//The progress we achieve due to reaching a seed
@@ -950,6 +951,8 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 
 		//Try to extend current extension on the leading unitig as far as possible//
 
+		//If the current unitig has predecessors and we are on the reverse complementary strand we do not compare the first k-1 positions//TODO: Would not it actually be better to compare as much as possible on this unitig rather than first move to the next one? -> Yes, but how to deal with seeds in the overlapping area?
+		lastUniPos = ()
 		//Set extension length on leading unitig
 		extLen = 0;
 		//Get the leading unitig's sequence

@@ -87,7 +87,7 @@ inline int32_t compUScore(const char &q, const char &u, const uint16_t &mscore, 
 
 //The good old X-drop algorithm (extension to the right) considering quorum and search color set using an iterative approach
 void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
-	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& onRefStrnd);
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and 
 //search color set using recursive function calls
@@ -122,8 +122,7 @@ int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStor
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
 int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, const uint32_t &lead, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-//This function starts the left extension for seeds lying on the query's reference strand considering a quorum and a search color 
-//set using an iterative approach
+//This function starts the left extension considering a quorum and a search color set using an iterative approach
 void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
 	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
