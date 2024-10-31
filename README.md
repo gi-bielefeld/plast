@@ -21,7 +21,8 @@ Schulz, T., Wittler, R., Rahmann, S., Hach, F., Stoye, J.: [Detecting High Scori
 * [Tool comparison](https://github.com/gi-bielefeld/plast#tool-comparison)
 * [FAQ](https://github.com/gi-bielefeld/plast#faq)
 * [Contact](https://github.com/gi-bielefeld/plast#contact)
-* [Licenses](https://github.com/gi-bielefeld/plast#license)
+* [Licenses](https://github.com/gi-bielefeld/plast#licenses)
+* [Privacy](https://github.com/gi-bielefeld/plast#privacy)
 
 ## Requirements
 
@@ -354,3 +355,11 @@ PLAST is provided as a service of the [German Network for Bioinformatics Infrast
 * Bifrost is BSD-2 licensed (https://github.com/pmelsted/bifrost)
 
 * PLAST is GNU GPLv3 licensed [LICENSE](https://github.com/gi-bielefeld/plast/blob/master/LICENSE)
+
+## Privacy
+
+We use the open source software Matomo for web analysis in order to collect anonymized usage statistics for this repository. Please refer to our [Privacy Notice](/PrivacyNotice.pdf) for details.
+
+<!-- Matomo Image Tracker-->
+<img referrerpolicy="no-referrer-when-downgrade" src="https://piwik.cebitec.uni-bielefeld.de/matomo.php?idsite=28&amp;rec=1" style="border:0" alt="" />
+<!-- End Matomo -->
