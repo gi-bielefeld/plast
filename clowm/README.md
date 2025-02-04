@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/gi-bielefeld/plast/clowm/PLASToverview.png" style="border:0;" alt="PLAST Alignment" align="right"/>
+<!-- TODO: Bild einbauen! -->
 
 # PLAST
 ### Pangenome Local Alignment Search Tool
