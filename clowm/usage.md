@@ -7,11 +7,11 @@ Searching for local alignments with PLAST requires two different kinds of input:
 
 ## The Query Sequence
 
-The query sequence is a plain text file containing a continuous string representing a [DNA sequence](#glossary) to search for. A query sequence file may contain multiple lines each with a different string making it possible to search for alignments for multiple DNA sequences in only a single run of PLAST.
+The query sequence is a plain text file containing a continuous string representing a [DNA sequence](#dna-sequence) to search for. A query sequence file may contain multiple lines each with a different string making it possible to search for alignments for multiple DNA sequences in only a single run of PLAST.
 
 ## The Pangenome
 
-PLAST expects a pangenome to be represented as a [Bifrost graph](#Pangenome-Input-as-Bifrost-Graph). However, it is also possible to use a [set of genomes](#Pangenome-Input-as-Set-of-Genomes) as input which form the pangenome. Required files and their formats for both cases are described in detail below.
+PLAST expects a pangenome to be represented as a [Bifrost graph](#pangenome-input-as-bifrost-graph). However, it is also possible to use a [set of genomes](#pangenome-input-as-set-of-genomes) as input which form the pangenome. Required files and their formats for both cases are described in detail below.
 
 ### Pangenome Input as Bifrost Graph
 
