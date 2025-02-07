@@ -28,6 +28,12 @@ An optional Bifrost index file is stored in a file with file suffix `.bfi`.
 
 *TODO!*
 
+# Output
+
+By default, PLAST generates a text file (file suffix `.plast`) containing all highest scoring alignments found between each query sequence and any sequences from the pangenome graph. Additionally, respective alignment scores and e-values are reported for each alignment, too.
+
+PLAST's default output may be modified using several parameters (see [Advanced Options](#advanced-options) for details).
+
 # Advanced Options
 
 *TODO!*
