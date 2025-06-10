@@ -299,6 +299,8 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			newHit.offU = currSeed->offsetU;
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
+			newHit.lExt.path = NULL;
+			newHit.rExt.path = NULL;
 			newHit.nextHit = NULL;
 
 			//Extend hit to the right
@@ -309,7 +311,7 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match, the third condition cares about seeds in the end of the query and the fourth that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
 				//Extend hit to the left
-				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still need to be tested!
 				
 				// startLeftX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
@@ -458,7 +460,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 	// cout << "searchQuery: Seed extension done for seeds on reference strand" << endl;
 
 	//Extend seeds lying on the reverse complementary strand if demanded
-	if(strand != Plus) extendRevCompSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);
+	if(strand != Plus) extendRevCompSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);//TODO: This function still need to be tested!
 
 	//Measure and output current runtime if demanded
 	if(calcRT){
