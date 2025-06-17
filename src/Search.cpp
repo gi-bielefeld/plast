@@ -231,7 +231,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			newHit.rExt.path = NULL;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
+			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, currUni.strand);//TODO: This function still needs to be tested!
 
 			// startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
@@ -242,7 +242,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
 				//Extend hit to the left
-				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still needs to be tested!
+				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, currUni.strand);//TODO: This function still needs to be tested!
 
 				// startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
@@ -255,7 +255,6 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 					newHit.nextHit = hitArr[newHit.offQ].nextHit;
 					//Create a new hit
 					hitArr[newHit.offQ].nextHit = new Hit(newHit);
-
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqG = "";
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
 				}
@@ -304,14 +303,17 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			newHit.nextHit = NULL;
 
 			//Extend hit to the right
-			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still need to be tested!
+			perfRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, currUni.strand);//TODO: This function still need to be tested!
 
 			// startRightX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match, the third condition cares about seeds in the end of the query and the fourth that we do not miss seeds in the end of a unitig if the unitig does not have successors (i.e. predecessors on the reference strand)
+			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are 
+			//      not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have 
+			//      more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length() || (!i->getPredecessors().hasPredecessors() && currSeed->offsetU + currSeed->len == i->size)){
 				//Extend hit to the left
-				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);//TODO: This function still need to be tested!
+				perfLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, currUni.strand);//TODO: This function still need to be tested!
 				
 				// startLeftX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 

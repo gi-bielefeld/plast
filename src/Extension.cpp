@@ -251,7 +251,7 @@ void perfRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const in
 			//Update max score found
 			hit->score = currExt.score;
 			//Recalculate hit's length
-			hit->length = (uint32_t) currExt.offsetQ - hit->offQ + 1;//TODO: We should think about whether it would not also make sense to change the type of offets inside the Hit Class
+			hit->length = (uint32_t) currExt.offsetQ - hit->offQ + 1;//TODO: We should think about whether it would not also make sense to change the type of offsets inside the Hit Class
 			//Clear extension path if it already exists
 			decmprExtPth(hit->rExt);
 			//Copy extension path
@@ -907,9 +907,9 @@ int32_t extendAtPrevUnitigOnRevComp(const BackwardCDBG<DataAccessor<UnitigInfo>,
 	return maxScore;
 }
 
-//This function starts the left extension considering a quorum and a search color set using an iterative approach
+//This function performs the left extension considering a quorum and a search color set using an iterative approach
 void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t 
-	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	&quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& onRefStrnd){
 	//The rank of a predecessor of a leading unitig (used to construct the extension path)
 	uint16_t nr;
 	//The last position in a unitig's sequence that needs to be compared with
@@ -952,7 +952,7 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 		//Try to extend current extension on the leading unitig as far as possible//
 
 		//If the current unitig has predecessors and we are on the reverse complementary strand we do not compare the first k-1 positions//TODO: Would not it actually be better to compare as much as possible on this unitig rather than first move to the next one? -> Yes, but how to deal with seeds in the overlapping area?
-		lastUniPos = ()
+		lastUniPos = !currExt.ldUni.strand && currExt.ldUni.getPredecessors().hasPredecessors() ? K - 1 : 0;
 		//Set extension length on leading unitig
 		extLen = 0;
 		//Get the leading unitig's sequence
@@ -981,7 +981,7 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 				nbffPos -= progress;
 				//Update extension with information about the reached seed (the score has to be increased by 1, because progress 
 				//does not consider that we have just moved forward in the beginning of this iteration)
-				updateExtension(currExt, posQ, (progress + 1) * mscore, extLen, false);
+				updateExtension(currExt, posQ, (progress + 1) * mscore, extLen, false);//TODO: This function still needs to be tested!
 
 				//Exclude reached seed from seed list
 				if(prevSeed != NULL){
@@ -1001,7 +1001,7 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 				//Extend further
 				++extLen;
 			//Make sure there is still unitig sequence left to compare
-			} else if(currExt.offsetU >= extLen){
+			} else if(currExt.offsetU >= extLen + lastUniPos){
 				//Update extension with information about the next two compared positions
 				updateExtension(currExt, posQ, compUScore(uSeq[currExt.offsetU - extLen], q[posQ - extLen], mscore, mmscore), extLen, false);
 
@@ -1022,7 +1022,7 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 						//Copy current extension
 						Ext newExt = Ext(currExt);
 						//Calculate sequence position at which we start on the next unitig
-						newExt.offsetU = n->size - K;
+						newExt.offsetU = n->size - K + 1 - (currExt.offsetU - extLen);
 						//Set tmpQoff correctly
 						newExt.tmpQoff = posQ - extLen;
 						//Update leading unitig
@@ -1052,7 +1052,7 @@ void perfLeftX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int
 			//Update max score found
 			hit->score = currExt.score;
 			//Recalculate hit's length
-			hit->length += hit->offQ - currExt.offsetQ;//TODO: We should think about whether it would not also make sense to change the type of offets inside the Hit Class
+			hit->length += hit->offQ - currExt.offsetQ;//TODO: We should think about whether it would not also make sense to change the type of offsets inside the Hit Class
 			//Clear extension path if it already exists
 			decmprExtPth(hit->lExt);
 			//Copy extension path
