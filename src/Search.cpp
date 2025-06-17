@@ -4,6 +4,7 @@
 #include "Sequence.cpp"
 #include "Hit.cpp"
 #include "Statistics.h"
+#include <bifrost/UnitigMap.hpp>
 
 //This function calculates quorums for every unitig of the given graph and stores it as unitig info
 void calcQrms(ColoredCDBG<UnitigInfo> &cdbg){
@@ -208,6 +209,8 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
 			//Extract seed from the list
+			cout << "Test_extenRefSeeds" << endl;
+			cout << currUni.mappedSequenceToString() << endl;
 			currUni.getData()->getData(currUni)->setSeed(currSeed->nextSeed, currUni.strand);
 			//Setup initial hit infos
 			newHit.score = 0;
@@ -217,7 +220,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
+			startRightX_Drop_Alt(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 			
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
@@ -255,6 +258,8 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 	struct Seed *currSeed;
 	Hit newHit, *hitIt;
 	UnitigColorMap<UnitigInfo> currUni;
+	cout << "Test_extenRefCompSeeds" << endl;
+	cout << currUni.mappedSequenceToString() << endl;
 
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<UnitigInfo>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
@@ -264,6 +269,9 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 		currUni.strand = false;
 		//Get the first seed
 		currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
+
+		cout << "Test_extenRefCompSeeds2" << endl;
+
 
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
@@ -276,7 +284,7 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
-
+			cout << "Test_extenRefCompSeeds3" << endl;
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 

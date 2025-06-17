@@ -25,7 +25,7 @@ int main(int argc, char **argv){
 	std::chrono::duration<double> tDiff;
 
 	//A flag indicating whether we need to measure run times
-	bool calcRT = RUNTIME_FLAG_DEFAULT;
+	bool calcRT = false;
 	//A flag indicating whether color coverage should be outputted for each alignment
 	bool repCols = REPORT_COLORS_FLAG_DEFAULT;
 	//A flag indicating whether this run is only a simulation run

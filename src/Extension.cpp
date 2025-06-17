@@ -2,6 +2,10 @@
 #include "Hit.h"
 #include "Search.h"
 #include "UnitigInfo.cpp"
+#include <bifrost/CompactedDBG.hpp>
+#include <bifrost/UnitigMap.hpp>
+#include <queue>
+#include <tuple>
 
 //This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
@@ -20,6 +24,7 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	maxScore = 0;
 	sucID = 0;
 
+	
 	//Iterate over successors
 	for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 		//Temporary extention path
@@ -44,6 +49,118 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	//Nothing found
 	return maxScore;
 }
+
+
+int32_t extendAtNextUnitig_Alt(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	uint16_t sucID = 0;
+	uint32_t tmpHitLen = 0;
+	int32_t maxScore = 0;
+
+
+	list<uint16_t> tempPath;
+
+	//auto& unitigName = *nI;
+	//cout << unitigName.mappedSequenceToString() << endl;
+
+	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
+	using pathList = std::list<uint16_t>;
+	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
+
+
+	cout << "start" << endl;
+
+	list<tuple<shorterTemp, uint32_t, pathList>> finalList;
+	std::queue<std::tuple<shorterTemp, uint32_t, pathList, uint32_t>> queueTest;
+	std::set<const void*> visited;
+	list<uint16_t> bestPath;
+
+
+	for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+		tmpHitLen = hitLen;
+        tempPath.clear();
+		int32_t startScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, lastExtSeedTmpScore, uniPos, tempPath, explCount, quorum, searchSet, advIdx);
+		tempPath.push_back(sucID);
+		queueTest.push(std::make_tuple(nI,startScore,tempPath, uniPos));
+		visited.insert(&(*nI));
+		if (startScore > maxScore) {
+            maxScore = startScore;
+            bestPath = tempPath;
+            hitLen = tmpHitLen;
+		}
+		++sucID;
+	}
+
+	cout << "firstPart" << endl;
+
+	while (!queueTest.empty()) {
+		cout << queueTest.size() << endl;
+
+		if (++explCount > MAXRECURSIONDEPTH) {
+            std::cout << "Max exploration depth reached in loop" << std::endl;
+            break;
+        }
+
+		cout << "firstPart2" << endl;
+
+		auto tempFront = queueTest.front();
+		queueTest.pop();
+
+		cout << "firstPart3" << endl;
+
+		shorterTemp currUnitig = std::get<0>(tempFront);
+		uint32_t currScore = std::get<1>(tempFront);
+		pathList tempPath2 = std::get<2>(tempFront);
+		uint32_t currUniPos = std::get<3>(tempFront);
+
+		cout << "firstPart4" << endl;
+
+		
+		auto& tempcurrUnitig = *currUnitig;
+		shorterContainer sucIter2 = tempcurrUnitig.getSuccessors();
+
+		if (currScore > maxScore) {
+              maxScore = currScore;
+              bestPath = tempPath2;
+              hitLen = tmpHitLen;
+          }
+
+		cout << "firstPart5" << endl;
+
+		if(sucIter2.begin() == sucIter2.end()) {
+			finalList.push_back(std::make_tuple(currUnitig, currScore, tempPath2));
+			cout << "firstPart6" << endl;
+		} else{
+			cout << "firstPart7" << endl;
+			sucID = 0;
+			for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+				if (visited.count(&(*nI))) continue;
+				visited.insert(&(*nI));
+				tmpHitLen = hitLen;
+                tempPath = tempPath2;
+				uint32_t nextUniPos = currUniPos + (tempcurrUnitig.getGraph()->getK() - 1);
+				cout << "firstPart8" << endl;
+				int32_t tempScore = contRightX_Drop_Alt(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, currScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx);
+				tempPath.push_back(sucID);
+                int32_t totalScore = currScore + tempScore;
+                queueTest.push(std::make_tuple(nI, totalScore, tempPath, nextUniPos));
+                if (totalScore > maxScore) {
+                    maxScore = totalScore;
+                    bestPath = tempPath;
+                    hitLen = tmpHitLen;
+                }
+				++sucID;
+			}
+		}
+	}
+
+	cout << "secondPart" << endl;
+	cout << "end" << endl;
+	extPth = bestPath;
+	return maxScore;
+}
+
+
+
 
 //This function  initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
 int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
@@ -85,6 +202,7 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>,
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
+	cout << "TESTXDROP" << endl;
 	int32_t tmpScore = 0;
 	uint32_t tmpSeedLen = hit->length;
 	uint32_t overlap = 0;
@@ -94,6 +212,13 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 	uint32_t explCount;
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
+	cout << hit->origUni.mappedSequenceToString() << endl;
+
+	auto tempSuccessors = hit->origUni.getSuccessors();
+	for(auto temp = tempSuccessors.begin(); temp != tempSuccessors.end(); ++temp) {
+		cout << (*temp).mappedSequenceToString() << endl;
+	}
+
 
 	//Calculate hit's initial score
 	hit->score = hit->length * mscore;
@@ -141,6 +266,73 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 	hit->rExt = cmprExtPth(extPth);
 }
 
+
+void startRightX_Drop_Alt(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	//Initialization of auxiliary variables
+	cout << "TESTXDROP" << endl;
+	int32_t tmpScore = 0;
+	uint32_t tmpSeedLen = hit->length;
+	uint32_t overlap = 0;
+	uint32_t iniUniPos;
+	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, hit->length, true, advIdx);
+	//Counter to count tries to explore a further unitig
+	uint32_t explCount;
+	string uSeq = hit->origUni.mappedSequenceToString();
+	list<uint16_t> extPth;
+	cout << hit->origUni.mappedSequenceToString() << endl;
+
+	auto tempSuccessors = hit->origUni.getSuccessors();
+	for(auto temp = tempSuccessors.begin(); temp != tempSuccessors.end(); ++temp) {
+		cout << (*temp).mappedSequenceToString() << endl;
+	}
+
+
+	//Calculate hit's initial score
+	hit->score = hit->length * mscore;
+
+	//Check how far we should explore the unitig's sequence
+	if(hit->origUni.getSuccessors().hasSuccessors()) overlap = hit->origUni.getGraph()->getK() - 1;
+
+	//We are done if we have reached the end of the query
+	while(hit->offQ + tmpSeedLen < q.length()){
+		//Check whether we have reached the end of the unitig's sequence
+		if(hit->offU + tmpSeedLen < hit->origUni.size - overlap){
+			//Ensure that search criteria are still fulfilled
+			if(checkedPos == 0) break;
+
+			//Check whether the score of our extension is positive
+			if((tmpScore += compUScore(uSeq[hit->offU + tmpSeedLen], q[hit->offQ + tmpSeedLen], mscore, mmscore)) > 0){
+				//Update the seed info
+				hit->score += tmpScore;
+				hit->length = tmpSeedLen + 1;//+1 because we haven't increased tmpSLen yet
+				//Reset the temporary score
+				tmpScore = 0;
+			} else{
+				//Check if the current extension is already too bad
+				if(tmpScore < -X) break;
+			}
+			//Proceed with the next two positions
+			++tmpSeedLen;
+			--checkedPos;
+		} else{
+			//Check if the current unitig has successors
+			if(overlap != 0){
+				//Calculate the unitig sequence position we have to start with in the successive unitig
+				iniUniPos = hit->offU + tmpSeedLen - hit->origUni.size + overlap;
+				//Initialize explCount
+				explCount = 0;
+				//Explore unitig's successors
+				hit->score += extendAtNextUnitig_Alt(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+			}
+
+			break;
+		}
+	}
+
+	//Compress extension path
+	hit->rExt = cmprExtPth(extPth);
+}
+
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reverse complement considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
 void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	//Initialization of auxiliary variables
@@ -150,6 +342,7 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscor
 	uint32_t explCount;
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
+	cout << "TESTXDROP_Rev" << endl;
 
 	//Get the number of checked positions considering that we do not start in the sequence's very end
 	int32_t checkedPos = getSrchCritCov(hit->origUni, quorum, searchSet, compOffset(hit->offU + hit->length, 1, hit->origUni.size, false), false, advIdx);
@@ -311,6 +504,132 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 		}
 	}
 
+	return score;
+}
+
+
+int32_t contRightX_Drop_Alt(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	int32_t tmpScore, progress, score = 0;
+	int32_t overlap = sucUnitig->getGraph()->getK() - 1;
+	uint32_t iniSeqPos;
+	uint32_t tmpSLen;
+	//Even if we are on the reverse complementary strand and no position is covered on this unitig, because we have checked the first k - 1 position on the last unitig already
+	int32_t checkedPos = getSrchCritCov(*sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig->size, sucUnitig->strand), sucUnitig->strand, advIdx);
+	string sucUniSeq = sucUnitig->mappedSequenceToString();
+	struct Seed *nearestSeed, *prevSeed;
+
+	cout << "XDROP1" << endl;
+
+
+	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
+	iniSeqPos = uniSeqPos;
+	//Find the nearest seed that we might be able to reach during our extension
+	nearestSeed = searchRightNeighbor(sucUnitig->getData()->getData(*sucUnitig)->getSeed(sucUnitig->strand), iniQoff, extLen, iniSeqPos, prevSeed);
+	//Perform the X-drop algorithm on the successive unitig
+	tmpScore = lastSeedTmpScore;
+	tmpSLen = 0;
+
+	cout << "XDROP2" << endl;
+
+	//We are done if we have reached the end of the query
+	while(iniQoff + extLen + tmpSLen < q.length()){
+		cout << "XDROP3" << endl;
+		//Check whether we have reached the next seed
+		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
+			//Calculate the gain we get by incorporating the reached seed
+			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
+			//Update temporary seed length
+			tmpSLen += progress;
+			//Update current position in the unitig sequence
+			uniSeqPos += progress;
+			//Adjust number of remaining covered positions
+			checkedPos -= progress;
+
+			//If we have reached a seed check if it suffices to get a positive tempScore
+			if((tmpScore += progress * mscore) > 0){
+				//Update hit's length
+				hitLen = extLen + tmpSLen;
+				//Check if there is another seed to reach
+				if(prevSeed != NULL){
+					//Exclude the reached seed from its seed list
+					prevSeed->nextSeed = nearestSeed->nextSeed;
+					//Delete the reached seed
+					free(nearestSeed);
+					//Search for the next neighbor
+					nearestSeed = searchRightNeighbor(sucUnitig->getData()->getData(*sucUnitig)->getSeed(sucUnitig->strand), iniQoff, extLen, iniSeqPos, prevSeed);
+				} else{
+					//Set seed's successor as head of the seed list
+					sucUnitig->getData()->getData(*sucUnitig)->setSeed(nearestSeed->nextSeed, sucUnitig->strand);
+					//Delete the reached seed
+					free(nearestSeed);
+					//Reset nearestSeed
+					nearestSeed = NULL;
+				}
+
+				//Update score
+				score += tmpScore;
+				//Reset the temporary score
+				tmpScore = 0;
+			} else{
+				//Check if there is another seed to reach
+				if(prevSeed != NULL){
+					//Exclude the reached seed from its seed list
+					prevSeed->nextSeed = nearestSeed->nextSeed;
+					//Delete the reached seed
+					free(nearestSeed);
+					//Search for the next one
+					nearestSeed = searchRightNeighbor(sucUnitig->getData()->getData(*sucUnitig)->getSeed(sucUnitig->strand), iniQoff, extLen, iniSeqPos, prevSeed);
+				} else{
+					//Set seed's successor as head of the seed list
+					sucUnitig->getData()->getData(*sucUnitig)->setSeed(nearestSeed->nextSeed, sucUnitig->strand);
+					//Delete the reached seed
+					free(nearestSeed);
+					//Reset nearestSeed
+					nearestSeed = NULL;
+				}
+			}
+		} else{
+			//Check up to which point we have to compare the unitig sequence
+			if(!sucUnitig->getSuccessors().hasSuccessors()){
+				overlap = 0;
+			}
+
+			//Check whether we have reached the end of the unitig's sequence
+			if(uniSeqPos < sucUnitig->size - overlap){
+				//Are search criteria still fulfilled?
+				if(checkedPos <= 0) break;
+
+				//Check whether the score of our extension is positive
+				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
+					//Update score
+					score += tmpScore;
+					//Update hit's length
+					hitLen = extLen + tmpSLen + 1;
+					//Reset the temporary score
+					tmpScore = 0;
+				} else{
+					//Check if the current extension is already too bad
+					if(tmpScore < -X){ break; }
+				}
+
+				//Proceed with the next two positions
+				++tmpSLen;
+				++uniSeqPos;
+				--checkedPos;
+				extPth.push_back(0);
+			} else{
+				//Check if the current unitig has successors
+				if(overlap != 0){
+					//Calculate the position in the next unitig's sequence we have to start with
+					uniSeqPos = uniSeqPos - sucUnitig->size + overlap;
+					//Check out next unitig
+				}
+
+				break;
+			}
+		}
+	}
+	std::cout << "XDROP4: Final score=" << score << ", hitLen=" << hitLen << ", extPth size=" << extPth.size() << std::endl;
 	return score;
 }
 
