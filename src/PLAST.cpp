@@ -98,8 +98,10 @@ int main(int argc, char **argv){
 	//Unitig array
 	UnitigColorMap<UnitigInfo> *uArr;
 
+	int16_t extend_modus = DEFAULT_B;
+
 	//Parse arguments
-	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, mscr, mmscr, X, goscr, gescr, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim, advIdx)){
+	if(!parseArgs(argc, argv, prep, graphFilePref, minSeedLength, kMerLength, miniLength, bOpt, nb_threads, qFile, sColFile, quorum, strand, repCols, mscr, mmscr, X, goscr, gescr, nRes, lambda, lambdaGap, C, Cgap, eBound, isSim, advIdx, extend_modus)){
 		//Display help message
 		dispHelp();
 		return 1;
@@ -223,7 +225,7 @@ int main(int argc, char **argv){
 		//Output which query we are working on
 		cout << "Query " << ++qCounter << ":" << endl;
 		//Search for the current query
-		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, mscr, mmscr, X, goscr, gescr, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim, advIdx);
+		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, mscr, mmscr, X, goscr, gescr, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim, advIdx, extend_modus);
 
 		//Measure and output current runtime if demanded
 		if(calcRT){

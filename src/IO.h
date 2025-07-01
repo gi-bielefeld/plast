@@ -6,7 +6,7 @@
 #include "Search.h"
 
 #define MIN_PARAM_NB 4
-#define OPTIONS "i:s:w:k:g:S:R:t:q:c:Q:m:M:X:e:n:o:d:l:L:C:T:aru"
+#define OPTIONS "i:s:w:k:g:S:R:t:q:c:Q:m:M:X:e:n:o:d:l:L:C:T:B:aru"
 #define BUILD_COMMAND "Build"
 #define SEARCH_COMMAND "Search"
 #define RUNTIME_FLAG_DEFAULT false
@@ -26,7 +26,7 @@
 const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols);
 
 //This function parses the program parameters. Returns false if given arguments are not valid
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx);
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g, CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx, int16_t& extend_modus);
 
 //This function prints usage infos
 inline void dispHelp(){

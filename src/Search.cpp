@@ -194,7 +194,7 @@ void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &n
 }
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus){
 	struct Seed *currSeed;
 	Hit newHit;
 	UnitigColorMap<UnitigInfo> currUni;
@@ -209,8 +209,6 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
 			//Extract seed from the list
-			cout << "Test_extenRefSeeds" << endl;
-			cout << currUni.mappedSequenceToString() << endl;
 			currUni.getData()->getData(currUni)->setSeed(currSeed->nextSeed, currUni.strand);
 			//Setup initial hit infos
 			newHit.score = 0;
@@ -220,8 +218,11 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
 			//Extend hit to the right
-			startRightX_Drop_Alt(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 			
+
+			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
+			
+
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
@@ -258,8 +259,6 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 	struct Seed *currSeed;
 	Hit newHit, *hitIt;
 	UnitigColorMap<UnitigInfo> currUni;
-	cout << "Test_extenRefCompSeeds" << endl;
-	cout << currUni.mappedSequenceToString() << endl;
 
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<UnitigInfo>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
@@ -270,7 +269,6 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 		//Get the first seed
 		currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
 
-		cout << "Test_extenRefCompSeeds2" << endl;
 
 
 		//Iterate over all seeds of a unitig
@@ -284,7 +282,6 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 			newHit.offQ = currSeed->offsetQ;
 			newHit.origUni = currUni;
 			newHit.nextHit = NULL;
-			cout << "Test_extenRefCompSeeds3" << endl;
 			//Extend hit to the right
 			startRightX_Drop_OnRevComp(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
@@ -387,7 +384,7 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 }
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx){
+void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx, const int16_t extend_modus){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
 	auto endTime = std::chrono::system_clock::now();
@@ -432,7 +429,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 	cout << "Extending seeds" << endl;
 
 	//Extend seeds lying on the reference strand if demanded
-	if(strand != Minus) extendRefSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);
+	if(strand != Minus) extendRefSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx, extend_modus);
 
 	//Extend seeds lying on the reverse complementary strand if demanded
 	if(strand != Plus) extendRevCompSeeds(cdbg, q, minSeedLength, mscore, mmscore, X, hitArr, quorum, searchColors, advIdx);
@@ -495,7 +492,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 	}
 
 	//Calculate gapped alignments
-	calcGappedAlignment(cdbg, resList, q, mscore, mmscore, X, gOpen, gExt, quorum, searchColors, lambdaGap, Cgap, advIdx);
+	//calcGappedAlignment(cdbg, resList, q, mscore, mmscore, X, gOpen, gExt, quorum, searchColors, lambdaGap, Cgap, advIdx);
 
 	//Check if this is a simulation run
 	if(isSim){
