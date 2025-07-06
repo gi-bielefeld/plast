@@ -620,6 +620,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 			}
 		}
 	}
+	
 	return score;
 }
 
@@ -742,8 +743,8 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 		}
 	}
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
-	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << ", q pos: " << (iniQoff + hitLen) << endl;
-	std::cout << "DEBUG: final uniSeqPos = " << uniSeqPos << std::endl;
+	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
+	std::cout << "final uniSeqPos = " << uniSeqPos << std::endl;
 	return score;
 }
 
