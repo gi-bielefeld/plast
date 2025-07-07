@@ -237,6 +237,7 @@ int32_t extendAtNextUnitig_BFS_SMART1(const ForwardCDBG<DataAccessor<UnitigInfo>
 int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t sucID = 0;
 	int32_t maxScore = 0;
+	bool check = true;
 
 	cout << "TESTESTETST " << q.length() << endl;
 
@@ -258,7 +259,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 		uint32_t tmpuniPos = uniPos;
 		cout << "uniPos: " << uniPos << endl;
         tempPath.clear();
-		int32_t startScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, lastExtSeedTmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx);
+		int32_t startScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, lastExtSeedTmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx, check);
 		tempPath.push_back(sucID);
 		queueTest.push(std::make_tuple(nI,startScore,tempPath,tmpHitLen,tempextLen, tmpuniPos));
 		if (startScore > maxScore) {
@@ -271,7 +272,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 
 	uint16_t stop = 0;
-	while (!queueTest.empty() && stop < 1000) {
+	while (!queueTest.empty() && stop < 10) {
 
 		auto tempFront = queueTest.front();
 		queueTest.pop();
@@ -280,6 +281,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 		//cout << " " << endl;
 		//cout << " " << endl;
 		//cout << "accessing unitig from queue" << endl;
+		cout << "std::get<0>(tempFront)->mappedSequenceToString(): " << std::get<0>(tempFront)->mappedSequenceToString() << endl;
 
 		shorterTemp currUnitig = std::get<0>(tempFront);
 		uint32_t currScore = std::get<1>(tempFront);
@@ -291,14 +293,16 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 		//cout << "iniQoff: " << iniQoff << endl;
 		//cout << "HitLen: " << currHitLen << endl;
 		//cout << "queue length: " << q.length() << endl;
+		cout << "currextLen: " << currextLen << endl;
 
 		
 		auto& tempcurrUnitig = *currUnitig;
 		shorterContainer sucIter2 = tempcurrUnitig.getSuccessors();
 
-		if((currextLen + currHitLen + iniQoff < q.length())) {
+		if((currextLen + iniQoff < q.length())) {
 			sucID = 0;
 			for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+				check = true;
 				//cout << " " << endl;
 				//cout << "going trough successor " << sucID << endl;
 				uint32_t tmpHitLen = currHitLen;
@@ -310,12 +314,13 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 				//cout << "extLen_before: " << tmpExtLen << endl;
 				//cout << "HitLen_before: " << tmpHitLen << endl;
 				cout << "nextUniPos: " << nextUniPos << endl;
-				int32_t tempScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, currScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx);
+				int32_t tempScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, currScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check);
+				// tempScore += currScore;
 				std::cout << "nextUniPos after call = " << nextUniPos << std::endl;
 				//cout << "extLen_after " << tmpExtLen << endl;
 				//cout << "HitLen_after: " << tmpHitLen << endl;
 				tempPath.push_back(sucID);
-				if(tmpExtLen != tmpExtLen2 || tmpHitLen != tmpHitLen2){
+				if(check == true){
 					queueTest.push(std::make_tuple(nI, tempScore, tempPath, tmpHitLen, tmpExtLen, nextUniPos));
                 	if (tempScore > maxScore) {
                     		maxScore = tempScore;
@@ -625,7 +630,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 }
 
 
-int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check){
 	int32_t tmpScore, progress, score = 0;
 	int32_t overlap = sucUnitig->getGraph()->getK() - 1;
 	uint32_t iniSeqPos;
@@ -646,8 +651,15 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
+		//Testing
+		cout << "Not at query's end" << endl;
+		cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
+			//Testing
+			cout << "Found seed" << endl;
+
 			//Calculate the gain we get by incorporating the reached seed
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
 			//Update temporary seed length
@@ -711,6 +723,9 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 				//Are search criteria still fulfilled?
 				if(checkedPos <= 0) break;
 
+				//TEsting
+				cout << "Compare bases" << endl;
+
 				//Check whether the score of our extension is positive
 				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
 					//Update score
@@ -741,6 +756,11 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 				break;
 			}
 		}
+	}
+	if (iniQoff + extLen + tmpSLen >= q.length() || tmpScore < -X){
+		check = false;
+	} else {
+		check = true;
 	}
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
 	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
