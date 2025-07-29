@@ -220,7 +220,11 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Extend hit to the right
 			
 			//Testing
-			cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
+			if(!(newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT")) {
+				break;
+			} else {
+				cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
+			}
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
 			
 
@@ -244,6 +248,8 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 					hitArr[newHit.offQ].nextHit->gAlgn.aSeqQ = "";
 				}
 			}
+
+			cout << newHit.score << endl;
 
 			//Delete the extended seed
 			free(currSeed);
