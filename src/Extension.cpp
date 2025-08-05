@@ -290,7 +290,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 		//cout << " " << endl;
 		//cout << " " << endl;
 		//cout << "accessing unitig from queue" << endl;
-		cout << "std::get<0>(tempFront)->mappedSequenceToString(): " << std::get<0>(tempFront)->mappedSequenceToString() << endl;
+		//cout << "std::get<0>(tempFront)->mappedSequenceToString(): " << std::get<0>(tempFront)->mappedSequenceToString() << endl;
 
 		shorterTemp currUnitig = std::get<0>(tempFront);
 		uint32_t currScore = std::get<1>(tempFront);
@@ -323,6 +323,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 				//cout << "going trough successor " << sucID << endl;
 				uint32_t tmpHitLen = currHitLen;
 				uint32_t tmpHitLen2 = currHitLen;
+				int32_t tmpScore = currtmpScore;
                 tempPath = currPath;
 				uint32_t tmpExtLen = currextLen;
 				uint32_t tmpExtLen2 = currextLen;
@@ -330,7 +331,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 				//cout << "extLen_before: " << tmpExtLen << endl;
 				//cout << "HitLen_before: " << tmpHitLen << endl;
 				//cout << "nextUniPos: " << nextUniPos << endl;
-				int32_t tempScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, currtmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check);
+				int32_t tempScore = contRightX_Drop_BFS(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check);
 				//tempScore += currScore;
 				//std::cout << "nextUniPos after call = " << nextUniPos << std::endl;
 				//cout << "extLen_after " << tmpExtLen << endl;
@@ -356,7 +357,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 	//cout << " " << endl;
 
 	//cout << "final maxScore: " << maxScore << endl;
-	cout << "Final maxScore: " << maxScore << ", hitLen: " << hitLen << ", uniPos: " << uniPos << endl;
+	//cout << "Final maxScore: " << maxScore << ", hitLen: " << hitLen << ", uniPos: " << uniPos << endl;
 	extPth = bestPath;
 	return maxScore;
 }
@@ -413,7 +414,7 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 	string uSeq = hit->origUni.mappedSequenceToString();
 	list<uint16_t> extPth;
 
-	cout << "startUnitig :" << uSeq << endl;
+	//cout << "startUnitig :" << uSeq << endl;
 
 	//Calculate hit's initial score
 	hit->score = hit->length * mscore;
@@ -552,13 +553,13 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 	while(iniQoff + extLen + tmpSLen < q.length()){
 		//Check whether we have reached the next seed
 		//Testing
-		cout << "Not at query's end" << endl;
-		cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+		//cout << "Not at query's end" << endl;
+		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
 			//Calculate the gain we get by incorporating the reached seed
 
 			//Testing
-			cout << "Found seed" << endl;
+			//cout << "Found seed" << endl;
 
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
 			//Update temporary seed length
@@ -623,7 +624,7 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 				if(checkedPos <= 0) break;
 
 				//TEsting
-				cout << "Compare bases" << endl;
+				//cout << "Compare bases" << endl;
 
 				//Check whether the score of our extension is positive
 				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
@@ -648,12 +649,12 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 					//Calculate the position in the next unitig's sequence we have to start with
 					uniSeqPos = uniSeqPos - sucUnitig->size + overlap;
 					//Check out next unitig
-					cout << " " << endl;
-					cout << "next unitig" << endl;
+					//cout << " " << endl;
+					//cout << "next unitig" << endl;
 					int32_t tempScore = extendAtNextUnitig(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, mscore, mmscore, X, tmpScore, uniSeqPos, extPth, explCount, quorum, searchSet, advIdx);
 					score += tempScore;
-					cout << tempScore << endl;
-					cout << sucUnitig->mappedSequenceToString() << endl;
+					//cout << tempScore << endl;
+					//cout << sucUnitig->mappedSequenceToString() << endl;
 				}
 
 				break;
@@ -686,13 +687,13 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
 		//Testing
-		cout << "Not at query's end" << endl;
-		cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+		//cout << "Not at query's end" << endl;
+		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
 
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
 			//Testing
-			cout << "Found seed" << endl;
+			//cout << "Found seed" << endl;
 
 			//Calculate the gain we get by incorporating the reached seed
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
@@ -758,7 +759,7 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 				if(checkedPos <= 0) break;
 
 				//TEsting
-				cout << "Compare bases" << endl;
+				//cout << "Compare bases" << endl;
 
 				//Check whether the score of our extension is positive
 				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
@@ -797,7 +798,7 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 		check = true;
 	}
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
-	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
+	//cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
 	//std::cout << "final uniSeqPos = " << uniSeqPos << std::endl;
 	return score;
 }
