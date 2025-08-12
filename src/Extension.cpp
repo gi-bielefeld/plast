@@ -32,6 +32,8 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 		//Note which successor we are on
 		++sucID;
 		//Calculate the score of an extension of a successor
+		//cout << "" << endl;
+		//cout << "unitig right now: " << nI->mappedSequenceToString() << endl;
 		currScore = contRightX_Drop(nI, iniQoff, tmpHitLen, extLen, q, mscore, mmscore, X, lastExtSeedTmpScore, uniPos, tmpPth, explCount, quorum, searchSet, advIdx);
 
 		//Check whether the score of the current successors extension is the best one found so far
@@ -243,7 +245,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 	//cout << "  " << endl;
 	//cout << "  " << endl;
 
-	//cout << "TESTESTETST " << q.length() << endl;
+	//cout << "first unitig succesor" << endl;
 
 
 	list<uint16_t> tempPath;
@@ -258,6 +260,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 
 	for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+		//cout << "successor: " << nI->mappedSequenceToString() << endl;
 		uint32_t tempextLen = extLen;
 		uint32_t tmpHitLen = hitLen;
 		uint32_t tmpHitLen2 = hitLen;
@@ -320,7 +323,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 			for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
 				check = true;
 				//cout << " " << endl;
-				//cout << "going trough successor " << sucID << endl;
+				//cout << "going trough successor: " << nI->mappedSequenceToString() << endl;
 				uint32_t tmpHitLen = currHitLen;
 				uint32_t tmpHitLen2 = currHitLen;
 				int32_t tmpScore = currtmpScore;
@@ -337,9 +340,10 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 				//cout << "extLen_after " << tmpExtLen << endl;
 				//cout << "HitLen_after: " << tmpHitLen << endl;
 				tempPath.push_back(sucID);
-
+				//cout << boolalpha;
+				//cout << check << endl;
 				if(check == true){
-					queueTest.push(std::make_tuple(nI, (currScore+tempScore), currtmpScore, tempPath, tmpHitLen, tmpExtLen, nextUniPos));
+					queueTest.push(std::make_tuple(nI, (currScore+tempScore), tmpScore, tempPath, tmpHitLen, tmpExtLen, nextUniPos));
                 }
 				if (currScore+tempScore > maxScore) {
                     maxScore = currScore+tempScore;
@@ -446,6 +450,7 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 		} else{
 			//cout << "check succesor" << endl;
 			//Check if the current unitig has successors
+			//cout << "startScore: " << hit->score << endl;
 			if(overlap != 0){
 				//Calculate the unitig sequence position we have to start with in the successive unitig
 				iniUniPos = hit->offU + tmpSeedLen - hit->origUni.size + overlap;
@@ -638,6 +643,9 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 					//Check if the current extension is already too bad
 					if(tmpScore < -X){ break; }
 				}
+				//cout << "tmpScore: " << tmpScore << endl;
+
+				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
 
 				//Proceed with the next two positions
 				++tmpSLen;
@@ -653,8 +661,6 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 					//cout << "next unitig" << endl;
 					int32_t tempScore = extendAtNextUnitig(sucUnitig->getSuccessors(), iniQoff, hitLen, extLen + tmpSLen, q, mscore, mmscore, X, tmpScore, uniSeqPos, extPth, explCount, quorum, searchSet, advIdx);
 					score += tempScore;
-					//cout << tempScore << endl;
-					//cout << sucUnitig->mappedSequenceToString() << endl;
 				}
 
 				break;
@@ -676,13 +682,15 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 	string sucUniSeq = sucUnitig->mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed;
 
+	//cout << "starttmpScore: " << tmpScore << endl;
+
 	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
 	iniSeqPos = uniSeqPos;
 	//Find the nearest seed that we might be able to reach during our extension
 	nearestSeed = searchRightNeighbor(sucUnitig->getData()->getData(*sucUnitig)->getSeed(sucUnitig->strand), iniQoff, extLen, iniSeqPos, prevSeed);
 	//Perform the X-drop algorithm on the successive unitig
 	tmpSLen = 0;
-
+	check = false;
 
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
@@ -756,10 +764,14 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 			//Check whether we have reached the end of the unitig's sequence
 			if(uniSeqPos < sucUnitig->size - overlap){
 				//Are search criteria still fulfilled?
-				if(checkedPos <= 0) break;
+				if(checkedPos <= 0){
+					break;
+				}
 
 				//TEsting
 				//cout << "Compare bases" << endl;
+
+				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << endl;
 
 				//Check whether the score of our extension is positive
 				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
@@ -771,8 +783,13 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 					tmpScore = 0;
 				} else{
 					//Check if the current extension is already too bad
-					if(tmpScore < -X){ break; }
+					if(tmpScore < -X){
+						break;
+					}
 				}
+				//cout << "tmpScore: " << tmpScore << endl;
+				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
+				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
 
 				//Proceed with the next two positions
 				++tmpSLen;
@@ -786,20 +803,20 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 					//Check out next unitig
 					extLen = extLen + tmpSLen;
 					//cout << "tmpSLen: " << tmpSLen << endl;
+					check = true;
 				}
 
 				break;
 			}
 		}
 	}
-	if (iniQoff + extLen + tmpSLen >= q.length() || tmpScore < -X){
-		check = false;
-	} else {
-		check = true;
-	}
+
+	//cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
+
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
 	//cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
-	//std::cout << "final uniSeqPos = " << uniSeqPos << std::endl;
+	//cout << "final uniSeqPos = " << uniSeqPos << std::endl;
+	//cout << "finaltmpScore: " << tmpScore << endl;
 	return score;
 }
 
