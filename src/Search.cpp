@@ -199,6 +199,26 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 	Hit newHit;
 	UnitigColorMap<UnitigInfo> currUni;
 
+	/*
+	for(ColoredCDBG<UnitigInfo>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
+		currUni = *i;
+		currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
+		while(currSeed != NULL){
+			currUni.getData()->getData(currUni)->setSeed(currSeed->nextSeed, currUni.strand);
+			if(currSeed->offsetQ == 5017 && currSeed->offsetU == 31){
+				cout << "treffer hat score. " << endl;
+			//cout << newHit.score << endl;
+			//cout << newHit.origUni.mappedSequenceToString() << endl;
+			}
+			free(currSeed);
+			//Move on to the next seed
+			currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
+		}
+	}
+
+	return;
+	*/
+
 	//Iterate over all seeds of all unitigs
 	for(ColoredCDBG<UnitigInfo>::iterator i = cdbg.begin(); i != cdbg.end(); ++i){
 		//Get current unitig
@@ -220,17 +240,35 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Extend hit to the right
 			
 			//Testin
+			
 			/*
-			if(!(newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT")) {
+			if(!(newHit.offQ == 27 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
 				break;
 			} else {
+				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 				cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
 			}
-			*/	
+			*/
+			
+			
 			//cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 			//cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
+
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
 
+			/*
+			if((newHit.offQ == 4874 && newHit.offU == 273 && currUni.mappedSequenceToString() == "TCTTCAATCTACTTTCCGACATGAATTGGTATTAACTAGACTAGCTCATCATATACCATTGATTTCCTTAATGCTAGGAGGTTCTGCGGGTGAGAAAAGTTCGTCGGATGCTGTCCGACTATTTCTTACGGCAAGTTATCAAAATTTTATCAATAATTTCAGTTGTTTGATGAGAAAGAACCAATCACCATTACCAGTTTGGCTTTATTTCCCTAGTGAAGGGCAACAACTAAAACCTATTTTAAAAATTTTGCAAAGGTTATCATGTTTATTAACAACTAAAAAGGTTCAAAATCACAGACCTGTAGCTGATACTTGTTTTTTGACTGATAATTTTTGGGTCTATCCAAGCAAATCAACGAGAACTAATCATTATTATGCAAGTCTTAATTATTGGAGAGACAAAGCTAATAAG")) {
+				exit(0);
+			}
+			*/
+			
+			/*
+			if(currSeed->offsetQ == 27 && currSeed->offsetU == 7){
+					cout << "treffer hat score 2 " << endl;
+					cout << newHit.score << endl;
+					cout << newHit.origUni.mappedSequenceToString() << endl;
+			}
+			*/
 
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
@@ -239,6 +277,23 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 				//Check whether we have created a hit for this query position already
+				
+				/*
+				if(currSeed->offsetQ == 27 && currSeed->offsetU == 7){
+					cout << "treffer hat score 3 " << endl;
+					cout << newHit.score << endl;
+					cout << newHit.origUni.mappedSequenceToString() << endl;
+				}
+				*/
+
+				/*
+				if(newHit.score == 19){
+					cout << currSeed->offsetQ << endl;
+					cout << currSeed->offsetU << endl;
+					cout << newHit.origUni.mappedSequenceToString() << endl;
+				}
+				*/
+
 				if(hitArr[newHit.offQ].length == 0){
 					//Copy hit into the array
 					hitArr[newHit.offQ] = newHit;
