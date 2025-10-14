@@ -437,17 +437,18 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 	int32_t maxScore = 0;
 	bool check = true;
 	uint numOfUnitig = 1000;
-	int numOfBases = 30;
+	int32_t numOfBases = 30;
 
 	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
 	using pathList = std::list<uint16_t>;
 	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
+	using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
 	using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
 
 
 	using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
 
+	shorterPrioQueue tempUnitigsQueue(prioLongest);
 	shorterPrioQueue bestUnitigsQueue(prioLongest);
 
 
@@ -464,7 +465,7 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 		uint32_t tmpuniPos = uniPos;
 		int32_t tmpScore = lastExtSeedTmpScore;
 		tempPath.clear();
-		int tmpNumOfBases = numOfBases;
+		int32_t tmpNumOfBases = numOfBases;
 		int32_t tempScore = 0;
 		int counter = numOfBases + 10;
 		while(tmpNumOfBases != 0){
@@ -473,10 +474,8 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 				exit(0);
 				break;
 			}
+			int checkNumOfBase = tmpNumOfBases;
 			tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, tmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
-			if(!check){
-				break;
-			}
 			cout << tmpNumOfBases << endl;
 			--counter;
 		}
@@ -532,7 +531,7 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
                 	tempPath = currPath;
 					uint32_t tmpExtLen = currextLen;
 					uint32_t nextUniPos = currUniPos;
-					int tempNumOfBases = numOfBases;
+					int32_t tempNumOfBases = numOfBases;
 					int32_t tempScore = 0;
 					while(tempNumOfBases != 0){
 						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases);
@@ -687,12 +686,12 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 		}
 	}
 
-	//cout << "startRightX_drop score after" << endl;
-	//cout << hit->score << endl;
+	cout << "startRightX_drop score after" << endl;
+	cout << hit->score << endl;
 	for(list<uint16_t>::iterator i = extPth.begin(); i != extPth.end(); i++){
-		//cout << *i << endl;
+		cout << *i << endl;
 	}
-	//cout << endl;
+	cout << endl;
 
 	//Compress extension path
 	hit->rExt = cmprExtPth(extPth);
@@ -1174,6 +1173,7 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 				} else{
 					//Check if the current extension is already too bad
 					if(tmpScore < -X){
+						numOfBases = 0;
 						break;
 					}
 				}

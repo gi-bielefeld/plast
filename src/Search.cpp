@@ -241,14 +241,14 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			
 			//Testin
 			
-			/*
-			if(!(newHit.offQ == 27 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
+			
+			if(!(newHit.offQ == 0 && newHit.offU == 12 && currUni.mappedSequenceToString() == "GTTGGTTATACGGGCTCTTAAAAATAATTCTACATGGCACCATGAGTT")) {
 				break;
 			} else {
 				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 				cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
 			}
-			*/
+			
 			
 			
 			//cout << "startUni: " << currUni.mappedSequenceToString() << endl;
@@ -287,7 +287,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				*/
 
 				/*
-				if(newHit.score == 19){
+				if(newHit.score == 16){
 					cout << currSeed->offsetQ << endl;
 					cout << currSeed->offsetU << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
