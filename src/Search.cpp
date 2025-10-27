@@ -242,7 +242,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Testin
 			
 			
-			if(!(newHit.offQ == 0 && newHit.offU == 12 && currUni.mappedSequenceToString() == "GTTGGTTATACGGGCTCTTAAAAATAATTCTACATGGCACCATGAGTT")) {
+			if(!(newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
 				break;
 			} else {
 				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
@@ -251,24 +251,26 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			
 			
 			
+			
 			//cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 			//cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
 
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
 
-			/*
-			if((newHit.offQ == 4874 && newHit.offU == 273 && currUni.mappedSequenceToString() == "TCTTCAATCTACTTTCCGACATGAATTGGTATTAACTAGACTAGCTCATCATATACCATTGATTTCCTTAATGCTAGGAGGTTCTGCGGGTGAGAAAAGTTCGTCGGATGCTGTCCGACTATTTCTTACGGCAAGTTATCAAAATTTTATCAATAATTTCAGTTGTTTGATGAGAAAGAACCAATCACCATTACCAGTTTGGCTTTATTTCCCTAGTGAAGGGCAACAACTAAAACCTATTTTAAAAATTTTGCAAAGGTTATCATGTTTATTAACAACTAAAAAGGTTCAAAATCACAGACCTGTAGCTGATACTTGTTTTTTGACTGATAATTTTTGGGTCTATCCAAGCAAATCAACGAGAACTAATCATTATTATGCAAGTCTTAATTATTGGAGAGACAAAGCTAATAAG")) {
+			
+			if((newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
 				exit(0);
 			}
-			*/
+			
 			
 			/*
-			if(currSeed->offsetQ == 27 && currSeed->offsetU == 7){
+			if(currSeed->offsetQ == 0 && currSeed->offsetU == 7){
 					cout << "treffer hat score 2 " << endl;
 					cout << newHit.score << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
 			}
 			*/
+			
 
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed

@@ -69,12 +69,8 @@ int32_t extendAtNextUnitig_BFS(const ForwardCDBG<DataAccessor<UnitigInfo>, DataS
 
 	list<uint16_t> tempPath;
 
-	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using pathList = std::list<uint16_t>;
-	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
 
-
-	std::queue<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>> queueTest;
+	queue<tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>> queueTest;
 	list<uint16_t> bestPath;
 
 
@@ -201,15 +197,6 @@ int32_t extendAtNextUnitig_BFS_SMART1(const ForwardCDBG<DataAccessor<UnitigInfo>
 	bool check = true;
 	uint numOfUnitig = 5;
 
-	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using pathList = std::list<uint16_t>;
-	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
-	using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
-
-
-	using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
-
 	shorterPrioQueue bestUnitigsQueue(prioLongest);
 
 
@@ -320,12 +307,6 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 	bool check = true;
 	uint numOfUnitig = 1000;
 
-	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using pathList = std::list<uint16_t>;
-	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
-	using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
-
 	shorterVector bestUnitigs;
 	vector<int> bestScores;
 	list<uint16_t> tempPath;
@@ -432,32 +413,26 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 	return maxScore;
 }
 
+
+
+
 int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t sucID = 0;
 	int32_t maxScore = 0;
-	bool check = true;
 	uint numOfUnitig = 1000;
 	int32_t numOfBases = 30;
-
-	using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using pathList = std::list<uint16_t>;
-	using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-	using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
-	using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
+	bool check = false;
 
 
-	using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
+	shorterPrioQueue2 bestUnitigsQueue(prioLongest2);
 
-	shorterPrioQueue tempUnitigsQueue(prioLongest);
-	shorterPrioQueue bestUnitigsQueue(prioLongest);
+	queue<tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int>> finishBases;
 
-
-	shorterVector bestUnitigs;
+	shorterVector2 bestUnitigs;
 	list<uint16_t> tempPath;
 	list<uint16_t> bestPath;
 
 
-	shorterVector tempBestUnitigs;
 	for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 		++sucID;
 		uint32_t tempextLen = extLen;
@@ -467,30 +442,75 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 		tempPath.clear();
 		int32_t tmpNumOfBases = numOfBases;
 		int32_t tempScore = 0;
-		int counter = numOfBases + 10;
-		while(tmpNumOfBases != 0){
-			if(counter == 0){
-				cout << "too many loops" << endl;
-				exit(0);
-				break;
-			}
-			int checkNumOfBase = tmpNumOfBases;
+		check = false;
+		while(!check && tmpNumOfBases != 0){
 			tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, tmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
-			cout << tmpNumOfBases << endl;
-			--counter;
+			//cout << tmpNumOfBases << endl;
 		}
-		cout << "while 1" << endl;
+		//cout << "while 1" << endl;
 		tempPath.push_back(sucID);
-		if(check){
-			//cout << "Added from startRight_XDrop" << endl;
-			//cout << sucID << endl;
-			bestUnitigsQueue.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen, tmpuniPos));
+		if(check && tmpNumOfBases == 0){
+			bestUnitigsQueue.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen, tmpuniPos, tmpNumOfBases));
+		} else if(check && tmpNumOfBases != 0){
+			finishBases.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen,tmpuniPos,tmpNumOfBases));
 		}
 		if(tempScore > maxScore){
 			maxScore = tempScore;
             bestPath = tempPath;
             hitLen = tmpHitLen;
 		}
+	}
+
+	//cout << "zwischen" << endl;
+
+	while(!(finishBases.empty())){
+		auto tempFront = finishBases.front();
+		finishBases.pop();
+
+		shorterTemp currUnitig = get<0>(tempFront);
+		uint32_t currScore = get<1>(tempFront);
+		int32_t currtmpScore = get<2>(tempFront);
+		pathList currPath = get<3>(tempFront);
+		uint32_t currHitLen = get<4>(tempFront);
+		uint32_t currextLen = get<5>(tempFront);
+		uint32_t curruniPos = get<6>(tempFront);
+		int currnumOfBases = get<7>(tempFront);
+
+		auto& tempcurrUnitig = *currUnitig;
+		shorterContainer sucIter2 = tempcurrUnitig.getSuccessors();
+
+		if((currextLen + iniQoff < q.length())){
+			sucID = 0;
+			for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+				++sucID;
+				uint32_t tmpHitLen = currHitLen;
+				int32_t tmpScore = currtmpScore;
+                tempPath = currPath;
+				uint32_t tmpExtLen = currextLen;
+				uint32_t nextUniPos = curruniPos;
+				int tmpNumOfBases = currnumOfBases;
+				check = false;
+				int32_t tempScore = 0;
+				while(!check && tmpNumOfBases != 0){
+					tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
+					//cout << tmpNumOfBases << endl;
+				}
+				tempPath.push_back(sucID);
+				if(check && tmpNumOfBases == 0){
+					bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+				} else if(check && tmpNumOfBases != 0){
+					finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
+				}
+				int32_t scoreNow = currScore+tempScore;
+				if (scoreNow > maxScore) {
+                    maxScore = scoreNow;
+                    bestPath = tempPath;
+                    hitLen = tmpHitLen;
+					uniPos = nextUniPos;
+				}
+			}
+		}
+
 	}
 
 	for(uint i = 0; i < numOfUnitig; i++) {
@@ -504,14 +524,14 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 	}
 
-	//cout << get<1>(bestUnitigs[0]) << endl;
+	//cout << "zwische2" << endl;
 
 	while(!(bestUnitigs.empty())){
-		shorterVector allSucUnitigs;
-		shorterPrioQueue allSucUnitigsQueue(prioLongest);
+		shorterVector2 allSucUnitigs;
+		shorterPrioQueue2 allSucUnitigsQueue(prioLongest2);
 
 		for(uint i = 0; i < bestUnitigs.size(); i++) {
-			shorterTuple temptuple = bestUnitigs[i];
+			shorterTuple2 temptuple = bestUnitigs[i];
 			shorterTemp currUnitig = std::get<0>(temptuple);
 			uint32_t currScore = std::get<1>(temptuple);
 			int32_t currtmpScore = std::get<2>(temptuple);
@@ -525,31 +545,28 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 				sucID = 0;
 				for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
 					++sucID;
-					check = true;
 					uint32_t tmpHitLen = currHitLen;
 					int32_t tmpScore = currtmpScore;
                 	tempPath = currPath;
 					uint32_t tmpExtLen = currextLen;
 					uint32_t nextUniPos = currUniPos;
-					int32_t tempNumOfBases = numOfBases;
+					int32_t tmpNumOfBases = numOfBases;
+					check = false;
 					int32_t tempScore = 0;
-					while(tempNumOfBases != 0){
-						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases);
-						if(!check){
-							break;
-						}
+					while(!check && tmpNumOfBases != 0){
+						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
+						//cout << tmpNumOfBases << endl;
 					}
-					cout << "while 2" << endl;
-					//cout << tempScore << endl;
+					//cout << "while 1" << endl;
 					tempPath.push_back(sucID);
-					if(check){
-						//cout << "Added in while loop " << counter << endl;
-						//cout << sucID << endl;
-						allSucUnitigsQueue.push(make_tuple(nI, (currScore+tempScore), tmpScore, tempPath, tmpHitLen, tmpExtLen, nextUniPos));
+					if(check && tmpNumOfBases == 0){
+						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+					} else if(check && tmpNumOfBases != 0){
+						finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
 					}
 					int32_t scoreNow = (currScore+tempScore);
 					if(scoreNow > maxScore){
-						maxScore = currScore+tempScore;
+						maxScore = scoreNow;
                     	bestPath = tempPath;
                     	hitLen = tmpHitLen;
 						uniPos = nextUniPos;
@@ -557,6 +574,59 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 				}
 			}
 		}
+
+		//cout << "zwischen3" << endl;
+
+		while(!(finishBases.empty())){
+			auto tempFront = finishBases.front();
+			finishBases.pop();
+
+			shorterTemp currUnitig = get<0>(tempFront);
+			uint32_t currScore = get<1>(tempFront);
+			int32_t currtmpScore = get<2>(tempFront);
+			pathList currPath = get<3>(tempFront);
+			uint32_t currHitLen = get<4>(tempFront);
+			uint32_t currextLen = get<5>(tempFront);
+			uint32_t curruniPos = get<6>(tempFront);
+			int currnumOfBases = get<7>(tempFront);
+
+			auto& tempcurrUnitig = *currUnitig;
+			shorterContainer sucIter2 = tempcurrUnitig.getSuccessors();
+
+			if((currextLen + iniQoff < q.length())){
+				sucID = 0;
+				for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+					++sucID;
+					uint32_t tmpHitLen = currHitLen;
+					int32_t tmpScore = currtmpScore;
+                	tempPath = currPath;
+					uint32_t tmpExtLen = currextLen;
+					uint32_t nextUniPos = curruniPos;
+					int tmpNumOfBases = currnumOfBases;
+					check = false;
+					int32_t tempScore = 0;
+					while(!check && tmpNumOfBases != 0){
+						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
+						//cout << tmpNumOfBases << endl;
+					}
+					tempPath.push_back(sucID);
+					if(check && tmpNumOfBases == 0){
+						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+					} else if(check && tmpNumOfBases != 0){
+						finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
+					}
+					int32_t scoreNow = currScore+tempScore;
+					if (scoreNow > maxScore) {
+                    	maxScore = scoreNow;
+                    	bestPath = tempPath;
+                    	hitLen = tmpHitLen;
+						uniPos = nextUniPos;
+					}
+				}
+			}
+
+		}
+
 		bestUnitigs.clear();
 		for(uint i = 0; i < numOfUnitig; i++) {
 			if(allSucUnitigsQueue.empty()){
@@ -567,7 +637,7 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 			}
 		}
 	}
-	cout << "while 3" << endl;
+	//cout << "while 3" << endl;
 	extPth = bestPath;
 	return maxScore;
 }
@@ -911,13 +981,13 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
 		//Testing
-		//cout << "Not at query's end" << endl;
-		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+		cout << "Not at query's end" << endl;
+		cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
 
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
 			//Testing
-			//cout << "Found seed" << endl;
+			cout << "Found seed" << endl;
 
 			/*
 			if(nearestSeed->offsetQ == 5017 && nearestSeed->offsetU == 31){
@@ -994,7 +1064,7 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 				}
 
 				//TEsting
-				//cout << "Compare bases" << endl;
+				cout << "Compare bases" << endl;
 
 				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << endl;
 
@@ -1013,7 +1083,7 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 					}
 				}
 				//cout << "tmpScore: " << tmpScore << endl;
-				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
+				cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
 				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
 
 				//Proceed with the next two positions
@@ -1036,10 +1106,10 @@ int32_t contRightX_Drop_BFS(const neighborIterator<DataAccessor<UnitigInfo>, Dat
 		}
 	}
 
-	//cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
+	cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
 
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
-	//cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
+	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
 	//cout << "final uniSeqPos = " << uniSeqPos << std::endl;
 	//cout << "finaltmpScore: " << tmpScore << endl;
 	return score;
@@ -1068,11 +1138,10 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
 		//Testing
-		//cout << "Not at query's end" << endl;
-		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+		cout << "Not at query's end" << endl;
+		cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
 
 		if(numOfBases == 0){
-			check = true;
 			break;
 		}
 
@@ -1080,19 +1149,19 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
 			//Testing
-			//cout << "Found seed" << endl;
+			cout << "Found seed" << endl;
 
 			//Calculate the gain we get by incorporating the reached seed
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
 
-			//cout << "before Seed calc: " << numOfBases << endl;
+			cout << "before Seed calc: " << numOfBases << endl;
 			if(progress >= numOfBases){
 				progress = numOfBases;
 				numOfBases = 0;
 			}else{
 				numOfBases -= progress;
 			}
-			//cout << "after Seed calc: " << numOfBases << endl;
+			cout << "after Seed calc: " << numOfBases << endl;
 
 			//Update temporary seed length
 			tmpSLen += progress;
@@ -1158,7 +1227,7 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 				}
 
 				//TEsting
-				//cout << "Compare bases" << endl;
+				cout << "Compare bases" << endl;
 
 				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << endl;
 
@@ -1178,7 +1247,7 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 					}
 				}
 				//cout << "tmpScore: " << tmpScore << endl;
-				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
+				cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
 				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
 
 				//Proceed with the next two positions
@@ -1203,10 +1272,10 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 		}
 	}
 
-	//cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
+	cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
 
 	//std::cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
-	//cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
+	cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
 	//cout << "final uniSeqPos = " << uniSeqPos << std::endl;
 	//cout << "finaltmpScore: " << tmpScore << endl;
 	return score;

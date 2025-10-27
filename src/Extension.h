@@ -37,9 +37,16 @@ void processExtPtr(struct Ext_ptr*& extPtr);
 
 
 using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-using pathList = list<uint16_t>;
+using pathList = std::list<uint16_t>;
+using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
 using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
+using shorterTuple2 = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
+using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
+using shorterVector2 = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>>;
+using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
+using shorterPrioQueue2 = priority_queue<shorterTuple2, vector<shorterTuple2>, const bool (*)(const shorterTuple2&, const shorterTuple2&)>;
 inline const bool prioLongest(const shorterTuple& left, const shorterTuple& right){ return get<1>(left) < get<1>(right); }
+inline const bool prioLongest2(const shorterTuple2& left, const shorterTuple2& right){ return get<1>(left) < get<1>(right); }
 
 
 
