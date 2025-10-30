@@ -441,16 +441,10 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 		int32_t tmpScore = lastExtSeedTmpScore;
 		tempPath.clear();
 		int32_t tmpNumOfBases = numOfBases;
-		int32_t tempScore = 0;
-		check = false;
-		while(!check && tmpNumOfBases != 0){
-			tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, tmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
-			//cout << tmpNumOfBases << endl;
-		}
-		//cout << "while 1" << endl;
+		int32_t tempScore = contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tempextLen, q, mscore, mmscore, X, tmpScore, tmpuniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
 		tempPath.push_back(sucID);
-		if(check && tmpNumOfBases == 0){
-			bestUnitigsQueue.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen, tmpuniPos, tmpNumOfBases));
+		if((check && tmpNumOfBases == 0) || tmpNumOfBases == 0){
+			bestUnitigsQueue.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen, tmpuniPos, numOfBases));
 		} else if(check && tmpNumOfBases != 0){
 			finishBases.push(make_tuple(nI,tempScore,tmpScore,tempPath,tmpHitLen,tempextLen,tmpuniPos,tmpNumOfBases));
 		}
@@ -489,15 +483,10 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 				uint32_t tmpExtLen = currextLen;
 				uint32_t nextUniPos = curruniPos;
 				int tmpNumOfBases = currnumOfBases;
-				check = false;
-				int32_t tempScore = 0;
-				while(!check && tmpNumOfBases != 0){
-					tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
-					//cout << tmpNumOfBases << endl;
-				}
+				int32_t tempScore = contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
 				tempPath.push_back(sucID);
-				if(check && tmpNumOfBases == 0){
-					bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+				if((check && tmpNumOfBases == 0) || tmpNumOfBases == 0){
+					bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, numOfBases));
 				} else if(check && tmpNumOfBases != 0){
 					finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
 				}
@@ -551,16 +540,10 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 					uint32_t tmpExtLen = currextLen;
 					uint32_t nextUniPos = currUniPos;
 					int32_t tmpNumOfBases = numOfBases;
-					check = false;
-					int32_t tempScore = 0;
-					while(!check && tmpNumOfBases != 0){
-						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
-						//cout << tmpNumOfBases << endl;
-					}
-					//cout << "while 1" << endl;
+					int32_t tempScore = contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
 					tempPath.push_back(sucID);
-					if(check && tmpNumOfBases == 0){
-						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+					if((check && tmpNumOfBases == 0) || tmpNumOfBases == 0){
+						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, numOfBases));
 					} else if(check && tmpNumOfBases != 0){
 						finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
 					}
@@ -603,15 +586,11 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 					uint32_t tmpExtLen = currextLen;
 					uint32_t nextUniPos = curruniPos;
 					int tmpNumOfBases = currnumOfBases;
-					check = false;
-					int32_t tempScore = 0;
-					while(!check && tmpNumOfBases != 0){
-						tempScore += contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
+					int32_t tempScore = contRightX_Drop_BFS_2(nI, iniQoff, tmpHitLen, tmpExtLen, q, mscore, mmscore, X, tmpScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tmpNumOfBases);
 						//cout << tmpNumOfBases << endl;
-					}
 					tempPath.push_back(sucID);
-					if(check && tmpNumOfBases == 0){
-						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, tmpNumOfBases));
+					if((check && tmpNumOfBases == 0) || tmpNumOfBases == 0){
+						bestUnitigsQueue.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen, nextUniPos, numOfBases));
 					} else if(check && tmpNumOfBases != 0){
 						finishBases.push(make_tuple(nI,(currScore+tempScore),tmpScore,tempPath,tmpHitLen,tmpExtLen,nextUniPos,tmpNumOfBases));
 					}
@@ -1154,14 +1133,14 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 			//Calculate the gain we get by incorporating the reached seed
 			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
 
-			cout << "before Seed calc: " << numOfBases << endl;
+			//cout << "before Seed calc: " << numOfBases << endl;
 			if(progress >= numOfBases){
 				progress = numOfBases;
 				numOfBases = 0;
 			}else{
 				numOfBases -= progress;
 			}
-			cout << "after Seed calc: " << numOfBases << endl;
+			//cout << "after Seed calc: " << numOfBases << endl;
 
 			//Update temporary seed length
 			tmpSLen += progress;
@@ -1242,7 +1221,6 @@ int32_t contRightX_Drop_BFS_2(const neighborIterator<DataAccessor<UnitigInfo>, D
 				} else{
 					//Check if the current extension is already too bad
 					if(tmpScore < -X){
-						numOfBases = 0;
 						break;
 					}
 				}

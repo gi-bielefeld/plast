@@ -242,7 +242,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Testin
 			
 			
-			if(!(newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
+			if(!(newHit.offQ == 2 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT")) {
 				break;
 			} else {
 				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
@@ -251,17 +251,16 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			
 			
 			
-			
 			//cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 			//cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
 
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
 
-			
+			/*
 			if((newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
 				exit(0);
 			}
-			
+			*/
 			
 			/*
 			if(currSeed->offsetQ == 0 && currSeed->offsetU == 7){
@@ -281,15 +280,15 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				//Check whether we have created a hit for this query position already
 				
 				/*
-				if(currSeed->offsetQ == 27 && currSeed->offsetU == 7){
+				if(currSeed->offsetQ == 2 && currSeed->offsetU == 7){
 					cout << "treffer hat score 3 " << endl;
 					cout << newHit.score << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
 				}
-				*/
+				
 
-				/*
-				if(newHit.score == 16){
+				
+				if(newHit.score == 25){
 					cout << currSeed->offsetQ << endl;
 					cout << currSeed->offsetU << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
