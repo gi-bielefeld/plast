@@ -240,15 +240,15 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Extend hit to the right
 			
 			//Testin
+		
 			
-			/*
-			if(!(newHit.offQ == 2 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT")) {
+			if(!(newHit.offQ == 3 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT")) {
 				break;
 			} else {
 				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
 				cout << "newHit.offQ: " << newHit.offQ << " newHit.offU: " << newHit.offU << endl;
 			}
-			*/
+			
 			
 			
 			//cout << "startUni: " << currUni.mappedSequenceToString() << endl;
@@ -280,7 +280,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				//Check whether we have created a hit for this query position already
 				
 				/*
-				if(currSeed->offsetQ == 2 && currSeed->offsetU == 7){
+				if(currSeed->offsetQ == 3 && currSeed->offsetU == 7){
 					cout << "treffer hat score 3 " << endl;
 					cout << newHit.score << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
