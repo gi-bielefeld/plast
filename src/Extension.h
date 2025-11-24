@@ -40,7 +40,7 @@ using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<Uniti
 using pathList = list<uint16_t>;
 using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
 using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
-using shorterTuple2 = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
+using shorterTuple2 = tuple<UnitigColorMap<UnitigInfo>, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
 using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>>;
 using shorterVector2 = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>>;
 using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
@@ -51,7 +51,7 @@ inline const bool prioLongest(const shorterTuple& left, const shorterTuple& righ
 inline const bool prioLongest2(const shorterTuple2& left, const shorterTuple2& right){ return get<1>(left) < get<1>(right); }
 
 
-struct {
+struct inputTypes{
     queue<shorterTuple2> extensionQueue;
 	uint32_t iniQoff;
 	string q;
@@ -66,14 +66,14 @@ struct {
 	int32_t numOfBases;
 	uint32_t hitLen;
 	list<uint16_t> bestPath;
-} outputTypes;
+};
 
-struct {
+struct outputTypes{
     shorterPrioQueue2 bestUnitigsPrioQueue;
     int32_t maxScore;
     uint32_t hitLen;
     list<uint16_t> bestPath;
-} inputTypes;
+};
 
 outputTypes calcUnitigsMitBasenberechnung(inputTypes);
 
@@ -90,7 +90,7 @@ int32_t extendAtNextUnitig_BFS_SMART1(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+int32_t extendAtNextUnitig_BFS_SMART3(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 //This function  initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
 int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);

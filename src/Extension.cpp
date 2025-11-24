@@ -413,7 +413,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 	return maxScore;
 }
 
-
+/*
 struct {
     queue<shorterTuple2> extensionQueue;
 	uint32_t iniQoff;
@@ -437,7 +437,7 @@ struct {
     uint32_t hitLen;
     list<uint16_t> bestPath;
 } inputTypes;
-
+*/
 
 //  							input Queue       iniQof    q      mscore   mmscore  X      extPath        explCount  quorum   searchSet            advIdx maxScore numOfBases hitLen
 //using inputTypes = tuple<queue<shorterTuple2>,uint32_t,string,uint16_t,int16_t,int16_t,list<uint16_t>, uint32_t,uint32_t,list<pair<string, size_t>>,bool,int32_t,int32_t,uint32_t>;
@@ -445,21 +445,21 @@ struct {
 //	  						PrioQueue		maxScore  hitLen
 //using outputTypes = tuple<shorterPrioQueue2,int32_t, uint32_t>;
 
-outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
-	queue<shorterTuple2> extensionQueue 	= inputTypes.extensionQueue;
-	uint32_t iniQoff 						= inputTypes.iniQiff;
-	string q 								= inputTypes.q;
-	uint16_t mscore 						= inputTypes.mscore;
-	int16_t mmscore 						= inputTypes.mmscore;
-	int16_t X 								= inputTypes.X;
-	uint32_t explCount 						= inputTypes.explCount;
-	uint32_t quorum 						= inputTypes.quorum;
-	list<pair<string, size_t>> searchSet 	= inputTypes.searchSet;
-	bool advIdx 							= inputTypes.advIdx;
-	int32_t maxScore 						= inputTypes.maxScore;
-	int32_t numOfBases 						= inputTypes.numOfBases;
-	uint32_t hitLen 						= inputTypes.hitLen;
-	list<uint16_t> bestPath					= inputTypes.bestPath;
+outputTypes calcUnitigsMitBasenberechnung(inputTypes inputStructure) {
+	queue<shorterTuple2> extensionQueue 	= inputStructure.extensionQueue;
+	uint32_t iniQoff 						= inputStructure.iniQoff;
+	string q 								= inputStructure.q;
+	uint16_t mscore 						= inputStructure.mscore;
+	int16_t mmscore 						= inputStructure.mmscore;
+	int16_t X 								= inputStructure.X;
+	uint32_t explCount 						= inputStructure.explCount;
+	uint32_t quorum 						= inputStructure.quorum;
+	list<pair<string, size_t>> searchSet 	= inputStructure.searchSet;
+	bool advIdx 							= inputStructure.advIdx;
+	int32_t maxScore 						= inputStructure.maxScore;
+	int32_t numOfBases 						= inputStructure.numOfBases;
+	uint32_t hitLen 						= inputStructure.hitLen;
+	list<uint16_t> bestPath					= inputStructure.bestPath;
 
 	shorterPrioQueue2 bestUnitigsPrioQueue(prioLongest2);
 
@@ -467,7 +467,7 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 		shorterTuple2 currExtension = extensionQueue.front();
 		extensionQueue.pop();
 
-		shorterTemp currUnitig 		= get<0>(currExtension);
+		UnitigColorMap<UnitigInfo> currUnitig 		= get<0>(currExtension);
 		uint32_t currScore 			= get<1>(currExtension);
 		int32_t currtmpScore 		= get<2>(currExtension);
 		list<uint16_t> currPath		= get<3>(currExtension);
@@ -475,8 +475,9 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 		uint32_t currextLen 		= get<5>(currExtension);
 		uint32_t curruniPos 		= get<6>(currExtension);
 
-		auto& tempcurrUnitig = *currUnitig;
-		shorterContainer sucIter2 = tempcurrUnitig.getSuccessors();
+		cout << currUnitig.mappedSequenceToString() << endl;
+
+		shorterContainer sucIter2 = currUnitig.getSuccessors();
 
 		if((currextLen + iniQoff < q.length())){
 			uint16_t sucID = 0;
@@ -493,13 +494,14 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 				int32_t addScore = contRightX_Drop_BFS_2(nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases);
 				tempPath.push_back(sucID);
 				int32_t fullScore = currScore+addScore;
+				//cout << ""
 
 				if((tempNumOfBases == 0) && !check){
 					//cout << "(tempNumOfBases == 0) && !check" << endl;
-					bestUnitigsPrioQueue.push(make_tuple(nI,fullScore,nextScore,tempPath,nextHitLen,nextExtLen, nextUniPos, 1));
+					bestUnitigsPrioQueue.push(make_tuple(*nI,fullScore,nextScore,tempPath,nextHitLen,nextExtLen, nextUniPos, 1));
 				} else if(check && tempNumOfBases != 0){
 					//cout << "check && tempNumOfBases != 0" << endl;
-					extensionQueue.push(make_tuple(nI,fullScore,nextScore,tempPath,nextHitLen,nextExtLen,nextUniPos,tempNumOfBases));
+					extensionQueue.push(make_tuple(*nI,fullScore,nextScore,tempPath,nextHitLen,nextExtLen,nextUniPos,tempNumOfBases));
 				}
 				if (fullScore > maxScore) {
                     maxScore = fullScore;
@@ -510,12 +512,14 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 		}
 	}
 
-	outputTypes.bestUnitigsPrioQueue = bestUnitigsPrioQueue;
-	outputTypes.maxScore = maxScore;
-	outputTypes.hitLen = hitLen;
-	outputTypes.bestPath = bestpath;
+	outputTypes p;
 
-	return outputTypes;
+	p.bestUnitigsPrioQueue = bestUnitigsPrioQueue;
+	p.maxScore = maxScore;
+	p.hitLen = hitLen;
+	p.bestPath = bestPath;
+
+	return p;
 }
 
 
@@ -535,7 +539,7 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 	return bestUnitigs;
 }
 
-int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_SMART3(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	int32_t maxScore = 0;
 	uint numOfUnitig = 1000000;
 	int32_t numOfBases = 30;
@@ -550,56 +554,59 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 
 
-	for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 
-		int32_t tempScore = 0;
-		int32_t tmpScore = lastExtSeedTmpScore;
-		tempPath.clear();
-		uint32_t tmpHitLen = hitLen;
-		uint32_t tempextLen = extLen;
-		uint32_t tmpuniPos = uniPos;
+	int32_t tempScore = 0;
+	int32_t tmpScore = lastExtSeedTmpScore;
+	tempPath.clear();
+	uint32_t tmpHitLen = hitLen;
+	uint32_t tempextLen = extLen;
+	uint32_t tmpuniPos = uniPos;
 
-		shorterTuple2 startTuple = make_tuple(nI, tempScore, tmpScore, tempPath, tmpHitLen, tempextLen, tmpuniPos, 0);
+	shorterTuple2 startTuple = make_tuple(startUnitig, tempScore, tmpScore, tempPath, tmpHitLen, tempextLen, tmpuniPos, 0);
 
-		startQueue.push(startTuple);
-	}
+	startQueue.push(startTuple);
 
-	inputTypes.extensionQueue = startQueue;
-	inputTypes.iniQiff = iniQoff;
-	inputTypes.q = q;
-	inputTypes.mscore = mscore;
-	inputTypes.mmscore = mmscore;
-	inputTypes.X = X;
-	inputTypes.explCount = explCount;
-	inputTypes.quorum = quorum;
-	inputTypes.searchSet = searchSet;
-	inputTypes.advIdx = advIdx;
-	inputTypes.maxScore = maxScore;
-	inputTypes.numOfBases = numOfBases;
-	inputTypes.hitLen = hitLen;
-	inputTypes.bestPath = bestPath;
 
-	outputTypes = calcUnitigsMitBasenberechnung(inputTypes);
+	inputTypes inputStruct;
 
-	bestUnitigsPrioQueue = outputTypes.bestUnitigsPrioQueue;
-	maxScore = outputTypes.maxScore;
-	hitLen = outputTypes.hitLen;
-	bestPath = outputTypes.bestPath;
+	inputStruct.extensionQueue = startQueue;
+	inputStruct.iniQoff = iniQoff;
+	inputStruct.q = q;
+	inputStruct.mscore = mscore;
+	inputStruct.mmscore = mmscore;
+	inputStruct.X = X;
+	inputStruct.explCount = explCount;
+	inputStruct.quorum = quorum;
+	inputStruct.searchSet = searchSet;
+	inputStruct.advIdx = advIdx;
+	inputStruct.maxScore = maxScore;
+	inputStruct.numOfBases = numOfBases;
+	inputStruct.hitLen = hitLen;
+	inputStruct.bestPath = bestPath;
+
+	outputTypes outputStruct;
+
+	outputStruct = calcUnitigsMitBasenberechnung(inputStruct);
+
+	bestUnitigsPrioQueue = outputStruct.bestUnitigsPrioQueue;
+	maxScore = outputStruct.maxScore;
+	hitLen = outputStruct.hitLen;
+	bestPath = outputStruct.bestPath;
 
 	bestUnitigs = getBestUnitigs(bestUnitigsPrioQueue,numOfUnitig);
 
 	while(!(bestUnitigs.empty())){
-		inputTypes.extensionQueue = bestUnitigs;
-		inputTypes.maxScore = maxScore;
-		inputTypes.hitLen = hitLen;
-		inputTypes.bestPath = bestPath;
+		inputStruct.extensionQueue = bestUnitigs;
+		inputStruct.maxScore = maxScore;
+		inputStruct.hitLen = hitLen;
+		inputStruct.bestPath = bestPath;
 
-		outputTypes = calcUnitigsMitBasenberechnung(inputTypes);
+		outputStruct = calcUnitigsMitBasenberechnung(inputStruct);
 
-		bestUnitigsPrioQueue = outputTypes.bestUnitigsPrioQueue;
-		maxScore = outputTypes.maxScore;
-		hitLen = outputTypes.hitLen;
-		bestPath = outputTypes.bestPath;
+		bestUnitigsPrioQueue = outputStruct.bestUnitigsPrioQueue;
+		maxScore = outputStruct.maxScore;
+		hitLen = outputStruct.hitLen;
+		bestPath = outputStruct.bestPath;
 
 		bestUnitigs = getBestUnitigs(bestUnitigsPrioQueue,numOfUnitig);
 	}
@@ -951,6 +958,7 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 				//Initialize explCount
 				explCount = 0;
 				//Explore unitig's successors
+				cout << "hit->score before:" << hit->score << endl;
 				switch(extend_modus) {
 					case 0:
 						hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
@@ -965,7 +973,7 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 						hit->score += extendAtNextUnitig_BFS_SMART2(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 4:
-						hit->score += extendAtNextUnitig_BFS_SMART3(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_SMART3(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 				}
 				
@@ -974,12 +982,12 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 		}
 	}
 
-	//cout << "startRightX_drop score after" << endl;
-	//cout << hit->score << endl;
+	cout << "startRightX_drop score after" << endl;
+	cout << hit->score << endl;
 	for(list<uint16_t>::iterator i = extPth.begin(); i != extPth.end(); i++){
-		//cout << *i << endl;
+		cout << *i << endl;
 	}
-	//cout << endl;
+	cout << endl;
 
 	//Compress extension path
 	hit->rExt = cmprExtPth(extPth);
