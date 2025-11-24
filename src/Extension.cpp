@@ -421,21 +421,22 @@ int32_t extendAtNextUnitig_BFS_SMART2(const ForwardCDBG<DataAccessor<UnitigInfo>
 //	  						PrioQueue		maxScore  hitLen
 //using outputTypes = tuple<shorterPrioQueue2,int32_t, uint32_t>;
 
-outputTypes calcUnitigsMitBasenberechnung(inputTypes extensionCalcInputs) {
-	queue<shorterTuple2> extensionQueue 	= get<0>(extensionCalcInputs);
-	uint32_t iniQoff 						= get<1>(extensionCalcInputs);
-	string q 								= get<2>(extensionCalcInputs);
-	uint16_t mscore 						= get<3>(extensionCalcInputs);
-	int16_t mmscore 						= get<4>(extensionCalcInputs);
-	int16_t X 								= get<5>(extensionCalcInputs);
-	list<uint16_t> extPath 					= get<6>(extensionCalcInputs);
-	uint32_t explCount 						= get<7>(extensionCalcInputs);
-	uint32_t quorum 						= get<8>(extensionCalcInputs);
-	list<pair<string, size_t>> searchSet 	= get<9>(extensionCalcInputs);
-	bool advIdx 							= get<10>(extensionCalcInputs);
-	int32_t maxScore 						= get<11>(extensionCalcInputs);
-	int32_t numOfBases 						= get<12>(extensionCalcInputs);
-	uint32_t hitLen 						= get<13>(extensionCalcInputs);
+outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
+	queue<shorterTuple2> extensionQueue 	= inputTypes.extensionQueue;
+	uint32_t iniQoff 						= inputTypes.iniQiff;
+	string q 								= inputTypes.q;
+	uint16_t mscore 						= inputTypes.mscore;
+	int16_t mmscore 						= inputTypes.mmscore;
+	int16_t X 								= inputTypes.X;
+	list<uint16_t> extPath 					= inputTypes.extPath;
+	uint32_t explCount 						= inputTypes.explCount;
+	uint32_t quorum 						= inputTypes.quorum;
+	list<pair<string, size_t>> searchSet 	= inputTypes.searchSet;
+	bool advIdx 							= inputTypes.advIdx;
+	int32_t maxScore 						= inputTypes.maxScore;
+	int32_t numOfBases 						= inputTypes.numOfBases;
+	uint32_t hitLen 						= inputTypes.hitLen;
+	list<uint16_t> bestPath					= inputTypes.bestPath;
 
 	shorterPrioQueue2 bestUnitigsPrioQueue(prioLongest2);
 
@@ -446,7 +447,7 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes extensionCalcInputs) {
 		shorterTemp currUnitig 		= get<0>(currExtension);
 		uint32_t currScore 			= get<1>(currExtension);
 		int32_t currtmpScore 		= get<2>(currExtension);
-		pathList currPath 			= get<3>(currExtension);
+		list<uint16_t> currPath		= get<3>(currExtension);
 		uint32_t currHitLen 		= get<4>(currExtension);
 		uint32_t currextLen 		= get<5>(currExtension);
 		uint32_t curruniPos 		= get<6>(currExtension);
@@ -480,18 +481,23 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes extensionCalcInputs) {
 				if (fullScore > maxScore) {
                     maxScore = fullScore;
                     hitLen = nextHitLen;
+					bestPath = tempPath;
 				}
 			}
 		}
 	}
 
-	outputTypes returnValues = make_tuple(bestUnitigsPrioQueue,maxScore,hitLen);
-	return returnValues;
+	outputTypes.bestUnitigsPrioQueue = bestUnitigsPrioQueue;
+	outputTypes.maxScore = maxScore;
+	outputTypes.hitLen = hitLen;
+	outputTypes.bestPath = bestpath;
+
+	return outputTypes;
 }
 
 
 
- tuple<shorterVector2> getBestUnitigs(shorterPrioQueue2 bestUnitigsPrioQueue, uint numOfAcceptedExtensions){
+ shorterVector2 getBestUnitigs(shorterPrioQueue2 bestUnitigsPrioQueue, uint numOfAcceptedExtensions){
 	shorterVector2 bestUnitigs;
 	
 	for(uint i = 0; i < numOfAcceptedExtensions; i++) {
@@ -506,9 +512,78 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes extensionCalcInputs) {
 	return bestUnitigs;
 }
 
+int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+	uint16_t sucID = 0;
+	int32_t maxScore = 0;
+	uint numOfUnitig = 1000000;
+	int32_t numOfBases = 30;
+
+	shorterPrioQueue2 bestUnitigsPrioQueue(prioLongest2);
+
+	shorterVector2 bestUnitigs;
+	list<uint16_t> tempPath;
+	list<uint16_t> bestPath;
+
+	queue<shorterTuple2> startQueue;
 
 
 
+	for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+
+		int32_t tempScore = 0;
+		int32_t tmpScore = lastExtSeedTmpScore;
+		tempPath.clear();
+		uint32_t tmpHitLen = hitLen;
+		uint32_t tempextLen = extLen;
+		uint32_t tmpuniPos = uniPos;
+		int32_t tmpNumOfBases = numOfBases;
+
+		shorterTuple2 startTuple = make_tuple(nI, tempScore, tmpScore, tempPath, tmpHitLen, tempextLen, tmpuniPos, 0);
+
+		startQueue.push(startTuple);
+	}
+
+	inputTypes.extensionQueue = startQueue;
+	inputTypes.iniQiff = iniQoff;
+	inputTypes.q = q;
+	inputTypes.mscore = mscore;
+	inputTypes.mmscore = mmscore;
+	inputTypes.X = X;
+	inputTypes.extPath = extPath;
+	inputTypes.explCount = explCount;
+	inputTypes.quorum = quorum;
+	inputTypes.searchSet = searchSet;
+	inputTypes.advIdx = advIdx;
+	inputTypes.maxScore = maxScore;
+	inputTypes.numOfBases = numOfBases;
+	inputTypes.hitLen = hitLen;
+	inputTypes.bestPath = bestPath;
+
+	outputTypes = calcUnitigsMitBasenberechnung(inputTypes);
+
+	bestUnitigsPrioQueue = outputTypes.bestUnitigsPrioQueue;
+	maxScore = outputTypes.maxScore;
+	hitLen = outputTypes.hitLen;
+	bestPath = outputTypes.bestPath;
+
+	bestUnitigs = getBestUnitigs(bestUnitigsPrioQueue,numOfUnitig);
+
+	while(!(bestUnitigs.empty())){
+		for(uint i = 0; i < bestUnitigs.size(); i++) {
+			shorterTuple2 temptuple = bestUnitigs[i];
+			shorterTemp currUnitig 	= std::get<0>(temptuple);
+			uint32_t currScore 		= std::get<1>(temptuple);
+			int32_t currtmpScore 	= std::get<2>(temptuple);
+			pathList currPath 		= std::get<3>(temptuple);
+			uint32_t currHitLen 	= std::get<4>(temptuple);
+			uint32_t currextLen 	= std::get<5>(temptuple);
+			uint32_t currUniPos 	= std::get<6>(temptuple);
+		}
+	}
+
+}
+
+/*
 int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	uint16_t sucID = 0;
 	int32_t maxScore = 0;
@@ -757,6 +832,7 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 	extPth = bestPath;
 	return maxScore;
 }
+	*/
 
 
 

@@ -37,7 +37,7 @@ void processExtPtr(struct Ext_ptr*& extPtr);
 
 
 using shorterTemp = neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
-using pathList = std::list<uint16_t>;
+using pathList = list<uint16_t>;
 using shorterContainer = ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false>;
 using shorterTuple = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t>;
 using shorterTuple2 = tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>;
@@ -45,15 +45,39 @@ using shorterVector = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList
 using shorterVector2 = vector<std::tuple<shorterTemp, uint32_t, int32_t, pathList, uint32_t, uint32_t, uint32_t, int32_t>>;
 using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, const bool (*)(const shorterTuple&, const shorterTuple&)>;
 using shorterPrioQueue2 = priority_queue<shorterTuple2, vector<shorterTuple2>, const bool (*)(const shorterTuple2&, const shorterTuple2&)>;
-using inputTypes = tuple<queue<shorterTuple2>,uint32_t,string,uint16_t,int16_t,int16_t,list<uint16_t>, uint32_t,uint32_t,list<pair<string, size_t>>,bool,int32_t,int32_t,uint32_t>;
-using outputTypes = tuple<shorterPrioQueue2,int32_t, uint32_t>;
+//using inputTypes = tuple<queue<shorterTuple2>,uint32_t,string,uint16_t,int16_t,int16_t,list<uint16_t>, uint32_t,uint32_t,list<pair<string, size_t>>,bool,int32_t,int32_t,uint32_t, list<uint16_t>>;
+//using outputTypes = tuple<shorterPrioQueue2,int32_t, uint32_t, list<uint16_t>>;
 inline const bool prioLongest(const shorterTuple& left, const shorterTuple& right){ return get<1>(left) < get<1>(right); }
 inline const bool prioLongest2(const shorterTuple2& left, const shorterTuple2& right){ return get<1>(left) < get<1>(right); }
 
+struct {
+    queue<shorterTuple2> extensionQueue;
+	uint32_t iniQoff;
+	string q;
+	uint16_t mscore;
+	int16_t mmscore;
+	int16_t X;
+	list<uint16_t> extPath;
+	uint32_t explCount;
+	uint32_t quorum;
+	list<pair<string, size_t>> searchSet;
+	bool advIdx;
+	int32_t maxScore;
+	int32_t numOfBases;
+	uint32_t hitLen;
+	list<uint16_t> bestPath;
+} outputTypes;
 
-outputTypes calcUnitigsMitBasenberechnung(inputTypes extensionCalcInputs);
+struct {
+    shorterPrioQueue2 bestUnitigsPrioQueue;
+    int32_t maxScore;
+    uint32_t hitLen;
+    list<uint16_t> bestPath;
+} inputTypes;
 
-tuple<shorterVector2> getBestUnitigs(shorterPrioQueue2,uint);
+outputTypes calcUnitigsMitBasenberechnung(inputTypes);
+
+shorterVector2 getBestUnitigs(shorterPrioQueue2,uint);
 
 
 
