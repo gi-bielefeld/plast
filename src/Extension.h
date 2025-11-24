@@ -50,6 +50,7 @@ using shorterPrioQueue2 = priority_queue<shorterTuple2, vector<shorterTuple2>, c
 inline const bool prioLongest(const shorterTuple& left, const shorterTuple& right){ return get<1>(left) < get<1>(right); }
 inline const bool prioLongest2(const shorterTuple2& left, const shorterTuple2& right){ return get<1>(left) < get<1>(right); }
 
+
 struct {
     queue<shorterTuple2> extensionQueue;
 	uint32_t iniQoff;
@@ -57,7 +58,6 @@ struct {
 	uint16_t mscore;
 	int16_t mmscore;
 	int16_t X;
-	list<uint16_t> extPath;
 	uint32_t explCount;
 	uint32_t quorum;
 	list<pair<string, size_t>> searchSet;
@@ -77,7 +77,7 @@ struct {
 
 outputTypes calcUnitigsMitBasenberechnung(inputTypes);
 
-shorterVector2 getBestUnitigs(shorterPrioQueue2,uint);
+queue<shorterTuple2> getBestUnitigs(shorterPrioQueue2,uint);
 
 
 
