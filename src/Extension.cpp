@@ -536,14 +536,13 @@ outputTypes calcUnitigsMitBasenberechnung(inputTypes) {
 }
 
 int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
-	uint16_t sucID = 0;
 	int32_t maxScore = 0;
 	uint numOfUnitig = 1000000;
 	int32_t numOfBases = 30;
 
 	shorterPrioQueue2 bestUnitigsPrioQueue(prioLongest2);
 
-	shorterVector2 bestUnitigs;
+	queue<shorterTuple2> bestUnitigs;
 	list<uint16_t> tempPath;
 	list<uint16_t> bestPath;
 
@@ -559,7 +558,6 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 		uint32_t tmpHitLen = hitLen;
 		uint32_t tempextLen = extLen;
 		uint32_t tmpuniPos = uniPos;
-		int32_t tmpNumOfBases = numOfBases;
 
 		shorterTuple2 startTuple = make_tuple(nI, tempScore, tmpScore, tempPath, tmpHitLen, tempextLen, tmpuniPos, 0);
 
@@ -605,6 +603,9 @@ int32_t extendAtNextUnitig_BFS_SMART3(const ForwardCDBG<DataAccessor<UnitigInfo>
 
 		bestUnitigs = getBestUnitigs(bestUnitigsPrioQueue,numOfUnitig);
 	}
+
+	extPth = bestPath;
+	return maxScore;
 
 }
 
