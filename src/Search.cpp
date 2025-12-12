@@ -242,7 +242,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Testin
 		
 			/*
-			if(!(newHit.offQ == 3096 && newHit.offU == 69 && currUni.mappedSequenceToString() == "TCCTCAGCCGATTTAGAAGATGAGATGGTATGTAAATGGCTACTTTCTTCAACACCTGTAATGAGTCGGTTTGCTGCTGATATATTCTCTCGTACTCCGAGTGGGAAGCGC")) {
+			if(!(newHit.offQ == 171 && newHit.offU == 9 && currUni.mappedSequenceToString() == "AAGGATGGAGCTTTCTTCCTCTATGACAGGCTGGCTTCAACT")) {
 				break;
 			} else {
 				cout << "startUni: " << currUni.mappedSequenceToString() << endl;
@@ -257,7 +257,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus);
 
 			/*
-			if((newHit.offQ == 0 && newHit.offU == 7 && currUni.mappedSequenceToString() == "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCGTCACCAAAGATCGATAGAGGTTGGGTC")) {
+			if((newHit.offQ == 0 && newHit.offU == 4 && currUni.mappedSequenceToString() == "TCAAATTGCCTACATGCTTACATCTGAGGACAGCCAGTGTGACTTGGATTGGAGATGTGGA")) {
 				exit(0);
 			}
 			*/
@@ -269,18 +269,23 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 					cout << newHit.origUni.mappedSequenceToString() << endl;
 			}
 			*/
+
+			//cout << "newHit.length: " << newHit.length << endl;
 			
 
 			//Filter out some seeds; the second condition ensures that we do not miss anything consisting of only one large perfect match and third one cares for seeds in the end of the query.
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
+				
+				//cout << "startLeftX_Drop" << endl;
+				
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx);
 
 				//Check whether we have created a hit for this query position already
 				
 				/*
-				if(currSeed->offsetQ == 3 && currSeed->offsetU == 7){
+				if(currSeed->offsetQ == 0 && currSeed->offsetU == 7){
 					cout << "treffer hat score 3 " << endl;
 					cout << newHit.score << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
@@ -288,7 +293,7 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				
 
 				
-				if(newHit.score == 76){
+				if(newHit.score == 43){
 					cout << currSeed->offsetQ << endl;
 					cout << currSeed->offsetU << endl;
 					cout << newHit.origUni.mappedSequenceToString() << endl;
