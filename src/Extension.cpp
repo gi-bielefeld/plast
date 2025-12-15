@@ -197,6 +197,11 @@ int32_t extendAtNextUnitig_BFS(const UnitigColorMap<UnitigInfo> startUnitig, con
 		hitLen = outputStruct.hitLen;
 		bestPath = outputStruct.bestPath;
 
+		//	empty the queue
+		while (!unitigsQueue.empty()) {
+        	unitigsQueue.pop();
+    	}
+
 		//	transfer element from priority queue to normal queue
 		while (!unitigsPrioQueue.empty()) {
     		unitigsQueue.push(unitigsPrioQueue.top());
@@ -555,7 +560,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const UnitigColorMap<UnitigInfo> startUnit
 		for(uint i = 0; i < bestUnitigs.size(); i++) {
 
 			//	extract all relevant information of the extension
-			shorterTuple currExtension 	= bestUnitigs[i];
+			shorterTuple currExtension 	= bestUnitigs[0];
 			UnitigColorMap<UnitigInfo> currUnitig 	= get<0>(currExtension);
 			uint32_t currScore 		= get<1>(currExtension);
 			int32_t currtmpScore 	= get<2>(currExtension);
@@ -566,6 +571,10 @@ int32_t extendAtNextUnitig_BFS_SMART2(const UnitigColorMap<UnitigInfo> startUnit
 
 			//	get the successors of the unitig
 			shorterContainer sucIter2 = currUnitig.getSuccessors();
+
+			//	remove the unitig from the list
+			bestUnitigs.erase(bestUnitigs.begin() + 0);
+			bestScores.erase(bestScores.begin() + 0);
 			
 			//	stop if we reached the end of the query
 			if((currextLen + iniQoff < q.length())){
@@ -592,7 +601,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const UnitigColorMap<UnitigInfo> startUnit
 
 					//	if we reached the end of the unitig and still place in the list
 					//	add extension to the list
-					if(check && bestUnitigs.size() < numOfUnitig){
+					if(check && bestUnitigs.size() <= numOfUnitig){
 						bestUnitigs.push_back(make_tuple(*nI,fullScore,nextScore,tempPath,nextHitLen,nextExtLen, nextUniPos, 0));
 						bestScores.push_back(fullScore);
 
@@ -619,6 +628,7 @@ int32_t extendAtNextUnitig_BFS_SMART2(const UnitigColorMap<UnitigInfo> startUnit
                     	maxScore = fullScore;
                     	hitLen = nextHitLen;
 						bestPath = tempPath;
+
 					}
 				}
 			}
