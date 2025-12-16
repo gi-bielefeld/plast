@@ -68,10 +68,38 @@ struct inputTypes{
 	int32_t numOfBases;
 	uint32_t hitLen;
 	list<uint16_t> bestPath;
+	bool compareBases;
 };
 
 struct outputTypes{
     shorterPrioQueue bestUnitigsPrioQueue;
+    int32_t maxScore;
+    uint32_t hitLen;
+    list<uint16_t> bestPath;
+};
+
+struct inputTypes2{
+	shorterPrioQueue priorityQueue;
+    queue<shorterTuple> extensionQueue;
+	uint32_t iniQoff;
+	string q;
+	uint16_t mscore;
+	int16_t mmscore;
+	int16_t X;
+	uint32_t explCount;
+	uint32_t quorum;
+	list<pair<string, size_t>> searchSet;
+	bool advIdx;
+	int32_t maxScore;
+	int32_t numOfBases;
+	uint32_t hitLen;
+	list<uint16_t> bestPath;
+	bool compareBases;
+};
+
+struct outputTypes2{
+    shorterPrioQueue unitigsPrioQueue;
+	queue<shorterTuple> extensionQueue;
     int32_t maxScore;
     uint32_t hitLen;
     list<uint16_t> bestPath;
