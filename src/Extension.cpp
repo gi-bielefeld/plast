@@ -313,9 +313,11 @@ int32_t extendAtNextUnitig_BFS(const UnitigColorMap<UnitigInfo> startUnitig, con
 		bestPath = outputStruct.bestPath;
 
 		//	empty the queue
-		while (!unitigsQueue.empty()) {
-      unitigsQueue.pop();
-    }
+		//while (!unitigsQueue.empty()) {
+      		//unitigsQueue.pop();
+    	//}
+
+		unitigsQueue = queue<shorterTuple>();
 
 		//	transfer element from priority queue to normal queue
 		while (!unitigsPrioQueue.empty()) {
