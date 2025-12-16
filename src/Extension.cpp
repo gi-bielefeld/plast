@@ -54,7 +54,7 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	return maxScore;
 }
 
-outputTypes2 stepUnitig(inputTypes2 inputStructure){
+outputTypes stepUnitig(inputTypes inputStructure){
 	queue<shorterTuple> extensionQueue		= inputStructure.extensionQueue;
 	uint32_t iniQoff						= inputStructure.iniQoff;
 	string q								= inputStructure.q;
@@ -73,14 +73,14 @@ outputTypes2 stepUnitig(inputTypes2 inputStructure){
 
 	shorterPrioQueue unitigsPrioQueue(prioLongest);
 
-	unitigsPrioQueue						= inputStructure.priorityQueue;
+	//unitigsPrioQueue						= inputStructure.priorityQueue;
 
 
 
-	outputTypes2 p;
+	outputTypes p;
 
-	p.unitigsPrioQueue = unitigsPrioQueue;
-	p.extensionQueue = extensionQueue;
+	p.bestUnitigsPrioQueue = unitigsPrioQueue;
+	//p.extensionQueue = extensionQueue;
 	p.maxScore = maxScore;
 	p.hitLen = hitLen;
 	p.bestPath = bestPath;
@@ -258,9 +258,26 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 	return p;
 }
 
+//	takes up to numOfAcceptedExtensions elements from the given priority queue
+//	and returns them as a queue
+queue<shorterTuple> getBestUnitigs(shorterPrioQueue bestUnitigsPrioQueue, uint numOfAcceptedExtensions){
+	queue<shorterTuple> bestUnitigs;
+	
+	for(uint i = 0; i < numOfAcceptedExtensions; i++) {
+		if(bestUnitigsPrioQueue.empty()){
+			break;
+		} else {
+			bestUnitigs.push(bestUnitigsPrioQueue.top());
+			bestUnitigsPrioQueue.pop(); 
+		}
+	}
+
+	return bestUnitigs;
+}
+
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a exhaustive BFS algorithm
-int32_t extendAtNextUnitig_BFS(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -317,13 +334,17 @@ int32_t extendAtNextUnitig_BFS(const UnitigColorMap<UnitigInfo> startUnitig, con
       		//unitigsQueue.pop();
     	//}
 
+		//	empty the queue
 		unitigsQueue = queue<shorterTuple>();
 
 		//	transfer element from priority queue to normal queue
-		while (!unitigsPrioQueue.empty()) {
-    		unitigsQueue.push(unitigsPrioQueue.top());
-    		unitigsPrioQueue.pop();
-		}
+		unitigsQueue = getBestUnitigs(unitigsPrioQueue,unitigsPrioQueue.size());
+
+		//	transfer element from priority queue to normal queue
+		//while (!unitigsPrioQueue.empty()) {
+    		//unitigsQueue.push(unitigsPrioQueue.top());
+    		//unitigsPrioQueue.pop();
+		//}
 	}
 
 	//	update path of best extension and return best score
@@ -430,27 +451,9 @@ int32_t extendAtNextUnitig_BFS(const UnitigColorMap<UnitigInfo> startUnitig, con
 
 */
 
-//	takes up to numOfAcceptedExtensions elements from the given priority queue
-//	and returns them as a queue
-queue<shorterTuple> getBestUnitigs(shorterPrioQueue bestUnitigsPrioQueue, uint numOfAcceptedExtensions){
-	queue<shorterTuple> bestUnitigs;
-	
-	for(uint i = 0; i < numOfAcceptedExtensions; i++) {
-		if(bestUnitigsPrioQueue.empty()){
-			break;
-		} else {
-			bestUnitigs.push(bestUnitigsPrioQueue.top());
-			bestUnitigsPrioQueue.pop(); 
-		}
-	}
-
-	return bestUnitigs;
-}
-
-
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where each iteration a number of best scoring extensions are pushed to the next iteration 
-int32_t extendAtNextUnitig_BFS_SMART1(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -648,7 +651,7 @@ int32_t extendAtNextUnitig_BFS_SMART1(const UnitigColorMap<UnitigInfo> startUnit
 
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where at all times only a certain number of the best scoring extensions are kept
-int32_t extendAtNextUnitig_BFS_SMART2(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -1031,7 +1034,7 @@ queue<shorterTuple> getBestUnitigs(shorterPrioQueue bestUnitigsPrioQueue, uint n
 
 //	This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where x bases are compared and the best scoring extensions are followed upon
-int32_t extendAtNextUnitig_BFS_SMART3(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -1223,16 +1226,16 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 						hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 1:
-						hit->score += extendAtNextUnitig_BFS(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_exhaustive(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 2:
-						hit->score += extendAtNextUnitig_BFS_SMART1(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_extendNBest(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 3:
-						hit->score += extendAtNextUnitig_BFS_SMART2(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_replaceWorst(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 4:
-						hit->score += extendAtNextUnitig_BFS_SMART3(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_iterateBasePairChunks(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 				}
 				
