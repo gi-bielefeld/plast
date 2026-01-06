@@ -3,7 +3,7 @@
 #include "IO.h"
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx, int16_t& extend_modus){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx, int16_t& extend_modus, int16_t& numCompBases, int16_t& numPushUni){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -33,6 +33,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
         {"gap-open",       optional_argument,  0, 'd'},
         {"gap-extension",  optional_argument,  0, 'e'},
 		{"extend_modus",   optional_argument,  0, 'B'},
+		{"numCompBases",   optional_argument,  0, 'b'},
+		{"numPushUni", 	   optional_argument,  0, 'P'},
         {"advanced-index", no_argument,        0, 'a'},
         {"report-colors",  no_argument,        0, 'r'},
         {"sim-run",        no_argument,        0, 'u'},
@@ -273,6 +275,10 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 						break;
 				}
 				break;
+			case 'b':
+				numCompBases = atoi(optarg);
+			case 'P':
+				numPushUni = atoi(optarg);
 			default:
 				break;
 		}

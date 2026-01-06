@@ -8,6 +8,8 @@
 //Default number of results to be outputted
 #define DEFAULT_NB_RES 250
 #define DEFAULT_B 0
+#define DEFAULT_B_SMALL 30 
+#define DEFAULT_P 5
 
 //All variations of strands we may perform a search
 enum SrchStrd {Plus, Minus, Both};
@@ -531,16 +533,16 @@ inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const
 void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool& isRefSeq, const bool& advIdx);
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus);
+void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numCompBases, const int16_t numPushUni);
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
-void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numCompBases, const int16_t numPushUni);
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
 void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C, const bool& advIdx);
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx);
+void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx, const int16_t extend_modus, const int16_t numCompBases, const int16_t numPushUni);
 
 //This function frees all memory additionally allocated for an hit array
 void freeHitArray(Hit *arr, uint32_t &arrLen);
