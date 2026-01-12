@@ -25,7 +25,7 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscor
 //This function continues an extension to the right on a successive unitig of a seed lying on the query's reference strand considering a quorum and a search color set. Returns the maximum score reached.
 int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, uint32_t uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &lastSeedTmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases);
+int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &lastSeedTmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev);
 
 //This function continues an extension to the right on a successive unitig of a seed lying on the query's reverse complement considering a quorum and a search color set. Returns the maximum score reached.
 int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
@@ -70,6 +70,7 @@ struct inputTypes{
 	uint32_t hitLen;
 	list<uint16_t> bestPath;
 	bool compareBases;
+	bool modeRev;
 };
 
 struct outputTypes{
@@ -82,25 +83,14 @@ struct outputTypes{
 struct inputTypes2{
 	shorterPrioQueue priorityQueue;
     queue<shorterTuple> extensionQueue;
-	uint32_t iniQoff;
-	string q;
-	uint16_t mscore;
-	int16_t mmscore;
-	int16_t X;
-	uint32_t explCount;
-	uint32_t quorum;
-	list<pair<string, size_t>> searchSet;
-	bool advIdx;
-	int32_t maxScore;
-	int32_t numOfBases;
-	uint32_t hitLen;
-	list<uint16_t> bestPath;
-	bool compareBases;
+	shorterTuple currExtension;
+	uint16_t sucID;
 };
 
 struct outputTypes2{
     shorterPrioQueue unitigsPrioQueue;
 	queue<shorterTuple> extensionQueue;
+	shorterTuple currExtension;
     int32_t maxScore;
     uint32_t hitLen;
     list<uint16_t> bestPath;
@@ -117,25 +107,16 @@ queue<shorterTuple> getBestUnitigs(shorterPrioQueue,uint);
 //This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-int32_t extendAtNextUnitig_BFS_exhaustive(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+int32_t extendAtNextUnitig_BFS_exhaustive(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& modeRev);
 
-int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni);
+int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool& modeRev);
 
-int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni);
+int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool& modeRev);
 
-int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const int16_t numCompBases);
+int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const int16_t numCompBases, const bool& modeRev);
 
 //This function  initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set. This function is explicitly designed for seeds lying on the query's reverse complement (considering the overlap between unitigs in sequences' beginning)
 int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
-
-int32_t extendAtNextUnitig_BFS_exhaustive_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
-
-int32_t extendAtNextUnitig_BFS_extendNBest_OnRevComp(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni);
-
-int32_t extendAtNextUnitig_BFS_replaceWorst_OnRevComp(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni);
-
-int32_t extendAtNextUnitig_BFS_iterateBasePairChunks_OnRevComp(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const int16_t numCompBases);
-
 
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one
 int32_t extendAtPrevUnitig(const BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> bwIter, uint32_t qPos, uint32_t &hitLen, const uint32_t &tmpExtLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);

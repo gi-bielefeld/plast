@@ -54,8 +54,7 @@ int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStora
 	return maxScore;
 }
 
-outputTypes stepUnitig(inputTypes inputStructure){
-	queue<shorterTuple> extensionQueue		= inputStructure.extensionQueue;
+outputTypes2 stepUnitig(inputTypes inputStructure, inputTypes2 inputStructure2){
 	uint32_t iniQoff						= inputStructure.iniQoff;
 	string q								= inputStructure.q;
 	uint16_t mscore							= inputStructure.mscore;
@@ -70,17 +69,63 @@ outputTypes stepUnitig(inputTypes inputStructure){
 	uint32_t hitLen							= inputStructure.hitLen;
 	list<uint16_t> bestPath					= inputStructure.bestPath;
 	bool compareBases						= inputStructure.compareBases;
+	bool modeRev							= inputStructure.modeRev;
 
 	shorterPrioQueue unitigsPrioQueue(prioLongest);
 
-	//unitigsPrioQueue						= inputStructure.priorityQueue;
+	unitigsPrioQueue 					= inputStructure2.priorityQueue;
+	queue<shorterTuple> extensionQueue 	= inputStructure2.extensionQueue;
+	shorterTuple currExtension 			= inputStructure2.currExtension;
+	uint16_t sucID						= inputStructure2.sucID;
 
+	UnitigColorMap<UnitigInfo> currUnitig 		= get<0>(currExtension);
+	uint32_t currScore 			= get<1>(currExtension);
+	int32_t currtmpScore 		= get<2>(currExtension);
+	list<uint16_t> currPath		= get<3>(currExtension);
+	uint32_t currHitLen 		= get<4>(currExtension);
+	uint32_t currextLen 		= get<5>(currExtension);
+	uint32_t curruniPos 		= get<6>(currExtension);
+	int currnumOfBases 			= get<7>(currExtension);
+	int32_t tempNumOfBases 		= numOfBases;
 
+	list<uint16_t>tempPath 	= currPath;
 
-	outputTypes p;
+	bool check = false;
 
-	p.bestUnitigsPrioQueue = unitigsPrioQueue;
-	//p.extensionQueue = extensionQueue;
+	int32_t addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev);
+	int32_t fullScore = currScore+addScore;
+
+	if(!compareBases && check){
+		tempPath.push_back(sucID);
+		unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, 0));
+	} else{
+		if(currnumOfBases == -1){
+			if((tempNumOfBases == 0) && !check){
+				unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, -1));
+			} else if(check && tempNumOfBases != 0){
+				extensionQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen,curruniPos,tempNumOfBases));
+			}
+		} else{
+			tempPath.push_back(sucID);
+			if((tempNumOfBases == 0) && !check){
+				unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, -1));
+			} else if(check && tempNumOfBases != 0){
+				extensionQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen,curruniPos,tempNumOfBases));
+			}
+		}
+	}
+
+	if (fullScore > maxScore) {
+        maxScore = fullScore;
+        hitLen = currHitLen;
+		bestPath = tempPath;
+	}
+
+	outputTypes2 p;
+
+	p.unitigsPrioQueue = unitigsPrioQueue;
+	p.extensionQueue = extensionQueue;
+	p.currExtension = currExtension;
 	p.maxScore = maxScore;
 	p.hitLen = hitLen;
 	p.bestPath = bestPath;
@@ -89,9 +134,129 @@ outputTypes stepUnitig(inputTypes inputStructure){
 }
 
 
+
 //	does a BFS-step for all saved unitigs
 //	and returns them in a priority queue
 outputTypes calcUnitigs(inputTypes inputStructure) {
+
+	//	get all information contained and given in the input structure
+	queue<shorterTuple> extensionQueue		= inputStructure.extensionQueue;
+	uint32_t iniQoff						= inputStructure.iniQoff;
+	string q								= inputStructure.q;
+	int32_t maxScore						= inputStructure.maxScore;
+	uint32_t hitLen							= inputStructure.hitLen;
+	list<uint16_t> bestPath					= inputStructure.bestPath;
+	bool compareBases						= inputStructure.compareBases;
+
+	//	create a priority queue sorted decreasingly by score for all finished extensions
+	shorterPrioQueue unitigsPrioQueue(prioLongest);
+
+	//	process all extensions
+	while(!(extensionQueue.empty())){
+
+		//	get next extension
+		shorterTuple currExtension = extensionQueue.front();
+		extensionQueue.pop();
+		
+		//	extract all relevant information of the extension
+		UnitigColorMap<UnitigInfo> currUnitig 		= get<0>(currExtension);
+		uint32_t currextLen 		= get<5>(currExtension);
+		int currnumOfBases 			= get<7>(currExtension);
+
+		//	get the successors of the unitig
+		shorterContainer sucIter2 = currUnitig.getSuccessors();
+
+		inputTypes2 inputStructure2;
+		outputTypes2 outputStructure2;
+
+		//	stop if we reached the end of the query
+		if((currextLen + iniQoff < q.length())){
+			uint16_t sucID = 0;
+
+			shorterTuple currExtension2 = currExtension;
+
+			if(!compareBases){
+				//	iterate over all successors
+				for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+					++sucID;
+
+					get<0>(currExtension) = *nI;
+
+					inputStructure2.priorityQueue	=	unitigsPrioQueue;
+					inputStructure2.extensionQueue	=	extensionQueue;
+					inputStructure2.currExtension	=	currExtension2;
+					inputStructure2.sucID			=	sucID;
+
+					outputStructure2 = stepUnitig(inputStructure,inputStructure2);
+
+					unitigsPrioQueue 	= outputStructure2.unitigsPrioQueue;
+					extensionQueue		= outputStructure2.extensionQueue;
+					maxScore			= outputStructure2.maxScore;
+					hitLen				= outputStructure2.hitLen;
+					bestPath			= outputStructure2.bestPath;
+				}
+			} else {
+				//	if the extension is marked we don't lock at successors
+				if(currnumOfBases == -1){
+
+					inputStructure2.priorityQueue	=	unitigsPrioQueue;
+					inputStructure2.extensionQueue	=	extensionQueue;
+					inputStructure2.currExtension	=	currExtension;
+					inputStructure2.sucID			=	0;
+
+					outputStructure2 = stepUnitig(inputStructure,inputStructure2);
+
+					unitigsPrioQueue 	= outputStructure2.unitigsPrioQueue;
+					extensionQueue		= outputStructure2.extensionQueue;
+					maxScore			= outputStructure2.maxScore;
+					hitLen				= outputStructure2.hitLen;
+					bestPath			= outputStructure2.bestPath;
+
+				//	if the extension is not marked go through the succesors of the unitig	
+				} else {
+					uint16_t sucID = 0;
+
+					//	iterate over all successors
+					for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+						++sucID;
+
+						get<0>(currExtension) = *nI;
+
+						inputStructure2.priorityQueue	=	unitigsPrioQueue;
+						inputStructure2.extensionQueue	=	extensionQueue;
+						inputStructure2.currExtension	=	currExtension2;
+						inputStructure2.sucID			=	sucID;
+
+						outputStructure2 = stepUnitig(inputStructure,inputStructure2);
+
+						unitigsPrioQueue 	= outputStructure2.unitigsPrioQueue;
+						extensionQueue		= outputStructure2.extensionQueue;
+						maxScore			= outputStructure2.maxScore;
+						hitLen				= outputStructure2.hitLen;
+						bestPath			= outputStructure2.bestPath;
+					}
+				}
+			}
+		}
+	}
+
+	//	return the best extension and the priority queue
+	outputTypes p;
+
+	p.bestUnitigsPrioQueue = unitigsPrioQueue;
+	p.maxScore = maxScore;
+	p.hitLen = hitLen;
+	p.bestPath = bestPath;
+
+	return p;
+}
+
+
+
+
+//	does a BFS-step for all saved unitigs
+//	and returns them in a priority queue
+outputTypes calcUnitigs_old(inputTypes inputStructure) {
 
 	//	get all information contained and given in the input structure
 	queue<shorterTuple> extensionQueue		= inputStructure.extensionQueue;
@@ -109,6 +274,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 	uint32_t hitLen							= inputStructure.hitLen;
 	list<uint16_t> bestPath					= inputStructure.bestPath;
 	bool compareBases						= inputStructure.compareBases;
+	bool modeRev							= inputStructure.modeRev;
 
 	//	create a priority queue sorted decreasingly by score for all finished extensions
 	shorterPrioQueue unitigsPrioQueue(prioLongest);
@@ -153,7 +319,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					uint32_t nextUniPos 	= curruniPos;
 
 					//	calculate the score of an extension of a successor and add it to its current score
-					int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false);
+					int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, false);
 					tempPath.push_back(sucID);
 					int32_t fullScore = currScore+addScore;
 
@@ -176,7 +342,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					list<uint16_t>tempPath 	= currPath;
 
 					//	continue extension on the current unitig and calculate the new score
-					int32_t addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, true);
+					int32_t addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, true, false);
 					int32_t fullScore = currScore+addScore;
 
 					//	if having compared enough bases while still not reaching the end of the unitig
@@ -218,7 +384,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 						int32_t tempNumOfBases 	= numOfBases;
 
 						//	calculate the score of an extension of a successor and add it to its current score
-						int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, true);
+						int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, true, false);
 						tempPath.push_back(sucID);
 						int32_t fullScore = currScore+addScore;
 
@@ -277,7 +443,7 @@ queue<shorterTuple> getBestUnitigs(shorterPrioQueue bestUnitigsPrioQueue, uint n
 
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a exhaustive BFS algorithm
-int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& modeRev){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -309,6 +475,7 @@ int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> start
 	inputStruct.advIdx      	= advIdx;
 	inputStruct.numOfBases  	= 0;
 	inputStruct.compareBases	= false;
+	inputStruct.modeRev			= modeRev;
 
 	outputTypes outputStruct;
 
@@ -355,7 +522,7 @@ int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> start
 
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where each iteration a number of best scoring extensions are pushed to the next iteration 
-int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni){
+int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool &modeRev){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -390,6 +557,7 @@ int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> star
 	inputStruct.advIdx 			= advIdx;
 	inputStruct.numOfBases 		= 0;
 	inputStruct.compareBases	= false;
+	inputStruct.modeRev			= modeRev;
 
 	outputTypes outputStruct;
 
@@ -422,7 +590,7 @@ int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> star
 
 //	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where at all times only a certain number of the best scoring extensions are kept
-int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni){
+int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool &modeRev){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -487,7 +655,7 @@ int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> sta
 					int32_t tempNumOfBases 	= 0;
 
 					//	calculate the score of an extension of a successor and add it to its current score
-					int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false);
+					int32_t addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, modeRev);
 					tempPath.push_back(sucID);
 					int32_t fullScore = currScore+addScore;
 
@@ -534,7 +702,7 @@ int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> sta
 
 //	This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 //	using a BFS heuristic where x bases are compared and the best scoring extensions are followed upon
-int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const int16_t numCompBases){
+int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const int16_t numCompBases, const bool &modeRev){
 	
 	//	best score
 	int32_t maxScore = 0;
@@ -586,6 +754,7 @@ int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<Unitig
 	//inputStruct.hitLen = hitLen;
 	//inputStruct.bestPath = bestPath;
 	inputStruct.compareBases	= true;
+	inputStruct.modeRev			= modeRev;
 
 	outputTypes outputStruct;
 
@@ -840,85 +1009,6 @@ outputTypes calcUnitigs_OnRevComp(inputTypes inputStructure) {
 }
 
 
-
-//	this function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
-//	using a exhaustive BFS algorithm
-int32_t extendAtNextUnitig_BFS_exhaustive_OnRevComp(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
-	
-	//	best score
-	int32_t maxScore = 0;
-
-	//	temporary and best global path
-	list<uint16_t> tempPath;
-	list<uint16_t> bestPath;
-
-	//	priority queue ordered decreasingly by score
-	shorterPrioQueue unitigsPrioQueue(prioLongest);
-
-	//	queue for next iterations extensions
-	queue<shorterTuple> unitigsQueue;
-
-	//	add starting extension to the queue
-	shorterTuple startTuple = make_tuple(startUnitig, 0, lastExtSeedTmpScore, tempPath, hitLen, extLen, 0, 0);
-	unitigsQueue.push(startTuple);
-
-	//	prepare the parameters given to the BFS extension function
-	inputTypes inputStruct;
-	inputStruct.iniQoff     	= iniQoff;
-	inputStruct.q           	= q;
-	inputStruct.mscore      	= mscore;
-	inputStruct.mmscore     	= mmscore;
-	inputStruct.X           	= X;
-	inputStruct.explCount   	= explCount;
-	inputStruct.quorum      	= quorum;
-	inputStruct.searchSet   	= searchSet;
-	inputStruct.advIdx      	= advIdx;
-	inputStruct.numOfBases  	= 0;
-	inputStruct.compareBases	= false;
-
-	outputTypes outputStruct;
-
-	//	repeat BFS extension until no more extensions are possible
-	while(!(unitigsQueue.empty())){
-		//	update extension queue and best result found so far
-		inputStruct.extensionQueue = unitigsQueue;
-		inputStruct.maxScore = maxScore;
-		inputStruct.hitLen = hitLen;
-		inputStruct.bestPath = bestPath;
-
-		//	extend and score
-		outputStruct = calcUnitigs_OnRevComp(inputStruct);
-
-		//	update with new results
-		unitigsPrioQueue = outputStruct.bestUnitigsPrioQueue;
-		maxScore = outputStruct.maxScore;
-		hitLen = outputStruct.hitLen;
-		bestPath = outputStruct.bestPath;
-
-		//	empty the queue
-		//while (!unitigsQueue.empty()) {
-      		//unitigsQueue.pop();
-    	//}
-
-		//	empty the queue
-		unitigsQueue = queue<shorterTuple>();
-
-		//	transfer element from priority queue to normal queue
-		unitigsQueue = getBestUnitigs(unitigsPrioQueue,unitigsPrioQueue.size());
-
-		//	transfer element from priority queue to normal queue
-		//while (!unitigsPrioQueue.empty()) {
-    		//unitigsQueue.push(unitigsPrioQueue.top());
-    		//unitigsPrioQueue.pop();
-		//}
-	}
-
-	//	update path of best extension and return best score
-	extPth = bestPath;
-	return maxScore;
-}
-
-
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numCompBases, const int16_t numPushUni){
 	//Initialization of auxiliary variables
@@ -972,21 +1062,22 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 				explCount = 0;
 				//Explore unitig's successors
 				//cout << "hit->score before:" << hit->score << endl;
+				bool modeRev = false;
 				switch(extend_modus) {
 					case 0:
 						hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 1:
-						hit->score += extendAtNextUnitig_BFS_exhaustive(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_exhaustive(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, modeRev);
 						break;
 					case 2:
-						hit->score += extendAtNextUnitig_BFS_extendNBest(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni);
+						hit->score += extendAtNextUnitig_BFS_extendNBest(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, modeRev);
 						break;
 					case 3:
-						hit->score += extendAtNextUnitig_BFS_replaceWorst(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni);
+						hit->score += extendAtNextUnitig_BFS_replaceWorst(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, modeRev);
 						break;
 					case 4:
-						hit->score += extendAtNextUnitig_BFS_iterateBasePairChunks(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, numCompBases);
+						hit->score += extendAtNextUnitig_BFS_iterateBasePairChunks(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, numCompBases, modeRev);
 						break;
 				}
 				
@@ -1049,21 +1140,24 @@ void startRightX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscor
 				//Initialize explCount
 				explCount = 0;
 				//Explore unitig's successors
+
+				uint32_t iniUniPos = 0;
+
 				switch(extend_modus) {
 					case 0:
 						hit->score += extendAtNextUnitig_OnRevComp(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
 						break;
 					case 1:
-						hit->score += extendAtNextUnitig_BFS_exhaustive_OnRevComp(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx);
+						hit->score += extendAtNextUnitig_BFS_exhaustive(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, true);
 						break;
 					case 2:
-						//hit->score += extendAtNextUnitig_BFS_extendNBest_OnRevComp(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx, numPushUni);
+						hit->score += extendAtNextUnitig_BFS_extendNBest(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, true);
 						break;
 					case 3:
-						//hit->score += extendAtNextUnitig_BFS_replaceWorst_OnRevComp(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx, numPushUni);
+						hit->score += extendAtNextUnitig_BFS_replaceWorst(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, true);
 						break;
 					case 4:
-						//hit->score += extendAtNextUnitig_BFS_iterateBasePairChunks_OnRevComp(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, extPth, explCount, quorum, searchSet, advIdx, numPushUni, numCompBases);
+						hit->score += extendAtNextUnitig_BFS_iterateBasePairChunks(hit->origUni, hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx, numPushUni, numCompBases, true);
 						break;
 				}
 			}
@@ -1214,9 +1308,14 @@ int32_t contRightX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataSto
 
 //	This function continues an extension to the right on a successive unitig of a seed lying on the query's reference strand considering a quorum and a search color set. Returns the maximum score reached.
 //	using an iterative BFS algorithm and can compare a certain number of bases
-int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases){
+int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, uint32_t &uniSeqPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev){
 	int32_t progress, score = 0;
-	int32_t overlap = sucUnitig.getGraph()->getK() - 1;
+	int32_t overlap = 0;
+	if(modusRev){
+		uniSeqPos = sucUnitig.getGraph()->getK() - 1;
+	} else{
+		overlap = sucUnitig.getGraph()->getK() - 1;
+	}
 	uint32_t iniSeqPos;
 	uint32_t tmpSLen;
 	//Even if we are on the reverse complementary strand and no position is covered on this unitig, because we have checked the first k - 1 position on the last unitig already
@@ -1316,7 +1415,8 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 			}
 		} else{
 			//Check up to which point we have to compare the unitig sequence
-			if(!sucUnitig.getSuccessors().hasSuccessors()){
+
+			if(!sucUnitig.getSuccessors().hasSuccessors() && !modusRev){
 				overlap = 0;
 			}
 
@@ -1359,9 +1459,16 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 				}
 			} else{
 				//Check if the current unitig has successors
-				if(overlap != 0){
+				if(overlap != 0 && !modusRev){
 					//Calculate the position in the next unitig's sequence we have to start with
 					uniSeqPos = uniSeqPos - sucUnitig.size + overlap;
+					//Check out next unitig
+					extLen = extLen + tmpSLen;
+					//cout << "tmpSLen: " << tmpSLen << endl;
+					check = true;
+				} else if(sucUnitig.getSuccessors().hasSuccessors() && modusRev){
+					//Calculate the position in the next unitig's sequence we have to start with
+					//uniSeqPos = uniSeqPos - sucUnitig.size + overlap;
 					//Check out next unitig
 					extLen = extLen + tmpSLen;
 					//cout << "tmpSLen: " << tmpSLen << endl;
@@ -1495,173 +1602,6 @@ int32_t contRightX_Drop_OnRevComp(const neighborIterator<DataAccessor<UnitigInfo
 
 	return score;
 }
-
-
-//	This function continues an extension to the right on a successive unitig of a seed lying on the query's reference strand considering a quorum and a search color set. Returns the maximum score reached.
-//	using an iterative BFS algorithm and can compare a certain number of bases
-int32_t contRightX_Drop_BFS_OnRevComp(const UnitigColorMap<UnitigInfo> &sucUnitig, const uint32_t &iniQoff, uint32_t &hitLen, uint32_t &extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases){
-	int32_t progress, score = 0;
-	int32_t iniSeqPos = sucUnitig.getGraph()->getK() - 1;
-	uint32_t uniSeqPos = iniSeqPos;
-	uint32_t tmpSLen;
-	//Even if we are on the reverse complementary strand and no position is covered on this unitig, because we have checked the first k - 1 position on the last unitig already
-	int32_t checkedPos = getSrchCritCov(sucUnitig, quorum, searchSet, compOffset(uniSeqPos, 1, sucUnitig.size, sucUnitig.strand), sucUnitig.strand, advIdx);
-	string sucUniSeq = sucUnitig.mappedSequenceToString();
-	struct Seed *nearestSeed, *prevSeed;
-
-	//cout << "starttmpScore: " << tmpScore << endl;
-
-	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
-	iniSeqPos = uniSeqPos;
-	//Find the nearest seed that we might be able to reach during our extension
-	nearestSeed = searchRightNeighbor(sucUnitig.getData()->getData(sucUnitig)->getSeed(sucUnitig.strand), iniQoff, extLen, iniSeqPos, prevSeed);
-	//Perform the X-drop algorithm on the successive unitig
-	tmpSLen = 0;
-	check = false;
-
-	//We are done if we have reached the end of the query
-	while(iniQoff + extLen + tmpSLen < q.length()){
-		//Testing
-		//cout << "Not at query's end" << endl;
-		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
-
-		//	stop the extension if the number of considered bases is reached
-		
-		if(numOfBases == 0 && compBases){
-			extLen = extLen + tmpSLen;
-			break;
-		}
-		
-
-		//Check whether we have reached the next seed
-		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
-			//Testing
-			//cout << "Found seed" << endl;
-
-			/*
-			if(nearestSeed->offsetQ == 5017 && nearestSeed->offsetU == 31){
-				cout << "treffer hat score 1 " << endl;
-				cout << sucUnitig->mappedSequenceToString() << endl;
-				cout << "iniQoff: " << iniQoff << endl;
-				//exit(0);
-			}
-			*/
-
-			//Calculate the gain we get by incorporating the reached seed
-			progress = nearestSeed->offsetQ + nearestSeed->len - (iniQoff + extLen + tmpSLen);
-			//Update temporary seed length
-			tmpSLen += progress;
-			//Update current position in the unitig sequence
-			uniSeqPos += progress;
-			//Adjust number of remaining covered positions
-			checkedPos -= progress;
-
-			//If we have reached a seed check if it suffices to get a positive tempScore
-			if((tmpScore += progress * mscore) > 0){
-				//Update hit's length
-				hitLen = extLen + tmpSLen;
-				//Check if there is another seed to reach
-				if(prevSeed != NULL){
-					//Exclude the reached seed from its seed list
-					prevSeed->nextSeed = nearestSeed->nextSeed;
-					//Delete the reached seed
-					free(nearestSeed);
-					//Search for the next neighbor
-					nearestSeed = searchRightNeighbor(sucUnitig.getData()->getData(sucUnitig)->getSeed(sucUnitig.strand), iniQoff, extLen, iniSeqPos, prevSeed);
-				} else{
-					//Set seed's successor as head of the seed list
-					sucUnitig.getData()->getData(sucUnitig)->setSeed(nearestSeed->nextSeed, sucUnitig.strand);
-					//Delete the reached seed
-					free(nearestSeed);
-					//Reset nearestSeed
-					nearestSeed = NULL;
-				}
-
-				//Update score
-				score += tmpScore;
-				//Reset the temporary score
-				tmpScore = 0;
-			} else{
-				//Check if there is another seed to reach
-				if(prevSeed != NULL){
-					//Exclude the reached seed from its seed list
-					prevSeed->nextSeed = nearestSeed->nextSeed;
-					//Delete the reached seed
-					free(nearestSeed);
-					//Search for the next one
-					nearestSeed = searchRightNeighbor(sucUnitig.getData()->getData(sucUnitig)->getSeed(sucUnitig.strand), iniQoff, extLen, iniSeqPos, prevSeed);
-				} else{
-					//Set seed's successor as head of the seed list
-					sucUnitig.getData()->getData(sucUnitig)->setSeed(nearestSeed->nextSeed, sucUnitig.strand);
-					//Delete the reached seed
-					free(nearestSeed);
-					//Reset nearestSeed
-					nearestSeed = NULL;
-				}
-			}
-		} else{
-			//Check whether we have reached the end of the unitig's sequence
-			if(uniSeqPos < sucUnitig.size){
-				//Are search criteria still fulfilled?
-				if(checkedPos <= 0){
-					break;
-				}
-
-				//TEsting
-				//cout << "Compare bases" << endl;
-
-				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << endl;
-
-				//Check whether the score of our extension is positive
-				if((tmpScore += compUScore(sucUniSeq[uniSeqPos], q[iniQoff + extLen + tmpSLen], mscore, mmscore)) > 0){
-					//Update score
-					score += tmpScore;
-					//Update hit's length
-					hitLen = extLen + tmpSLen + 1;
-					//Reset the temporary score
-					tmpScore = 0;
-				} else{
-					//Check if the current extension is already too bad
-					if(tmpScore < -X){
-						break;
-					}
-				}
-				//cout << "tmpScore: " << tmpScore << endl;
-				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
-				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
-
-				//Proceed with the next two positions
-				++tmpSLen;
-				++uniSeqPos;
-				--checkedPos;
-				if(compBases){
-					--numOfBases;
-				}
-			} else{
-				//Check if the current unitig has successors
-				if(sucUnitig.getSuccessors().hasSuccessors()){
-					//Calculate the position in the next unitig's sequence we have to start with
-					//uniSeqPos = uniSeqPos - sucUnitig.size + overlap;
-					//Check out next unitig
-					extLen = extLen + tmpSLen;
-					//cout << "tmpSLen: " << tmpSLen << endl;
-					check = true;
-				}
-
-				break;
-			}
-		}
-	}
-
-	//cout << "iniQoff: " << iniQoff << ", uniPos: " << uniSeqPos << ", extLen: " << extLen << ", tmpSLen: " << tmpSLen << ", iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << endl;
-
-	//cout << "contRightX_Drop_BFS Final score: " << score << std::endl;
-	//cout << "Unitig: " << sucUnitig->mappedSequenceToString() << ", hitLen: " << hitLen << ", score: " << score << ", uniPos: " << uniSeqPos << endl;
-	//cout << "final uniSeqPos = " << uniSeqPos << std::endl;
-	//cout << "finaltmpScore: " << tmpScore << endl;
-	return score;
-}
-
 
 
 //This function performs an extension on all possible predecessors of a unitig considering a quorum and a search color set and returns the maximum scoring one
