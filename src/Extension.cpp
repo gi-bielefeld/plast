@@ -102,25 +102,22 @@ outputTypes2 stepUnitig(inputTypes inputStructure, inputTypes2 inputStructure2){
 		leftResult = contLeftX_Drop_BFS(currUnitig, iniQoff, currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev);
 		addScore = get<0>(leftResult);
 		currextLen = get<1>(leftResult);
+		iniQoff -= currextLen;
 	}
 	int32_t fullScore = currScore+addScore;
 
 	if(!compareBases){
-<<<<<<< HEAD
+		tempPath.push_back(sucID);	ändern zu push_front
 		if(check){
-			tempPath.push_back(sucID);
-=======
-		tempPath.push_back(sucID);
-		if(check){
->>>>>>> 1810483142f46226962043ef9f087413f00a4005
 			unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, 0));
 		}
 	} else{
-		cout << "Dont" << endl;
+		//cout << "Dont" << endl;
 		if(currnumOfBases == -1){
 			if((tempNumOfBases == 0) && !check){
 				unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, -1));
 			} else if(check && tempNumOfBases != 0){
+				/*
 				cout << "when added by baseCompareMarked" << endl;
 				cout << "currUnitig: " << get<0>(currExtension).mappedSequenceToString() << endl;
 				cout << "currextLen: " << get<5>(currExtension) << endl;
@@ -128,6 +125,7 @@ outputTypes2 stepUnitig(inputTypes inputStructure, inputTypes2 inputStructure2){
 				cout << "currtmpScore: " << get<2>(currExtension) << endl;
 				cout << "curruniPos: " << get<6>(currExtension) << endl;
 				cout << "currHitLen: " << get<4>(currExtension) << endl;
+				*/
 				extensionQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen,curruniPos,tempNumOfBases));
 			}
 		} else{
@@ -135,6 +133,7 @@ outputTypes2 stepUnitig(inputTypes inputStructure, inputTypes2 inputStructure2){
 			if((tempNumOfBases == 0) && !check){
 				unitigsPrioQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen, curruniPos, -1));
 			} else if(check && tempNumOfBases != 0){
+				/*
 				cout << "when added by baseCompare" << endl;
 				cout << "currUnitig: " << get<0>(currExtension).mappedSequenceToString() << endl;
 				cout << "currextLen: " << get<5>(currExtension) << endl;
@@ -142,6 +141,7 @@ outputTypes2 stepUnitig(inputTypes inputStructure, inputTypes2 inputStructure2){
 				cout << "currtmpScore: " << get<2>(currExtension) << endl;
 				cout << "curruniPos: " << get<6>(currExtension) << endl;
 				cout << "currHitLen: " << get<4>(currExtension) << endl;
+				*/
 				extensionQueue.push(make_tuple(currUnitig,fullScore,currtmpScore,tempPath,currHitLen,currextLen,curruniPos,tempNumOfBases));
 			}
 		}
@@ -179,6 +179,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 	uint32_t hitLen							= inputStructure.hitLen;
 	list<uint16_t> bestPath					= inputStructure.bestPath;
 	bool compareBases						= inputStructure.compareBases;
+	bool isLeft								= inputStructure.isLeft;
 
 	//	create a priority queue sorted decreasingly by score for all finished extensions
 	shorterPrioQueue unitigsPrioQueue(prioLongest);
@@ -186,20 +187,13 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 	//	process all extensions
 	while(!(extensionQueue.empty())){
 
-		cout << extensionQueue.size() << endl;
+		//cout << extensionQueue.size() << endl;
 
 		//	get next extension
 		shorterTuple currExtension = extensionQueue.front();
 
 		extensionQueue.pop();
 		
-		cout << "when removed" << endl;
-		cout << "currUnitig: " << get<0>(currExtension).mappedSequenceToString() << endl;
-		cout << "currextLen: " << get<5>(currExtension) << endl;
-		cout << "currnumOfBases: " << get<7>(currExtension) << endl;
-		cout << "currtmpScore: " << get<2>(currExtension) << endl;
-		cout << "curruniPos: " << get<6>(currExtension) << endl;
-		cout << "currHitLen: " << get<4>(currExtension) << endl;
 
 		
 		//	extract all relevant information of the extension
@@ -207,8 +201,19 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 		uint32_t currextLen 		= get<5>(currExtension);
 		int currnumOfBases 			= get<7>(currExtension);
 
-		//	get the successors of the unitig
-		shorterContainer sucIter2 = currUnitig.getSuccessors();
+		shorterTemp nIBegin;
+		shorterTemp nIEnd;
+
+		if(!isLeft){
+			//	get the successors of the unitig
+			shorterContainer sucIter2 = currUnitig.getSuccessors();
+			nIBegin = sucIter2.begin();
+			nIEnd = sucIter2.end();
+		} else{
+			BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter2 = currUnitig.getPredecessors();
+			nIBegin = sucIter2.begin();
+			nIEnd = sucIter2.end();
+		}
 
 		inputTypes2 inputStructure2;
 		outputTypes2 outputStructure2;
@@ -219,7 +224,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 
 			if(!compareBases){
 				//	iterate over all successors
-				for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+				for(shorterTemp nI = nIBegin; nI != nIEnd; ++nI){
 					++sucID;
 
 					get<0>(currExtension) = *nI;
@@ -230,7 +235,6 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					inputStructure2.currExtension	=	currExtension;
 					inputStructure2.sucID			=	sucID;
 
-					cout << "before: " << extensionQueue.size() << endl;
 
 					outputStructure2 = stepUnitig(inputStructure,inputStructure2);
 
@@ -241,7 +245,6 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					hitLen				= outputStructure2.hitLen;
 					bestPath			= outputStructure2.bestPath;
 
-					cout << "after: " << extensionQueue.size() << endl;
 				}
 			} else {
 				//	if the extension is marked we don't lock at successors
@@ -252,7 +255,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					inputStructure2.currExtension	=	currExtension;
 					inputStructure2.sucID			=	0;
 
-					cout << "before: " << extensionQueue.size() << endl;
+
 
 					outputStructure2 = stepUnitig(inputStructure,inputStructure2);
 
@@ -263,24 +266,23 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 					hitLen				= outputStructure2.hitLen;
 					bestPath			= outputStructure2.bestPath;
 
-					cout << "after: " << extensionQueue.size() << endl;
 
 				//	if the extension is not marked go through the succesors of the unitig	
 				} else {
 					uint16_t sucID = 0;
 
 					//	iterate over all successors
-					for(shorterTemp nI = sucIter2.begin(); nI != sucIter2.end(); ++nI){
+					for(shorterTemp nI = nIBegin; nI != nIEnd; ++nI){
 						++sucID;
 
-						get<0>(currExtension2) = *nI;
+						get<0>(currExtension) = *nI;
 
 						inputStructure2.priorityQueue	=	unitigsPrioQueue;
 						inputStructure2.extensionQueue	=	extensionQueue;
 						inputStructure2.currExtension	=	currExtension;
 						inputStructure2.sucID			=	sucID;
 
-						cout << "before: " << extensionQueue.size() << endl;
+
 
 						outputStructure2 = stepUnitig(inputStructure,inputStructure2);
 
@@ -291,7 +293,7 @@ outputTypes calcUnitigs(inputTypes inputStructure) {
 						hitLen				= outputStructure2.hitLen;
 						bestPath			= outputStructure2.bestPath;
 
-						cout << "after: " << extensionQueue.size() << endl;
+
 					}
 				}
 			}
@@ -339,7 +341,7 @@ outputTypes calcUnitigs_old(inputTypes inputStructure) {
 	//	process all extensions
 	while(!(extensionQueue.empty())){
 
-		cout << extensionQueue.size() << endl;
+		//cout << extensionQueue.size() << endl;
 
 		//	get next extension
 		shorterTuple currExtension = extensionQueue.front();
@@ -899,10 +901,7 @@ int32_t extendAtNextUnitig_OnRevComp(const ForwardCDBG<DataAccessor<UnitigInfo>,
 	return maxScore;
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 1810483142f46226962043ef9f087413f00a4005
 //The good old X-drop algorithm (extension to the right) for seeds matching the query's reference strand considering quorum and search color set. Returns an extension pointer storing the extension path through the graph
 void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numCompBases, const int16_t numPushUni){
 	//Initialization of auxiliary variables
