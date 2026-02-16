@@ -53,9 +53,7 @@ using shorterPrioQueue = priority_queue<shorterTuple, vector<shorterTuple>, cons
 inline const bool prioLongest(const shorterTuple& left, const shorterTuple& right){ return get<1>(left) < get<1>(right); }
 //inline const bool prioLongest2(const shorterTuple2& left, const shorterTuple2& right){ return get<1>(left) < get<1>(right); }
 
-
-struct inputTypes{
-    queue<shorterTuple> extensionQueue;
+struct searchSettings{
 	uint32_t iniQoff;
 	string q;
 	uint16_t mscore;
@@ -65,13 +63,49 @@ struct inputTypes{
 	uint32_t quorum;
 	list<pair<string, size_t>> searchSet;
 	bool advIdx;
-	int32_t maxScore;
 	int32_t numOfBases;
-	uint32_t hitLen;
-	list<uint16_t> bestPath;
 	bool compareBases;
 	bool modeRev;
 	bool isLeft;
+};
+
+struct exploration{
+	queue<shorterTuple> extensionQueue;
+	shorterPrioQueue priorityQueue;
+	shorterTuple currExtension;
+	uint16_t sucID;
+	int32_t maxScore;
+	uint32_t hitLen;
+	list<uint16_t> bestPath;
+};
+
+
+
+
+struct inputTypes{
+	//searchSettings
+	uint32_t iniQoff;
+	string q;
+	uint16_t mscore;
+	int16_t mmscore;
+	int16_t X;
+	uint32_t explCount;
+	uint32_t quorum;
+	list<pair<string, size_t>> searchSet;
+	bool advIdx;
+	int32_t numOfBases;
+	bool compareBases;
+	bool modeRev;
+	bool isLeft;
+
+	//exploration
+	queue<shorterTuple> extensionQueue;
+	//shorterPrioQueue priorityQueue;
+	//shorterTuple currExtension;
+	//uint16_t sucID;
+	int32_t maxScore;
+	uint32_t hitLen;
+	list<uint16_t> bestPath;
 };
 
 struct outputTypes{
@@ -88,7 +122,7 @@ struct inputTypes2{
 	uint16_t sucID;
 };
 
-struct outputTypes2{
+struct finishedExploration{
     shorterPrioQueue unitigsPrioQueue;
 	queue<shorterTuple> extensionQueue;
 	shorterTuple currExtension;
@@ -97,9 +131,9 @@ struct outputTypes2{
     list<uint16_t> bestPath;
 };
 
-outputTypes calcUnitigs(inputTypes);
+finishedExploration stepUnitig(searchSettings, exploration);
 
-outputTypes calcUnitigs_OnRevComp(inputTypes);
+finishedExploration calcUnitigs(searchSettings, exploration);
 
 queue<shorterTuple> getBestUnitigs(shorterPrioQueue,uint);
 
@@ -108,7 +142,7 @@ queue<shorterTuple> getBestUnitigs(shorterPrioQueue,uint);
 //This function initiates the extension on all successors of a unitig and returns the best one considering a quorum and a search color set
 int32_t extendAtNextUnitig(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-int32_t extendAtNextUnitig_BFS_exhaustive(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& modeRev, const bool& chooseDirec);
+int32_t extendAtNextUnitig_BFS_exhaustive(const ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter, const uint32_t iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const bool& modeRev, const bool& chooseDirec);
 
 int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool& modeRev, const bool& chooseDirec);
 
@@ -134,7 +168,7 @@ void startLeftX_Drop_OnRevComp(Hit* hit, const string &q, const uint16_t &mscore
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and a search color set and returns the achieved score
 int32_t contLeftX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
-tuple<int32_t,uint32_t> contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastSeedTmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev);
+int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev, uint32_t &lastTempExtLen);
 
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reverse complement considering a quorum and a search color set and returns the achieved score
