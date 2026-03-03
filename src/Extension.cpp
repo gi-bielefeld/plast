@@ -81,14 +81,14 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 	uint16_t sucID						= exploration.sucID;
 
 	UnitigColorMap<UnitigInfo> currUnitig 		= get<0>(currExtension);
-	uint32_t currScore 			= get<1>(currExtension);
-	int32_t currtmpScore 		= get<2>(currExtension);
-	list<uint16_t> currPath		= get<3>(currExtension);
-	uint32_t currHitLen 		= get<4>(currExtension);
-	uint32_t currextLen 		= get<5>(currExtension);
-	uint32_t curruniPos 		= get<6>(currExtension);
-	int currnumOfBases 			= get<7>(currExtension);
-	int32_t tempNumOfBases 		= numOfBases;
+	uint32_t currScore 							= get<1>(currExtension);
+	int32_t currtmpScore 						= get<2>(currExtension);
+	list<uint16_t> currPath						= get<3>(currExtension);
+	uint32_t currHitLen 						= get<4>(currExtension);
+	uint32_t currextLen 						= get<5>(currExtension);
+	uint32_t curruniPos 						= get<6>(currExtension);
+	int currnumOfBases 							= get<7>(currExtension);
+	int32_t tempNumOfBases 						= numOfBases;
 
 	list<uint16_t>tempPath 	= currPath;
 
@@ -102,9 +102,15 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 	if(!isLeft){
 		addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev);
 	} else{
+		uint32_t uPos = 0;
+		if(modeRev){
+			uPos = currUnitig.size - curruniPos;
+		}
+		curruniPos = 0;
+
 		//cout << "iniQoff: " << iniQoff << endl;
 		//cout << "qPos: " << (iniQoff-currHitLen-currextLen) << " currHitLen: " << currHitLen << " currextLen: " << currextLen << endl;
-		addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen);
+		addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen, curruniPos);
 
 
 		//cout << "after stepUnitig score after" << endl;
@@ -565,7 +571,11 @@ int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> sta
 					if(!chooseDirec){
 						addScore = contRightX_Drop_BFS(*nI, iniQoff, nextHitLen, nextExtLen, q, mscore, mmscore, X, nextScore, nextUniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, modeRev);
 					} else{
-						addScore = contLeftX_Drop_BFS(*nI, (iniQoff-nextHitLen-nextExtLen), nextHitLen, q, mscore, mmscore, X, nextScore, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, modeRev, nextExtLen);
+						uint32_t uPos = 0;
+						if(modeRev){
+							uPos = nI->size - nextUniPos;
+						}
+						addScore = contLeftX_Drop_BFS(*nI, (iniQoff-nextHitLen-nextExtLen), nextHitLen, q, mscore, mmscore, X, nextScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, modeRev, nextExtLen, nextUniPos);
 					}
 					    //addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen);
 
@@ -1797,15 +1807,20 @@ int32_t contLeftX_Drop(const neighborIterator<DataAccessor<UnitigInfo>, DataStor
 }
 
 //This function continues a left extension on a predecessive unitig of a seed lying on the query's reference strand considering a quorum and a search color set and returns the achieved score
-int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev, uint32_t &lastTempExtLen){
+int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t qPos, uint32_t &hitLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, int32_t &tmpScore, list<uint16_t> &extPth, uint32_t uPos, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, bool &check, int &numOfBases, const bool &compBases, const bool &modusRev, uint32_t &lastTempExtLen, uint32_t lead){
 	
 	//cout << "beginning contLeftX_Drop_BFS" << endl;
 	
 	//bool inSeedList;
 	int32_t score = 0;
 	uint32_t tmpExtLen = 1;
+	uint32_t overlap = 0;
+
 	//Calculate our offset position inside the unitig sequence (+1, because otherwise it is not possible to calculate the correct gain if reaching a seed)
-	uint32_t uPos = prevUni.size - prevUni.getGraph()->getK() + 1;
+	if(!modusRev){
+		uPos = prevUni.size - prevUni.getGraph()->getK() + 1;
+	}
+	uint32_t k = prevUni.getGraph()->getK();
 
 	int32_t checkedPos = getSrchCritCov(prevUni, quorum, searchSet, compOffset(uPos - tmpExtLen, 1, prevUni.size, prevUni.strand), !prevUni.strand, advIdx);
 	string prevUniSeq = prevUni.mappedSequenceToString();
@@ -1814,6 +1829,8 @@ int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t q
 	//Find the nearest seed that we might be able to reach during our extension
 	nearestSeed = searchLeftNeighbor(prevUni.getData()->getData(prevUni)->getSeed(prevUni.strand), qPos, uPos, prevSeed);
 	//Initialize our temporary score with the last temporary score of its successive unitig
+
+	if(prevUni.getPredecessors().hasPredecessors()) overlap = k - 1;
 
 	//We are done if we reach the beginning of the query
 	while(qPos >= tmpExtLen){
@@ -1836,12 +1853,20 @@ int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t q
 			//Calculate the gain we have by incorporating the seed into our extension and update the temporary extension length
 			tmpExtLen = qPos - nearestSeed->offsetQ + 1;
 			//Adjust number of remaining covered positions
-			checkedPos -= qPos - nearestSeed->offsetQ + 1;
+			if(modusRev){
+				checkedPos -= qPos - tmpExtLen - nearestSeed->offsetQ + 1;
+			} else {
+				checkedPos -= qPos - nearestSeed->offsetQ + 1;
+			}
 
 			//Check whether we get a score larger 0 by incorporating the reached seed
 			if(tmpScore > 0){
 				//Update hit's length
-				hitLen += qPos - nearestSeed->offsetQ + lastTempExtLen;
+				if(modusRev){
+					hitLen += qPos - nearestSeed->offsetQ;
+				} else {
+					hitLen += qPos - nearestSeed->offsetQ + lastTempExtLen;
+				}
 				lastTempExtLen = 0;
 				//Update score
 				score += tmpScore;
@@ -1880,7 +1905,11 @@ int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t q
 				//Update score
 				score += tmpScore;
 				//Update hit's length
-				hitLen += tmpExtLen + lastTempExtLen;
+				if(modusRev){
+					hitLen += tmpExtLen;
+				} else {
+					hitLen += tmpExtLen + lastTempExtLen;
+				}
 				lastTempExtLen = 0;
 				//Reset temporary length and score
 				tmpExtLen = 0;
@@ -1905,6 +1934,8 @@ int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t q
 			if(prevUni.getPredecessors().hasPredecessors()){
 				//Try to continue the extension on the predecessive unitigs
 				check = true;
+
+				lead = overlap - (uPos - tmpExtLen);
 
 			}
 
