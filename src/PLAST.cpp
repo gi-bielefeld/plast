@@ -18,6 +18,7 @@
 #include "Sequence.h"
 #include "Statistics.h"
 
+
 int main(int argc, char **argv){
 	//Staff we need to measure run times
 	auto startTime = std::chrono::system_clock::now();
