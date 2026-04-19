@@ -22,6 +22,8 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 	//Calculate length of unitig sequence to compare
 	uCmpSeqLen = uni.size - (posU + endBuf);
 
+	//uCmpSeqLen = min(uCmpSeqLen,baseCompare);
+
 	//Do a search criteria check only if necessary
 	if(srchCritCheck){
 		//Get the number of positions fulfilling our search crit on this unitig reduced by our starting offset
@@ -177,6 +179,8 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 		posQ = maxPosQ;
 	}
 
+
+	//aufpassen wenn ende unitig nicht erreicht aber alle basen verglichen
 	if(eMax > -X && matShrunk && posQ < q.length() - 1) return false;
 	
 	return true;
@@ -356,6 +360,7 @@ void contRightGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &e
 	UnitigColorMap<UnitigInfo> maxUni = uni;
 
 	//Calculate gapped alignment and check outcome
+	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore)
 	if(!calcSemiGlobAlignment(uni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx)){
 		explSuc = contGappedOnSameUni(uni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
 	} else if(maxBorderScore > -X && posQ < q.length() - 1){
@@ -376,6 +381,115 @@ void contRightGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &e
 		//Reset the unitig on which the maximum has been found
 		uni = maxUni;
 	}
+}
+
+
+
+bool contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus){
+	uint32_t maxPosQ = posQ, maxPosU = posU;
+	int32_t maxBorderScore = -X;
+	struct Algn globAlgn;
+	UnitigColorMap<UnitigInfo> maxUni = uni;
+	struct Algn tmpAlgn;
+
+	searchSettings searchSettings;
+	searchSettings.q           	= q;
+	searchSettings.mscore      	= mscore;
+	searchSettings.mmscore     	= mmscore;
+	searchSettings.X           	= X;
+	searchSettings.gOpen   		= gOpen;
+	searchSettings.gExt   		= gExt;
+	searchSettings.maxGaps   	= maxGaps;
+	searchSettings.quorum      	= quorum;
+	searchSettings.searchSet   	= searchSet;
+	searchSettings.advIdx      	= advIdx;
+	searchSettings.extend_modus = extend_modus;
+
+
+
+
+	shorterPrioQueue unitigsPrioQueue(prioLongest);
+	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore)
+	shorterTuple startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, maxBorderScore);
+	unitigsPrioQueue.push(startTuple);
+
+
+	exploration exploration;
+
+	exploration.priorityQueue = unitigsPrioQueue;
+	exploration.maxBorderScore = -X;
+	//exploration.maxPosQ = maxPosQ;
+	exploration.globAlgn = globAlgn;
+
+	while(!(unitigsPrioQueue.empty())){
+		exploration = calcUnitigsGapped(searchSettings, exploration)
+
+		unitigsPrioQueue = exploration.priorityQueue;
+	}
+
+	maxPosQ = exploration.maxPosQ;
+
+
+
+	//Check whether exploration of next unitig was successful (this is only the case if a new maximum score has been found as well)
+	if(score < exploration.maxBorderScore){
+		//Score has to be updated if we have found a better one on a successive unitig
+		score = exploration.maxBorderScore;
+		//Overwrite previous best alignment
+		algn = exploration.globAlgn;
+	}
+}
+
+exploration calcUnitigsGapped(searchSettings, exploration){
+
+	//direkt in calcSemiGlobAlignment
+	q           	= searchSettings.q;
+	mscore      	= searchSettings.mscore;
+	mmscore     	= searchSettings.mmscore;
+	X           	= searchSettings.X;
+	gOpen   		= searchSettings.gOpen;
+	gExt   			= searchSettings.gExt;
+	maxGaps   		= searchSettings.maxGaps;
+	quorum      	= searchSettings.quorum;
+	searchSet   	= searchSettings.searchSet;
+	advIdx      	= searchSettings.advIdx;
+	extend_modus 	= searchSettings.extend_modus;
+
+	shorterPrioQueue unitigsPrioQueueBefore(prioLongest);
+	shorterPrioQueue unitigsPrioQueueAfter(prioLongest);
+	unitigsPrioQueueBefore = exploration.priorityQueue
+
+	while(!(unitigsPrioQueueBefore.empty())){
+		shorterTuple currExtension = unitigsPrioQueueBefore.pop();
+
+		UnitigColorMap<UnitigInfo> currUnitig = get<0>(currExtension);
+		uint32_t posU 			= get<0>(currExtension);
+		uint32_t posQ 			= get<1>(currExtension);
+		uint32_t maxPosQ 		= get<2>(currExtension);
+		struct Algn algn 		= get<3>(currExtension);
+		struct Algn globAlgn 	= get<4>(currExtension);
+		int32_t score 			= get<5>(currExtension);
+		int32_t maxBorderScore 	= get<6>(currExtension);
+
+		while(!calcSemiGlobAlignment(uni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx)){
+			posU++;
+			posQ++;			
+		}
+		//check maxScore
+
+		if(maxBorderScore > -X && posQ < q.length() - 1){
+
+		}
+
+	}
+
+
+
+
+	exploration.priorityQueue = unitigsPrioQueueAfter
+
+	return exploration;
+
 }
 
 //This function calculates the continuation of a gapped alignment on a predecessive unitig or the next peace of the query considering a quorum and a search color set
@@ -534,6 +648,93 @@ bool contGappedOnSuccUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth
 	return suc;
 }
 
+
+
+bool contGappedOnSuccUni_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus){
+	bool suc = false;
+	uint16_t sucCount, nextSuc;
+	uint32_t tmpPosU, tmpPosQ, maxPosQ, maxPosU;
+	int32_t maxScore, tmpScore;
+	struct Algn maxAlgn;
+	UnitigColorMap<UnitigInfo> sucUni;
+	ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = uni.getSuccessors();
+
+	//Check whether we have reached the maximum recursion depth of an extension
+	if(++explCount > MAXRECURSIONDEPTH){
+		//Report this incident
+		//cerr << "Maximum recursion depth reached during extension. Position in q: " << qOff << endl;
+		//Terminate this extension
+		return suc;
+	}
+
+	//Check whether there are successors to continue
+	if(sucIter.hasSuccessors()){
+		maxScore = score;
+		//Set counter
+		sucCount = 1;
+
+		//Check if there still exists an extension path to follow
+		if(!extPth.empty()){
+			//Get next successor
+			nextSuc = extPth.front();
+			//Delete that successor from path
+			extPth.pop_front();
+			//We do not need to count how many successors we have explored yet
+			explCount = 0;
+		} else{
+			//We have no successor given to go on with
+			nextSuc = 0;
+		}
+
+		//Explore each neighbor
+		for(neighborIterator<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> nI = sucIter.begin(); nI != sucIter.end(); ++nI, ++sucCount){
+			struct Algn tmpAlgn;
+
+			//Check if we still have to wait for the correct successor to go on with
+			if(sucCount < nextSuc) continue;
+
+			//Get next unitig
+			sucUni = *nI;
+			tmpPosQ = qOff + 1;
+			tmpPosU = 0;
+			tmpScore = score;
+			//Calculate gapped alignment on the next unitig
+			//contRightGappedAlignment(sucUni, extPth, q, tmpPosQ, tmpPosU, mscore, mmscore, X, gOpen, gExt, maxGaps, tmpAlgn, tmpScore, explCount, quorum, searchSet, advIdx);
+
+			//Check for new maximum
+			if(maxScore < tmpScore){
+				//Update maximum
+				maxScore = tmpScore;
+				maxPosU = tmpPosU;
+				maxPosQ = tmpPosQ;
+				uni = sucUni;
+				maxAlgn = tmpAlgn;
+				suc = true;
+			}
+
+			//If we reach this point and had a specific successor to go on with we are done
+			if(nextSuc > 0) break;
+		}
+
+		//Only update score and qOff if exploration was successful
+		if(suc){
+			//Give back best result found
+			score = maxScore;
+			qOff = maxPosQ;
+			uOff = maxPosU;
+			algn.aSeqG += maxAlgn.aSeqG;
+			algn.aSeqQ += maxAlgn.aSeqQ;
+		}
+	}
+
+	return suc;
+}
+
+
+
+
+
+
 //This function initiates a gapped alignment calculation on all predecessive unitigs considering a quorum and a search color set. Returns true if calculations have been successful
 bool contGappedOnPredUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &qOff, uint32_t &uOff, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
 	bool suc = false;
@@ -615,7 +816,7 @@ bool contGappedOnPredUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth
 }
 
 //This function calculates a gapped alignment to the right side of the starting position considering a quorum and a search color set. ATTENTION: Hit's length attribute will be deprecated after function call!
-void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus){
 	bool explSuc = false;
 	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
 	int32_t maxScore = 0, maxBorderScore;
@@ -623,12 +824,16 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 	list<uint16_t> extPth = decmprExtPth(h->rExt);
 	UnitigColorMap<UnitigInfo> currUni = h->origUni;
 
-	//Calculate gapped alignment and check whether we have reached the end of the current unitig
-	if(!calcSemiGlobAlignment(currUni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx)){
-		explSuc = contGappedOnSameUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
-	} else if(maxBorderScore > -X && posQ < q.length() - 1){
-		//Continue calculations on the next unitig
-		explSuc = contGappedOnSuccUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+	if(extend_modus == 0){
+		//Calculate gapped alignment and check whether we have reached the end of the current unitig
+		if(!calcSemiGlobAlignment(currUni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx)){
+			explSuc = contGappedOnSameUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+		} else if(maxBorderScore > -X && posQ < q.length() - 1){
+			//Continue calculations on the next unitig
+			explSuc = contGappedOnSuccUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+		}
+	}else{
+		contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus);
 	}
 
 	//Check whether exploration of next unitig was successful

@@ -438,7 +438,7 @@ void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const in
 }
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C, const bool& advIdx){
+void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C, const bool& advIdx, const int16_t extend_modus){
 	bool isDupl = false;
 	uint32_t bandRadius;
 	list<Hit*>::const_iterator iter;
@@ -448,7 +448,7 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
 		//Calculate gapped extension to the right
-		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx);
+		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus);
 		//Calculate gapped extension to the left
 		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx);
 
@@ -594,7 +594,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 	}
 
 	//Calculate gapped alignments
-	//calcGappedAlignment(cdbg, resList, q, mscore, mmscore, X, gOpen, gExt, quorum, searchColors, lambdaGap, Cgap, advIdx);
+	calcGappedAlignment(cdbg, resList, q, mscore, mmscore, X, gOpen, gExt, quorum, searchColors, lambdaGap, Cgap, advIdx, extend_modus);
 
 	//Check if this is a simulation run
 	if(isSim){
