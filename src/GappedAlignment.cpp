@@ -558,6 +558,14 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 
 
 
+	//GCCCCTCTTATTGTGTCATGATGCCCCCCTCTTTGTGTG
+	//PLAST Build -i test15Pangenome -R Test15_color*.fa -k 9 -g 4 -w 7
+	//PLAST Search -i test15Pangenome -q unknownQueriesTest2.q -B 0 -w 7
+
+
+
+
+
 
 	shorterPrioQueueGapped unitigsPrioQueue(prioLongestGapped);
 	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore,numOfBases)
