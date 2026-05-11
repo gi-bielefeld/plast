@@ -12,6 +12,7 @@
 using shorterTupleGapped = tuple<UnitigColorMap<UnitigInfo>, uint32_t, uint32_t, uint32_t, struct Algn, struct Algn, int32_t, int32_t, int16_t, uint32_t>;
 using shorterPrioQueueGapped = priority_queue<shorterTupleGapped, vector<shorterTupleGapped>, const bool (*)(const shorterTupleGapped&, const shorterTupleGapped&)>;
 inline const bool prioLongestGapped(const shorterTupleGapped& left, const shorterTupleGapped& right){ return get<6>(left) < get<6>(right); }
+using shorterVectorGapped = vector<shorterTupleGapped>;
 
 
 struct searchSettingsGapped{
@@ -60,6 +61,8 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 void contRightGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
 
 void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases);
+
+void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases);
 
 //This function calculates the continuation of a gapped alignment on a predecessive unitig or the next peace of the query considering a quorum and a search color set
 void contLeftGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &maxAlgn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);

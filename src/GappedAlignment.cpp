@@ -388,7 +388,7 @@ void contRightGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &e
 	//Calculate gapped alignment and check outcome
 	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore)
 	#ifdef DEBUG
-	cout << "posQ: " << posQ << endl;
+	cout << "posQ: " << posQ << " posU: " << posU << endl;
 	#endif
 	if(!calcSemiGlobAlignment(uni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, 0, 0)){
 		explSuc = contGappedOnSameUni(uni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
@@ -427,6 +427,110 @@ shorterPrioQueueGapped getBestUnitigs(shorterPrioQueueGapped bestUnitigsPrioQueu
 	return unitigsPrioQueue;
 }
 
+void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
+
+	uint32_t maxPosQ = posQ, maxPosU = posU;
+	int32_t maxBorderScore = -X;
+	struct Algn globAlgn;
+	//UnitigColorMap<UnitigInfo> maxUni = uni;
+	struct Algn tmpAlgn;
+
+
+	shorterVectorGapped bestUnitigs;
+	vector<int> bestScores;
+
+	uint numOfUnitig = numPushUni;
+
+	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, maxBorderScore, numCompBases, maxPosU);
+	bestUnitigs.push_back(startTuple);
+	bestScores.push_back(0);
+
+	while(!(bestUnitigs.empty())){
+
+		for(uint i = 0; i < bestUnitigs.size(); i++) {
+
+			shorterTupleGapped currExtension 	= bestUnitigs[0];
+
+			UnitigColorMap<UnitigInfo> currUnitig = get<0>(currExtension);
+			uint32_t posU 				= get<1>(currExtension);
+			uint32_t posQ 				= get<2>(currExtension);
+			uint32_t maxPosQ 			= get<3>(currExtension);
+			struct Algn tempAlgn;
+			struct Algn globAlgn;
+			struct Algn completeAlgn 	= get<4>(currExtension);
+			struct Algn completeGlobAlgn = get<5>(currExtension);
+			int32_t maxScore 			= get<6>(currExtension);
+			int32_t maxBorderScore 		= get<7>(currExtension);
+			int16_t currnumOfBases		= get<8>(currExtension);
+			uint32_t maxPosU 			= get<9>(currExtension);
+
+			bestUnitigs.erase(bestUnitigs.begin() + 0);
+			bestScores.erase(bestScores.begin() + 0);
+
+			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
+				posU++;
+				posQ++;
+				if(currnumOfBases == 0){
+					//break;
+				}
+				completeAlgn.aSeqG += algn.aSeqG;
+				completeAlgn.aSeqQ += algn.aSeqQ;
+				tempAlgn.aSeqG.clear();
+				tempAlgn.aSeqQ.clear();
+
+				completeGlobAlgn.aSeqG += globAlgn.aSeqG;
+				completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
+				globAlgn.aSeqG.clear();
+				globAlgn.aSeqQ.clear();
+			}
+			completeAlgn.aSeqG += tempAlgn.aSeqG;
+			completeAlgn.aSeqQ += tempAlgn.aSeqQ;
+			completeGlobAlgn.aSeqG += globAlgn.aSeqG;
+			completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
+
+			if(maxBorderScore > -X && posQ < q.length() - 1){
+
+				ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+
+				for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+
+					if(bestUnitigs.size() <= numOfUnitig){
+
+						bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
+						bestScores.push_back(maxScore);
+
+					}else{
+
+						int minElement = *min_element(bestScores.begin(), bestScores.end());
+						if(minElement < maxScore){
+
+							for(uint i = 0; i < bestScores.size(); i++){
+								if(bestScores[i] == minElement){
+									bestScores[i] = maxScore;
+									bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
+									break;
+								}
+							}
+						}
+					}
+					if(score < maxBorderScore){
+						//Score has to be updated if we have found a better one on a successive unitig
+						score = maxBorderScore;
+						//Overwrite previous best alignment
+						algn = globAlgn;
+					}
+					if(score < maxScore){
+						//Score has to be updated if we have found a better one on a successive unitig
+						score = maxScore;
+						//Overwrite previous best alignment
+						algn = tempAlgn;
+					}
+				}
+			}
+		}
+	}
+}
+
 
 
 void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
@@ -457,7 +561,7 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 
 	shorterPrioQueueGapped unitigsPrioQueue(prioLongestGapped);
 	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore,numOfBases)
-	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, maxBorderScore, numCompBases, maxPosU);
+	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
 	unitigsPrioQueue.push(startTuple);
 
 
@@ -540,8 +644,8 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 		struct Algn globAlgn;
 		struct Algn completeAlgn = get<4>(currExtension);
 		struct Algn completeGlobAlgn = get<5>(currExtension);
-		int32_t score 			= get<6>(currExtension);
-		int32_t maxBorderScore 	= get<7>(currExtension);
+		int32_t score 			= get<7>(currExtension);
+		int32_t maxBorderScore 	= -X;
 		int16_t currnumOfBases	= get<8>(currExtension);
 		uint32_t maxPosU 		= get<9>(currExtension);
 
@@ -555,8 +659,12 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 			if(currnumOfBases == 0){
 				//break;
 			}
-			completeAlgn.aSeqG += algn.aSeqG;
-			completeAlgn.aSeqQ += algn.aSeqQ;
+			if(score > exploration.maxScore){
+				completeAlgn.aSeqG = completeGlobAlgn.aSeqG + algn.aSeqG;
+				completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + algn.aSeqQ;
+				exploration.maxScore = score;
+				exploration.algn = completeAlgn;
+			}
 			algn.aSeqG.clear();
 			algn.aSeqQ.clear();
 
@@ -564,9 +672,15 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 			completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
 			globAlgn.aSeqG.clear();
 			globAlgn.aSeqQ.clear();
+
+			score = maxBorderScore;
+			maxBorderScore = -X;
+
 		}
-		completeAlgn.aSeqG += algn.aSeqG;
-		completeAlgn.aSeqQ += algn.aSeqQ;
+		if(score > exploration.maxScore){
+			completeAlgn.aSeqG = completeGlobAlgn.aSeqG + algn.aSeqG;
+			completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + algn.aSeqQ;
+		}
 		completeGlobAlgn.aSeqG += globAlgn.aSeqG;
 		completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
 
@@ -961,7 +1075,7 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 	if(extend_modus == 0){
 		//Calculate gapped alignment and check whether we have reached the end of the current unitig
 		#ifdef DEBUG
-		cout << "posQ: " << posQ << endl;
+		cout << "posQ: " << posQ << " posU: " << posU << endl;
 		#endif
 		if(!calcSemiGlobAlignment(currUni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, 0, 0)){
 			explSuc = contGappedOnSameUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
@@ -969,6 +1083,9 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 			//Continue calculations on the next unitig
 			explSuc = contGappedOnSuccUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
 		}
+	}else if(extend_modus == 3){
+		contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
+		explSuc = true;
 	}else{
 		contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 		explSuc = true;
