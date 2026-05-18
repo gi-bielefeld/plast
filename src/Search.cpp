@@ -452,6 +452,10 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		//Calculate gapped extension to the left
 		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx);
 
+		#ifdef DEBUG
+		cout << "resList length: " << resList.size() << endl;
+		#endif
+
 		//Check whether this is not the first hit in the result list
 		if(it != resList.begin()){
 			iter = resList.begin();
@@ -563,8 +567,18 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 
 		//Go through all hits of a certain array position
 		while(hitList != NULL){
+			#ifdef DEBUG
+			cout << "in while loop" << endl;
+			cout << "offU: " << hitList->offU << " offQ: " << hitList->offQ << " origUni: " << hitList->origUni.mappedSequenceToString() << " score: " << hitList->score << endl;
+			#endif
+
 			//Calculate e-value
 			hitList->eval = calcEVal(hitList->score, lambda, C, q.length());
+
+			#ifdef DEBUG
+			cout << "nRes: " << nRes << endl;
+			cout << "hitList->eval: " << hitList->eval << " eLim: " << eLim << endl;
+			#endif
 
 			//Make sure the hit should still be considered
 			if(hitList->score != 0 && hitList->eval <= eLim){
@@ -574,6 +588,10 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 					replWorseRes(resList, hitList);
 				} else{
 					//Insert a new result
+					#ifdef DEBUG
+					cout << "in else" << endl;
+					#endif
+
 					insRes(resList, hitList);
 					--nRes;
 				}
@@ -593,8 +611,22 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 		for(list<Hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter) cout << "Score (ungapped): " << (*iter)->score << endl;
 	}
 
+	#ifdef DEBUG
+	for(list<Hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter){
+		cout << "score in resList before: " << (*iter)->score << endl;
+	}
+	#endif
+
 	//Calculate gapped alignments
 	calcGappedAlignment(cdbg, resList, q, mscore, mmscore, X, gOpen, gExt, quorum, searchColors, lambdaGap, Cgap, advIdx, extend_modus, numCompBases, numPushUni);
+
+	#ifdef DEBUG
+	for(list<Hit*>::iterator iter = resList.begin(); iter != resList.end(); ++iter){
+		cout << "score in resList after: " << (*iter)->score << endl;
+	}
+	#endif
+
+
 
 	//Check if this is a simulation run
 	if(isSim){

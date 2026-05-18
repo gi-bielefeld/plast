@@ -535,7 +535,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 
 void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
 	uint32_t maxPosQ = posQ, maxPosU = posU;
-	int32_t maxBorderScore = -X;
+	//int32_t maxBorderScore = -X;
 	struct Algn globAlgn;
 	//UnitigColorMap<UnitigInfo> maxUni = uni;
 	struct Algn tmpAlgn;
@@ -559,6 +559,7 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 
 
 	//GCCCCTCTTATTGTGTCATGATGCCCCCCTCTTTGTGTG
+	//GCCCCTCGTATTGTGTCATGATGCCACCCTCTTTGTGTG <- problem
 	//PLAST Build -i test15Pangenome -R Test15_color*.fa -k 9 -g 4 -w 7
 	//PLAST Search -i test15Pangenome -q unknownQueriesTest2.q -B 0 -w 7
 
@@ -709,8 +710,25 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 				cout << "currUnitig has suc: " << sucIter.hasSuccessors() << endl;
 				#endif
 
+				uint16_t nextUnitig = 5;
+
+				if(!extPth.empty()){
+					nextUnitig = extPth.front();
+					extPth.pop_front();
+				}
+
+				int count = 1;
+
 				for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
-					unitigsPrioQueueAfter.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
+
+					if(nextUnitig == count){
+						unitigsPrioQueueAfter.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
+						break;
+					} else if(nextUnitig == 5){
+						unitigsPrioQueueAfter.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
+					}
+
+					count++;
 				}
 			} else if(extend_modus == 4){
 				if(currnumOfBases == 0){
@@ -1079,6 +1097,15 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 	struct Algn globAlgn;
 	list<uint16_t> extPth = decmprExtPth(h->rExt);
 	UnitigColorMap<UnitigInfo> currUni = h->origUni;
+
+	#ifdef DEBUG
+	cout << "extPth bei startrightgapped:" << endl;
+
+	
+	cout << extPth.front() << endl;
+	cout << extPth.back() << endl;
+	#endif
+
 
 	if(extend_modus == 0){
 		//Calculate gapped alignment and check whether we have reached the end of the current unitig
