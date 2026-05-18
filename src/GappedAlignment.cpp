@@ -559,7 +559,8 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 
 
 	//GCCCCTCTTATTGTGTCATGATGCCCCCCTCTTTGTGTG
-	//GCCCCTCGTATTGTGTCATGATGCCACCCTCTTTGTGTG <- problem
+	//GCCCCTCGTATTGTGTCATGATGCCACCCTCTTTGTGTG <- problem solution abildung laenge
+	//TTGTGTCATGATGCGCCC <- problem score
 	//PLAST Build -i test15Pangenome -R Test15_color*.fa -k 9 -g 4 -w 7
 	//PLAST Search -i test15Pangenome -q unknownQueriesTest2.q -B 0 -w 7
 
