@@ -447,6 +447,13 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 	for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
+
+		//cout << (*it)->origUni.mappedSequenceToString() << endl;
+		if((*it)->origUni.mappedSequenceToString() == "ATCATCAACTCCTGTTATGAGTCGTTTTGCAGCCGATATTTTTTCACGTACGCCGAGCGGGAAGCGATTGCAAATTCTA"){
+			uniqueUnitig = true;
+		}
+
+
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 		//Calculate gapped extension to the left

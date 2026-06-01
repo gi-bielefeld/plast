@@ -8,6 +8,8 @@
 // #define GAP_RATIO 10
 #define GAP_SYMB "-"
 
+bool uniqueUnitig = false;
+
 
 using shorterTupleGapped = tuple<UnitigColorMap<UnitigInfo>, uint32_t, uint32_t, uint32_t, struct Algn, struct Algn, int32_t, int32_t, int16_t, uint32_t>;
 using shorterPrioQueueGapped = priority_queue<shorterTupleGapped, vector<shorterTupleGapped>, const bool (*)(const shorterTupleGapped&, const shorterTupleGapped&)>;
@@ -29,7 +31,6 @@ struct searchSettingsGapped{
     int16_t extend_modus;
     int32_t numOfBases;
 	bool compareBases;
-    list<uint16_t> extPth;
 };
 
 struct explorationGapped{
@@ -41,6 +42,7 @@ struct explorationGapped{
 	uint32_t maxPosQ;
 	struct Algn globAlgn;
     struct Algn algn;
+    list<uint16_t> extPth;
 };
 
 
