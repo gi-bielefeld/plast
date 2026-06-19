@@ -442,17 +442,26 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 	bool isDupl = false;
 	uint32_t bandRadius;
 	list<Hit*>::const_iterator iter;
+	
+	int counterGapped = 0;
 
 	//Go through result list
 	for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
 
-		//cout << (*it)->origUni.mappedSequenceToString() << endl;
-		if((*it)->origUni.mappedSequenceToString() == "ATCATCAACTCCTGTTATGAGTCGTTTTGCAGCCGATATTTTTTCACGTACGCCGAGCGGGAAGCGATTGCAAATTCTA"){
-			uniqueUnitig = true;
-		}
+		/*
+		cout << (*it)->origUni.mappedSequenceToString() << endl;
+		cout << (*it)->offU << endl;
+		cout << (*it)->offQ << endl;
 
+		
+		if((*it)->origUni.mappedSequenceToString() != "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT" || counterGapped != 0){
+			continue;
+		}
+		*/
+		counterGapped++;
+		
 
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
@@ -462,6 +471,15 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		#ifdef DEBUG
 		cout << "resList length: " << resList.size() << endl;
 		#endif
+
+		/*
+		if((*it)->score == 57){
+			cout << "score found" << endl;
+			cout << (*it)->origUni.mappedSequenceToString() << endl;
+			cout << (*it)->offU << endl;
+			cout << (*it)->offQ << endl;
+		}
+		*/
 
 		//Check whether this is not the first hit in the result list
 		if(it != resList.begin()){
@@ -660,6 +678,9 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 		//Iterate over alignments
 		for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 			//Check e-value once again
+			//cout << (*it)->origUni.mappedSequenceToString() << endl;
+			//cout << (*it)->offU << endl;
+			//cout << (*it)->offQ << endl;
 			if((*it)->eval <= eLim){
 				//Output alignment
 				repAlgn(*it);
@@ -667,6 +688,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 				//Output color sets if demanded
 				if(colOut) outpColSets(cdbg, *it);
 			}
+			//exit(0);
 		}
 	}
 

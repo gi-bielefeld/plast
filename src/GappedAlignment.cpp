@@ -23,8 +23,7 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 	uCmpSeqLen = uni.size - (posU + endBuf);
 
 	if(extend_modus == 4){
-		int16_t tempUCmpSeqLen = uCmpSeqLen;
-		uCmpSeqLen = min(tempUCmpSeqLen,numCompBases);
+		uCmpSeqLen = min(uCmpSeqLen,(uint32_t) numCompBases);
 		numCompBases -= uCmpSeqLen;
 	}
 
@@ -65,6 +64,7 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 	#ifdef DEBUG
 
 	cout << " qCmpSeqLen: " << qCmpSeqLen << " maxGaps: " << maxGaps << " uCmpSeqLen: " << uCmpSeqLen << endl;
+	cout << " matBrth: " << matBrth << " matHgth: " << matHgth << endl;
 	#endif
 
 	//Initialize dynamic programming matrix
@@ -439,13 +439,16 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 	//UnitigColorMap<UnitigInfo> maxUni = uni;
 	struct Algn tmpAlgn;
 
+	int32_t bestScore = 0;
+	struct Algn bestAlgn;
+
 
 	shorterVectorGapped bestUnitigs;
 	vector<int> bestScores;
 
 	uint numOfUnitig = numPushUni;
 
-	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, maxBorderScore, numCompBases, maxPosU);
+	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
 	bestUnitigs.push_back(startTuple);
 	bestScores.push_back(0);
 
@@ -463,13 +466,17 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			struct Algn globAlgn;
 			struct Algn completeAlgn 	= get<4>(currExtension);
 			struct Algn completeGlobAlgn = get<5>(currExtension);
-			int32_t maxScore 			= get<6>(currExtension);
-			int32_t maxBorderScore 		= get<7>(currExtension);
+			int32_t maxScore 			= get<7>(currExtension);
+			int32_t maxBorderScore 		= -X;
 			int16_t currnumOfBases		= get<8>(currExtension);
 			uint32_t maxPosU 			= get<9>(currExtension);
 
 			bestUnitigs.erase(bestUnitigs.begin() + 0);
 			bestScores.erase(bestScores.begin() + 0);
+
+			#ifdef DEBUG
+			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << endl;
+			#endif
 
 			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
 				posU++;
@@ -477,8 +484,12 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 				if(currnumOfBases == 0){
 					//break;
 				}
-				completeAlgn.aSeqG += algn.aSeqG;
-				completeAlgn.aSeqQ += algn.aSeqQ;
+				if(maxScore > bestScore){
+					completeAlgn.aSeqG = completeGlobAlgn.aSeqG + tempAlgn.aSeqG;
+					completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + tempAlgn.aSeqQ;
+					bestScore = maxScore;
+					bestAlgn = completeAlgn;
+				}
 				tempAlgn.aSeqG.clear();
 				tempAlgn.aSeqQ.clear();
 
@@ -486,53 +497,93 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 				completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
 				globAlgn.aSeqG.clear();
 				globAlgn.aSeqQ.clear();
+
+				maxScore = maxBorderScore;
+				maxBorderScore = -X;
 			}
-			completeAlgn.aSeqG += tempAlgn.aSeqG;
-			completeAlgn.aSeqQ += tempAlgn.aSeqQ;
+			if(maxScore > bestScore){
+				completeAlgn.aSeqG = completeGlobAlgn.aSeqG + tempAlgn.aSeqG;
+				completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + tempAlgn.aSeqQ;
+				bestScore = maxScore;
+				bestAlgn = completeAlgn;
+			}
 			completeGlobAlgn.aSeqG += globAlgn.aSeqG;
 			completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
+
+			#ifdef DEBUG
+			cout << "calcSemiGlobAlignment score: " << maxScore << endl;
+			cout << "currUnitig: " << currUnitig.mappedSequenceToString() << endl;
+			cout << "maxBorderScore: " << maxBorderScore << " X: " << X << " posQ: " << posQ << " q.length() - 1: " << q.length() - 1 << endl;
+			cout << "extPth size: " << extPth.size() << endl;
+			#endif
 
 			if(maxBorderScore > -X && posQ < q.length() - 1){
 
 				ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
 
+				int count = 1;
+
+				uint16_t nextUnitig = 5;
+
+				if(!extPth.empty()){
+					nextUnitig = extPth.front();
+					extPth.pop_front();
+				}
+
 				for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
 
 					if(bestUnitigs.size() <= numOfUnitig){
-
-						bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
-						bestScores.push_back(maxScore);
-
+						if(nextUnitig == count){
+							bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
+							bestScores.push_back(maxScore);
+							break;
+						} else if(nextUnitig == 5){
+							bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
+							bestScores.push_back(maxScore);
+						}
 					}else{
 
 						int minElement = *min_element(bestScores.begin(), bestScores.end());
 						if(minElement < maxScore){
-
-							for(uint i = 0; i < bestScores.size(); i++){
-								if(bestScores[i] == minElement){
-									bestScores[i] = maxScore;
-									bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
-									break;
+							if(nextUnitig == count){
+								for(uint i = 0; i < bestScores.size(); i++){
+										if(bestScores[i] == minElement){
+										bestScores[i] = maxScore;
+										bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
+										break;
+									}
+								}
+								break;
+							} else if(nextUnitig == 5){
+								for(uint i = 0; i < bestScores.size(); i++){
+									if(bestScores[i] == minElement){
+										bestScores[i] = maxScore;
+										bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
+										break;
+									}
 								}
 							}
 						}
 					}
-					if(score < maxBorderScore){
-						//Score has to be updated if we have found a better one on a successive unitig
-						score = maxBorderScore;
-						//Overwrite previous best alignment
-						algn = globAlgn;
-					}
-					if(score < maxScore){
-						//Score has to be updated if we have found a better one on a successive unitig
-						score = maxScore;
-						//Overwrite previous best alignment
-						algn = tempAlgn;
-					}
+					count++;
+				}
+				score = bestScore;
+				algn = bestAlgn;
+				if(score < maxBorderScore){
+					score = maxBorderScore;
+					algn = globAlgn;
+				}
+				if(score < maxScore){
+					score = maxScore;
+					algn = tempAlgn;
 				}
 			}
 		}
 	}
+	if (score < bestScore) {
+        score = bestScore;
+        algn = bestAlgn;
+    }
 }
 
 
@@ -763,19 +814,38 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 					count++;
 				}
 			} else if(extend_modus == 4){
+
+
 				if(currnumOfBases == 0){
-					unitigsPrioQueueAfter.push(make_tuple(currUnitig,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, numCompBases, maxPosU));
+					unitigsPrioQueueAfter.push(make_tuple(currUnitig,posU+1,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, numCompBases, maxPosU));
 				}
 				else{
+
+					uint16_t nextUnitig = 5;
+
+					if(!exploration.extPth.empty()){
+						nextUnitig = exploration.extPth.front();
+						exploration.extPth.pop_front();
+					}
+
+
+					int count = 1;
 
 					ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
 
 					for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
-						unitigsPrioQueueBefore.push(make_tuple(*nI,posU,posQ,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
+						if(nextUnitig == count){
+							unitigsPrioQueueBefore.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
+							break;
+						} else if(nextUnitig == 5){
+							unitigsPrioQueueBefore.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
+						}
+						count++;
 					}
 				}
 			}
 		}
+
 
 		if(maxBorderScore > exploration.maxBorderScore){
 			exploration.maxBorderScore = maxBorderScore;
