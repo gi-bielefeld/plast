@@ -450,13 +450,17 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
 
-		/*
+		
+		#ifdef DEBUG
 		cout << (*it)->origUni.mappedSequenceToString() << endl;
 		cout << (*it)->offU << endl;
 		cout << (*it)->offQ << endl;
+		cout << (*it)->score << endl;
+		#endif
 
-		
-		if((*it)->origUni.mappedSequenceToString() != "CTGTCAGAAAAGCCTCCGGCCGGTCCCACCATCACCAAAGATCGATAGAGGTTGGGTCTGT" || counterGapped != 0){
+
+		/*
+		if((*it)->origUni.mappedSequenceToString() != "ACTTGATCCTATATCGCCAGGGGACTTAACCATGGTTATCGCCCAGGATTGTGATTCATGTCACTCTCCAGCCAGCCATCCGTATCACATG" || counterGapped != 0){
 			continue;
 		}
 		*/
@@ -678,9 +682,11 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 		//Iterate over alignments
 		for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 			//Check e-value once again
-			//cout << (*it)->origUni.mappedSequenceToString() << endl;
-			//cout << (*it)->offU << endl;
-			//cout << (*it)->offQ << endl;
+			#ifdef DEBUG
+			cout << (*it)->origUni.mappedSequenceToString() << endl;
+			cout << (*it)->offU << endl;
+			cout << (*it)->offQ << endl;
+			#endif
 			if((*it)->eval <= eLim){
 				//Output alignment
 				repAlgn(*it);

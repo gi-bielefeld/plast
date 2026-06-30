@@ -442,6 +442,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 	int32_t bestScore = 0;
 	struct Algn bestAlgn;
 
+	score = -X;
 
 	shorterVectorGapped bestUnitigs;
 	vector<int> bestScores;
@@ -451,6 +452,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
 	bestUnitigs.push_back(startTuple);
 	bestScores.push_back(0);
+
 
 	while(!(bestUnitigs.empty())){
 
@@ -475,7 +477,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			bestScores.erase(bestScores.begin() + 0);
 
 			#ifdef DEBUG
-			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << endl;
+			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << " maxScore" << maxScore << endl;
 			#endif
 
 			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
@@ -518,6 +520,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			#endif
 
 			if(maxBorderScore > -X && posQ < q.length() - 1){
+
 
 				ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
 
@@ -580,7 +583,8 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			}
 		}
 	}
-	if (score < bestScore) {
+	
+	if(score < bestScore) {
         score = bestScore;
         algn = bestAlgn;
     }
@@ -1209,7 +1213,7 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 	#ifdef DEBUG
 	cout << "extPth bei startrightgapped:" << endl;
 
-	cout << extPth.size();
+	cout << extPth.size() << endl; 
 	cout << extPth.front() << endl;
 	cout << extPth.back() << endl;
 	#endif
