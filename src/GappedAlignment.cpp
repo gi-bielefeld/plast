@@ -126,7 +126,13 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 				}
 
 				//Check whether we are at the right or lower matrix edge and whether we have found a new maximum
-				if((i == matHgth - 1 || j == matBrth - 1) && eMax <= mat[i][j]){//TODO Using <= instead of < here let's the edge maximum be as close to the diagonal as possible. This minimizes the number of gaps in our alignment, but also prevents us from finding the best possible score sometimes (like in test case 5 of the startRightGappedAlignment test). Maybe it is worth to change this, but could also be that we have to consider this when we want do implement hybrid matrices' alignment
+				//Using <= instead of < if we are above or on the main diagonal 
+				//shall allow to start as close to the main diagonal as possible
+				//on the next unitig. This will hopefully save us from unnecces-
+				//sary gaps in the alignment.
+				if((i == matHgth - 1 || j == matBrth - 1) && 
+					((i <= j && eMax <= mat[i][j]) || 
+						(i > j && eMax < mat[i][j]))){
 					//Update edge maximum
 					eMax = mat[i][j];
 					eMaxPosQ = posQ + i - 1;
@@ -292,7 +298,13 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 				}
 
 				//Check whether we are at the right or lower matrix edge and whether we have found a new maximum
-				if((i == matHgth - 1 || j == matBrth - 1) && eMax <= mat[i][j]){
+				//Using <= instead of < if we are above or on the main diagonal 
+				//shall allow to start as close to the main diagonal as possible
+				//on the next unitig. This will hopefully save us from unnecces-
+				//sary gaps in the alignment.
+				if((i == matHgth - 1 || j == matBrth - 1) && 
+					((i <= j && eMax <= mat[i][j]) || 
+						(i > j && eMax < mat[i][j]))){
 					//Update edge maximum
 					eMax = mat[i][j];
 					eMaxPosQ = posQ - i + 1;
