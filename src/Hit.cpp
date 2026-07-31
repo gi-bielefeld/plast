@@ -1,4 +1,3 @@
-
 #include "Hit.h"
 #include "Smer.h"
 
@@ -47,6 +46,9 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
 
 	//Check if we have to allocate memory for path compression
 	if(ePath.nbElem){
+		//Testing
+		// cout << "ePath.nbElem: " << ePath.nbElem << endl;
+
 		//Calculate how many bytes we need to save the path
 		nbBytes = (ePath.nbElem / SUCCESSORS_PER_BYTE) + ((ePath.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);
 		//Allocate space for compressed path
@@ -112,7 +114,6 @@ const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
 
 		++cmpSucs;
 	}
-
 	//Free memory of compressed path if existing
 	if(nbBytes) free(cmpPth.path);
 	

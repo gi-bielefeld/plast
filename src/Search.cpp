@@ -458,22 +458,38 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		cout << (*it)->score << endl;
 		#endif
 
-
-		/*
-		if((*it)->origUni.mappedSequenceToString() != "ACTTGATCCTATATCGCCAGGGGACTTAACCATGGTTATCGCCCAGGATTGTGATTCATGTCACTCTCCAGCCAGCCATCCGTATCACATG" || counterGapped != 0){
-			continue;
-		}
-		*/
+		
+		#ifdef DEBUG
+		//if((*it)->origUni.mappedSequenceToString() != "CGTTTCGCAGCCGATATTTTCTCACGAACACCAAGC"){
+			//continue;
+			/*
+			cout << "extension Path" << endl;
+			list<uint16_t> extenPath = decmprExtPth((*it)->lExt);
+			cout << "between" << endl;
+			for(list<uint16_t>::iterator ext = extenPath.begin(); ext != extenPath.end(); ++ext){
+				cout << *ext << endl;
+			}
+			*/
+		//}
+		#endif
+		
+		
 		counterGapped++;
 		
 
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 		//Calculate gapped extension to the left
-		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx);
+		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 
 		#ifdef DEBUG
 		cout << "resList length: " << resList.size() << endl;
+		if((*it)->gAlgn.aSeqG == "TATTTCACGCTTCTGCAGATCTT-GAAGACGAATTAGTATGTAAA-TGGTTACTT-TCTTCAACGCCCGTGATGAGTCGTTTCGCAGCCGA" && (*it)->gAlgn.aSeqQ == "TATTTCATGCATCAGCTGA-CTTCGAAGACGAACTGGTTTGTA-AGTGGCT-CTTATCATCAACTCCTGTTATGAGTCGTTTCGCAGCCGA"){
+			cout << "This is the wanted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		}
+		if((*it)->gAlgn.aSeqG == "TATTTCACGCTTCTGCAGATCTT-GAAGACGAATTAGTATGTAAATGGTTACTT-TCTTCAACGCCCGTTATGAGCCGTTTCGCAGCCGA" && (*it)->gAlgn.aSeqQ == "TATTTCATGCATCAGCTGA-CTTCGAAGACGAACTGGTTTGTAAGTGGCT-CTTATCATCAACTCCTGTTATGAGTCGTTTCGCAGCCGA"){
+			cout << "This is the wanted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		}
 		#endif
 
 		/*

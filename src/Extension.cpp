@@ -106,14 +106,18 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 		if(modeRev){
 			uPos = currUnitig.size - curruniPos;
 		}
-		//cout << "iniQoff: " << iniQoff << endl;
+		#ifdef DEBUG
+		cout << "iniQoff: " << iniQoff << endl;
 		
-		//cout << "currUnitig.size: " << currUnitig.size << endl;
-		//cout << "qPos: " << (iniQoff-currHitLen-currextLen) << " currHitLen: " << currHitLen << " currextLen: " << currextLen << " uPos: " << uPos << " uniPos(lead): " << curruniPos << endl;
+		cout << "currUnitig.size: " << currUnitig.size << endl;
+		cout << "qPos: " << (iniQoff-currHitLen-currextLen) << " currHitLen: " << currHitLen << " currextLen: " << currextLen << " uPos: " << uPos << " uniPos(lead): " << curruniPos << endl;
+		#endif
 		curruniPos = 0;
 		
-		//cout << "current unitig: " << currUnitig.mappedSequenceToString() << " qPos: " << (iniQoff-currHitLen-currextLen) << endl;
-		//cout << "currHitLen: " << currHitLen << " currextLen: " << currextLen << endl;
+		#ifdef DEBUG
+		cout << "current unitig: " << currUnitig.mappedSequenceToString() << " qPos: " << (iniQoff-currHitLen-currextLen) << endl;
+		cout << "currHitLen: " << currHitLen << " currextLen: " << currextLen << endl;
+		#endif
 		addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen, curruniPos);
 
 
@@ -586,6 +590,7 @@ int32_t extendAtNextUnitig_BFS_replaceWorst(const UnitigColorMap<UnitigInfo> sta
 						if(modeRev){
 							uPos = nI->size - nextUniPos;
 						}
+						nextUniPos = 0;
 						addScore = contLeftX_Drop_BFS(*nI, (iniQoff-nextHitLen-nextExtLen), nextHitLen, q, mscore, mmscore, X, nextScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, false, modeRev, nextExtLen, nextUniPos);
 					}
 					    //addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen);

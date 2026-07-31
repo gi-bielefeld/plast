@@ -62,7 +62,6 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 	}
 
 	#ifdef DEBUG
-
 	cout << " qCmpSeqLen: " << qCmpSeqLen << " maxGaps: " << maxGaps << " uCmpSeqLen: " << uCmpSeqLen << endl;
 	cout << " matBrth: " << matBrth << " matHgth: " << matHgth << endl;
 	#endif
@@ -220,7 +219,7 @@ bool calcSemiGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 }
 
 //This function calculates a banded alignment of a unitig and the query sequence to the left considering a quorum and a search color set. Returns true if calculations on unitig could be finished (i.e. the unitig sequence was not to long to be stored inside the edit matrix).
-bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool srchCritCheck, const bool& advIdx){
+bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &q, uint32_t& posU, uint32_t& posQ, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, uint32_t& maxPosQ, uint32_t& maxPosU, struct Algn &maxAlgn, struct Algn &brdAlgn, int32_t& maxScore, int32_t& eMax, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool srchCritCheck, const bool& advIdx, int16_t numCompBases, const int16_t extend_modus){
 	bool termCalcs, matShrunk = false;
 	uint32_t matBrth, matHgth, i, j, lCalcBorder, rCalcBorder, maxMatPosI = 0, maxMatPosJ = 0, eMaxPosU = posU, eMaxPosQ = posQ, edgeMaxPosI = 0, edgeMaxPosJ = 0, uCmpSeqLen = posU;
 	int32_t covPos = 0;
@@ -228,6 +227,11 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 
 	//Get unitig's sequence
 	uSeq = uni.mappedSequenceToString();
+
+	if(extend_modus == 4){
+		uCmpSeqLen = min(uCmpSeqLen,(uint32_t) numCompBases);
+		numCompBases -= uCmpSeqLen;
+	}
 
 	//Do we have to check search criteria on this unitig?
 	if(srchCritCheck){
@@ -262,6 +266,11 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 		matBrth = 1;
 	}
 
+	#ifdef DEBUG
+	cout << " maxGaps: " << maxGaps << " uCmpSeqLen: " << uCmpSeqLen << endl;
+	cout << " matBrth: " << matBrth << " matHgth: " << matHgth << endl;
+	#endif
+
 	//Initialize dynamic programming matrix
 	int32_t **mat = (int32_t**) malloc(matHgth * sizeof(int32_t*));
 	for(i = 0; i < matHgth; ++i) mat[i] = (int32_t*) malloc(matBrth * sizeof(int32_t));
@@ -294,6 +303,11 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 	//Set left border
 	lCalcBorder = 1;
 
+	#ifdef DEBUG
+	cout << "matHgth: " << matHgth << endl;
+	cout << "matBrth: " << matBrth << endl;
+	#endif
+
 	//Fill the matrix
 	for(i = 1; i < matHgth; ++i){
 		//Reset abort var
@@ -311,8 +325,17 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 		//If existing, initialize cell to the right of the last calculated one as we might need it for calculations in the next iteration
 		if(rCalcBorder < matBrth - 1) mat[i][rCalcBorder + 1] = INT32_MIN - gOpen;
 
+		#ifdef DEBUG
+		cout << "lCalcBorder: " << lCalcBorder << " rCalcBorder: " << rCalcBorder << endl;
+		#endif
+
 		for(j = lCalcBorder; j <= rCalcBorder; ++j){
 			//Calculate current cells value and check we don't drop
+
+			#ifdef DEBUG
+			cout << "q[posQ + i - 1]: " << q[posQ + i - 1] << " uSeq[posU + j - 1]: " << uSeq[posU + j - 1] << endl;
+			#endif
+
 			if((mat[i][j] = max(mat[i - 1][j - 1] + compUScore(q[posQ - i + 1], uSeq[posU - j + 1], mscore, mmscore), max(mat[i][j - 1] + gOpen, mat[i - 1][j] + gOpen))) > -X){
 				//Make sure we do not terminate our calculations too soon
 				termCalcs = false;
@@ -385,6 +408,11 @@ bool calcLeftGlobAlignment(const UnitigColorMap<UnitigInfo> &uni, const string &
 		posQ = maxPosQ;
 	}
 
+	#ifdef DEBUG
+	cout << "maxAlgn.aSeqG: " << maxAlgn.aSeqG << " maxAlgn.aSeqQ: " << maxAlgn.aSeqQ << endl;
+	cout << "brdAlgn.aSeqG: " << brdAlgn.aSeqG << " brdAlgn.aSeqQ: " << brdAlgn.aSeqQ << endl;
+	#endif
+
 	if(eMax > -X && matShrunk && posQ > 0) return false;
 	
 	return true;
@@ -443,10 +471,9 @@ shorterPrioQueueGapped getBestUnitigs(shorterPrioQueueGapped bestUnitigsPrioQueu
 	return unitigsPrioQueue;
 }
 
-void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
+void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases, const bool& isRight){
 
 	uint32_t maxPosQ = posQ, maxPosU = posU;
-	int32_t maxBorderScore = -X;
 	struct Algn globAlgn;
 	//UnitigColorMap<UnitigInfo> maxUni = uni;
 	struct Algn tmpAlgn;
@@ -489,7 +516,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			bestScores.erase(bestScores.begin() + 0);
 
 			#ifdef DEBUG
-			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << " maxScore" << maxScore << endl;
+			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << endl;
 			#endif
 
 			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
@@ -604,13 +631,14 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 
 
 
-void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
+void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, const string &q, uint32_t &posQ, uint32_t &posU, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &maxGaps, struct Algn &algn, int32_t &score, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases, const bool& isRight){
 	uint32_t maxPosQ = posQ, maxPosU = posU;
 	//int32_t maxBorderScore = -X;
 	struct Algn globAlgn;
 	//UnitigColorMap<UnitigInfo> maxUni = uni;
 	struct Algn tmpAlgn;
 	score = 0;
+	shorterTupleGapped startTuple;
 
 	searchSettingsGapped searchSettings;
 	searchSettings.q           	= q;
@@ -625,6 +653,7 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 	searchSettings.advIdx      	= advIdx;
 	searchSettings.extend_modus = extend_modus;
 	searchSettings.numOfBases	= numCompBases;
+	searchSettings.isRight 		= isRight;
 
 
 
@@ -636,25 +665,45 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 	//PLAST Search -i test15Pangenome -q unknownQueriesTest2.q -B 0 -w 7
 
 
-
+	if(!isRight){
+		globAlgn = algn;
+	}
+	
 
 	explorationGapped exploration;
 
 	//shorterPrioQueueGapped unitigsPrioQueue(prioLongestGapped);
 	//(uni,posU,posQ,maxPosQ,algn,globAlgn,score,maxBorderScore,numOfBases)
-	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+	if(isRight){
+		startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+	} else{
+		if(posU == 0){
+			startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, -1, maxPosU);
+		} else{
+			if(posQ > 0 && posU > 0){
+				--posU;
+				--posQ;
+			}
+			startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+		}
+	}
 	exploration.priorityQueue = shorterPrioQueueGapped(prioLongestGapped);
 	exploration.priorityQueue.push(startTuple);
 
 
 
 	//exploration.priorityQueue = unitigsPrioQueue;
-	exploration.maxBorderScore = -X;
-	exploration.maxScore = score;
-	exploration.maxPosQ = maxPosQ;
-	exploration.globAlgn = globAlgn;
-	exploration.algn = algn;
-	exploration.extPth		= extPth;
+	exploration.maxBorderScore 	= -X;
+	exploration.maxScore 		= score;
+	exploration.maxPosQ 		= maxPosQ;
+	exploration.globAlgn 		= globAlgn;
+	exploration.algn 			= algn;
+	exploration.extPth			= extPth;
+
+	if(!isRight){
+		cout << "first algn.aSeqQ: " << algn.aSeqQ << " algn.aSeqG: " << algn.aSeqG << endl;
+		cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << endl;
+	}
 
 
 	//cout << "before while loop" << endl;
@@ -690,6 +739,7 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 		score = exploration.maxScore;
 		//Overwrite previous best alignment
 		algn = exploration.algn;
+		posQ = exploration.maxPosQ;
 		#ifdef DEBUG
 		cout << "in score < exploration.maxScore" << endl;
 		#endif
@@ -700,6 +750,7 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 		score = exploration.maxBorderScore;
 		//Overwrite previous best alignment
 		algn = exploration.globAlgn;
+		posQ = exploration.maxPosQ;
 		#ifdef DEBUG
 		cout << "in score < exploration.maxBorderScore" << endl;
 		#endif
@@ -721,6 +772,7 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 	bool advIdx      		= searchSettings.advIdx;
 	int16_t extend_modus 	= searchSettings.extend_modus;
 	int32_t numCompBases	= searchSettings.numOfBases;
+	bool isRight			= searchSettings.isRight;
 
 	shorterPrioQueueGapped unitigsPrioQueueBefore(prioLongestGapped);
 	shorterPrioQueueGapped unitigsPrioQueueAfter(prioLongestGapped);
@@ -747,36 +799,70 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 		cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << endl;
 		#endif
 
-		while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, exploration.extPth.empty(), advIdx, currnumOfBases, extend_modus)){
-			posU++;
-			posQ++;
-			if(currnumOfBases == 0){
-				//break;
+		if(isRight){
+			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, exploration.extPth.empty(), advIdx, currnumOfBases, extend_modus)){
+				posU++;
+				posQ++;
+				if(score > exploration.maxScore){
+					completeAlgn.aSeqG = completeGlobAlgn.aSeqG + algn.aSeqG;
+					completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + algn.aSeqQ;
+					exploration.maxScore = score;
+					exploration.algn = completeAlgn;
+				}
+				algn.aSeqG.clear();
+				algn.aSeqQ.clear();
+
+				completeGlobAlgn.aSeqG += globAlgn.aSeqG;
+				completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
+				globAlgn.aSeqG.clear();
+				globAlgn.aSeqQ.clear();
+
+				score = maxBorderScore;
+				maxBorderScore = -X;
+
 			}
 			if(score > exploration.maxScore){
 				completeAlgn.aSeqG = completeGlobAlgn.aSeqG + algn.aSeqG;
 				completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + algn.aSeqQ;
-				exploration.maxScore = score;
-				exploration.algn = completeAlgn;
 			}
-			algn.aSeqG.clear();
-			algn.aSeqQ.clear();
-
 			completeGlobAlgn.aSeqG += globAlgn.aSeqG;
 			completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
-			globAlgn.aSeqG.clear();
-			globAlgn.aSeqQ.clear();
+			//cout << "stuck in while right" << endl;
+		} else if(currnumOfBases != -1){
+			while(!calcLeftGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, algn, globAlgn, score, maxBorderScore, quorum, searchSet, exploration.extPth.empty(), advIdx, currnumOfBases, extend_modus)){
+				posU--;
+				posQ--;
+				if(score > exploration.maxScore){
+					completeAlgn.aSeqG = algn.aSeqG + completeGlobAlgn.aSeqG;
+					completeAlgn.aSeqQ = algn.aSeqQ + completeGlobAlgn.aSeqQ;
+					exploration.maxScore = score;
+					exploration.algn = completeAlgn;
+				}
+				algn.aSeqG.clear();
+				algn.aSeqQ.clear();
 
-			score = maxBorderScore;
-			maxBorderScore = -X;
+				completeGlobAlgn.aSeqG = globAlgn.aSeqG + completeGlobAlgn.aSeqG;
+				completeGlobAlgn.aSeqQ = globAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
+				globAlgn.aSeqG.clear();
+				globAlgn.aSeqQ.clear();
 
+				score = maxBorderScore;
+				maxBorderScore = -X;
+
+			}
+			if(score > exploration.maxScore){
+				completeAlgn.aSeqG = algn.aSeqG + completeGlobAlgn.aSeqG;
+				completeAlgn.aSeqQ = algn.aSeqQ + completeGlobAlgn.aSeqQ;
+			}
+			completeGlobAlgn.aSeqG = globAlgn.aSeqG + completeGlobAlgn.aSeqG;
+			completeGlobAlgn.aSeqQ = globAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
+			//cout << "stuck in while left" << endl;
 		}
-		if(score > exploration.maxScore){
-			completeAlgn.aSeqG = completeGlobAlgn.aSeqG + algn.aSeqG;
-			completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + algn.aSeqQ;
+
+		if(currnumOfBases == -1){
+			currnumOfBases = numCompBases;
+			maxBorderScore = 0;
 		}
-		completeGlobAlgn.aSeqG += globAlgn.aSeqG;
-		completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
 
 		#ifdef DEBUG
 		cout << "calcSemiGlobAlignment score: " << score << endl;
@@ -794,15 +880,35 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 		}
 		*/
 
-		if(maxBorderScore > -X && posQ < q.length() - 1){
+		uint32_t qAdjustment = 1;
+		uint32_t uValue = 0;
+
+		if(!isRight){
+			qAdjustment = -1;
+		}
+
+		if((maxBorderScore > -X && posQ < q.length() - 1 && isRight) || (maxBorderScore > -X && posQ > 0 && !isRight)){
 
 			
 			if(extend_modus == 1 || extend_modus == 2){
 
-				ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+				shorterTemp nIBegin;
+				shorterTemp nIEnd;
+
+				if(isRight){
+					//	get the successors of the unitig
+					ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+					nIBegin = sucIter.begin();
+					nIEnd = sucIter.end();
+				} else{
+					BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getPredecessors();
+					nIBegin = sucIter.begin();
+					nIEnd = sucIter.end();
+				}
+
 
 				#ifdef DEBUG
-				cout << "currUnitig has suc: " << sucIter.hasSuccessors() << endl;
+				//cout << "currUnitig has suc: " << sucIter.hasSuccessors() << endl;
 				#endif
 
 				uint16_t nextUnitig = 5;
@@ -818,13 +924,18 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 				cout << "nextUnitig: " << nextUnitig << endl;
 				#endif
 
-				for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+
+				for(shorterTemp nI = nIBegin; nI != nIEnd; ++nI){
+
+					if(!isRight){
+						uValue = (*nI).size - (*nI).getGraph()->getK();
+					}
 
 					if(nextUnitig == count){
-						unitigsPrioQueueAfter.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
+						unitigsPrioQueueAfter.push(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
 						break;
 					} else if(nextUnitig == 5){
-						unitigsPrioQueueAfter.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
+						unitigsPrioQueueAfter.push(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, 0, maxPosU));
 					}
 
 					count++;
@@ -833,7 +944,7 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 
 
 				if(currnumOfBases == 0){
-					unitigsPrioQueueAfter.push(make_tuple(currUnitig,posU+1,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, numCompBases, maxPosU));
+					unitigsPrioQueueAfter.push(make_tuple(currUnitig,posU+qAdjustment,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, numCompBases, maxPosU));
 				}
 				else{
 
@@ -847,14 +958,31 @@ explorationGapped calcUnitigsGapped(searchSettingsGapped searchSettings, explora
 
 					int count = 1;
 
-					ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+					shorterTemp nIBegin;
+					shorterTemp nIEnd;
 
-					for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+					if(isRight){
+						//	get the successors of the unitig
+						ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+						nIBegin = sucIter.begin();
+						nIEnd = sucIter.end();
+					} else{
+						BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getPredecessors();
+						nIBegin = sucIter.begin();
+						nIEnd = sucIter.end();
+					}
+
+					for(shorterTemp nI = nIBegin; nI != nIEnd; ++nI){
+
+						if(!isRight){
+							uValue = (*nI).size - (*nI).getGraph()->getK();
+						}
+
 						if(nextUnitig == count){
-							unitigsPrioQueueBefore.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
+							unitigsPrioQueueBefore.push(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
 							break;
 						} else if(nextUnitig == 5){
-							unitigsPrioQueueBefore.push(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
+							unitigsPrioQueueBefore.push(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, score, maxBorderScore, currnumOfBases, maxPosU));
 						}
 						count++;
 					}
@@ -898,8 +1026,15 @@ void contLeftGappedAlignment(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &ex
 	struct Algn brdAlgn;
 	UnitigColorMap<UnitigInfo> maxUni = uni;
 
+	#ifdef DEBUG
+	cout << "contLeftGappedAlignment" << endl;
+	cout << "uni: " << uni.mappedSequenceToString() << " extPth: " << extPth.size() << " posQ: " << posQ << " posU: " << posU << " score: " << score << " explCount: " << explCount << " maxAlgnQ: " << maxAlgn.aSeqQ << " maxAlgnG: " << maxAlgn.aSeqG << endl;
+	cout << extPth.front() << endl;
+	cout << extPth.back() << endl;
+	#endif
+
 	//Calculate gapped alignment and check outcome
-	if(!calcLeftGlobAlignment(uni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, maxAlgn, brdAlgn, score, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx)){
+	if(!calcLeftGlobAlignment(uni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, maxAlgn, brdAlgn, score, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, 0, 0)){
 		explSuc = contLeftOnSameUni(uni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, brdAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
 	} else if(maxBorderScore > -X && posQ > 0){
 		//Continue calculations on the next unitig
@@ -948,6 +1083,13 @@ bool contLeftOnSameUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth, 
 	uint32_t tmpQOff = qOff - 1, tmpUOff = uOff - 1;
 	int32_t tmpScore = score;
 	struct Algn tmpAlgn;
+
+	#ifdef DEBUG
+	cout << "contLeftOnSameUni" << endl;
+	cout << "uni: " << uni.mappedSequenceToString() << " extPth: " << extPth.size() << " posQ: " << qOff << " posU: " << uOff << " score: " << score << " explCount: " << explCount << " maxAlgnQ: " << algn.aSeqQ << " maxAlgnG: " << algn.aSeqG << endl;
+	cout << extPth.front() << endl;
+	cout << extPth.back() << endl;
+	#endif
 
 	contLeftGappedAlignment(uni, extPth, q, tmpQOff, tmpUOff, mscore, mmscore, X, gOpen, gExt, maxGaps, tmpAlgn, tmpScore, explCount, quorum, searchSet, advIdx);
 
@@ -1143,6 +1285,13 @@ bool contGappedOnPredUni(UnitigColorMap<UnitigInfo> &uni, list<uint16_t> &extPth
 	UnitigColorMap<UnitigInfo> predUni;
 	BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> predIter = uni.getPredecessors();
 
+	#ifdef DEBUG
+	cout << "contGappedOnPredUni" << endl;
+	cout << "uni: " << uni.mappedSequenceToString() << " extPth: " << extPth.size() << " posQ: " << qOff << " posU: " << uOff << " score: " << score << " explCount: " << explCount << " maxAlgnQ: " << algn.aSeqQ << " maxAlgnG: " << algn.aSeqG << endl;
+	cout << extPth.front() << endl;
+	cout << extPth.back() << endl;
+	#endif
+
 	//Check whether we have reached the maximum recursion depth of an extension
 	if(++explCount > MAXRECURSIONDEPTH){
 		//Report this incident
@@ -1243,10 +1392,10 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 			explSuc = contGappedOnSuccUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
 		}
 	}else if(extend_modus == 3){
-		contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
+		contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, true);
 		explSuc = true;
 	}else{
-		contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
+		contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, true);
 		explSuc = true;
 	}
 
@@ -1272,7 +1421,7 @@ void startRightGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, 
 }
 
 //This function calculates a gapped alignment to the left side of the starting position considering a quorum and a search color set. ATTENTION: Hit's length attribute will be deprecated after function call!
-void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx){
+void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t maxGaps, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t extend_modus, const int16_t numPushUni, const int16_t numCompBases){
 	bool explSuc = false, unitigDone = true;
 	uint32_t posU = h->offU, posQ = h->offQ, maxPosU = h->offU, maxPosQ = h->offQ, explCount = 0;
 	int32_t maxScore = 0, maxBorderScore;
@@ -1280,24 +1429,40 @@ void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, c
 	struct Algn globAlgn = h->gAlgn;
 	UnitigColorMap<UnitigInfo> currUni = h->origUni;
 
-	//Check whether we can start the calculation right on this unitig or whether we are already at the begin of unitig or query sequence
-	if(posQ > 0 && posU > 0){
-		//Set alignment start positions
-		--posU;
-		--posQ;
-		//Calculate gapped alignment
-		unitigDone = calcLeftGlobAlignment(currUni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx);
-	} else{
-		//Set variable for exploration of predecessive unitigs
-		maxBorderScore = 0;
-	}
+	#ifdef DEBUG
+	cout << "startLeftGappedAlignment" << endl;
+	cout << "h->offU: " << h->offU << " h->offQ: " << h->offQ << " h->gAlgnG: " << h->gAlgn.aSeqG << " h->gAlgnQ: " << h->gAlgn.aSeqQ << " score: " << h->score << " length: " << h->length << " eval:" << h->eval << " lExt: " << h->lExt.nbElem << " rExt: " << h->rExt.nbElem << endl;
+	#endif
 
-	//Check whether we have reached the beginning of the current unitig
-	if(!unitigDone){
-		explSuc = contLeftOnSameUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
-	} else if(maxBorderScore > -X && posQ > 0){
-		//Continue calculations on the next unitig
-		explSuc = contGappedOnPredUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+	
+	if(extend_modus == 0){
+		//Check whether we can start the calculation right on this unitig or whether we are already at the begin of unitig or query sequence
+		if(posQ > 0 && posU > 0){
+			//Set alignment start positions
+			--posU;
+			--posQ;
+			//Calculate gapped alignment
+			unitigDone = calcLeftGlobAlignment(currUni, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, h->gAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, 0, 0);
+		} else{
+			//Set variable for exploration of predecessive unitigs
+			maxBorderScore = 0;
+		}
+
+		//Check whether we have reached the beginning of the current unitig
+		if(!unitigDone){
+			explSuc = contLeftOnSameUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+		} else if(maxBorderScore > -X && posQ > 0){
+			//Continue calculations on the next unitig
+			explSuc = contGappedOnPredUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
+		}
+	}else if(extend_modus == 3){
+		contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, false);
+		explSuc = true;
+	}else{
+		if(posQ != 0){
+			contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, false);
+			explSuc = true;
+		}
 	}
 
 	//Check whether exploration of predecessive unitig was successful
