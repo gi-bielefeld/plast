@@ -477,18 +477,42 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 	struct Algn globAlgn;
 	//UnitigColorMap<UnitigInfo> maxUni = uni;
 	struct Algn tmpAlgn;
+	uint32_t bestPosQ = posQ;
+
+	#ifdef DEBUG
+	cout << "posQ in beginning: " << posQ << endl;
+	#endif
 
 	int32_t bestScore = 0;
 	struct Algn bestAlgn;
 
-	score = -X;
+	shorterTupleGapped startTuple;
+
+	score = 0;
 
 	shorterVectorGapped bestUnitigs;
 	vector<int> bestScores;
 
 	uint numOfUnitig = numPushUni;
 
-	shorterTupleGapped startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+	if(!isRight){
+		globAlgn = algn;
+	}
+
+
+	if(isRight){
+		startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+	} else{
+		if(posU == 0){
+			startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, -1, maxPosU);
+		} else{
+			if(posQ > 0 && posU > 0){
+				--posU;
+				--posQ;
+			}
+			startTuple = make_tuple(uni, posU, posQ, maxPosQ, algn, globAlgn, score, 0, numCompBases, maxPosU);
+		}
+	}
 	bestUnitigs.push_back(startTuple);
 	bestScores.push_back(0);
 
@@ -519,11 +543,26 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			cout << "posU: " << posU << " posQ: " << posQ << " maxPosQ: " << maxPosQ << " maxPosU: " << maxPosU << " maxBorderScore: " << maxBorderScore << endl;
 			#endif
 
-			while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
-				posU++;
-				posQ++;
-				if(currnumOfBases == 0){
-					//break;
+			if(isRight){
+				while(!calcSemiGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
+					posU++;
+					posQ++;
+					if(maxScore > bestScore){
+						completeAlgn.aSeqG = completeGlobAlgn.aSeqG + tempAlgn.aSeqG;
+						completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + tempAlgn.aSeqQ;
+						bestScore = maxScore;
+						bestAlgn = completeAlgn;
+					}
+					tempAlgn.aSeqG.clear();
+					tempAlgn.aSeqQ.clear();
+
+					completeGlobAlgn.aSeqG += globAlgn.aSeqG;
+					completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
+					globAlgn.aSeqG.clear();
+					globAlgn.aSeqQ.clear();
+
+					maxScore = maxBorderScore;
+					maxBorderScore = -X;
 				}
 				if(maxScore > bestScore){
 					completeAlgn.aSeqG = completeGlobAlgn.aSeqG + tempAlgn.aSeqG;
@@ -531,25 +570,50 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 					bestScore = maxScore;
 					bestAlgn = completeAlgn;
 				}
-				tempAlgn.aSeqG.clear();
-				tempAlgn.aSeqQ.clear();
-
 				completeGlobAlgn.aSeqG += globAlgn.aSeqG;
 				completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
-				globAlgn.aSeqG.clear();
-				globAlgn.aSeqQ.clear();
+			} else if(currnumOfBases != -1){
+				while(!calcLeftGlobAlignment(currUnitig, q, posU, posQ, mscore, mmscore, X, gOpen, gExt, maxGaps, maxPosQ, maxPosU, tempAlgn, globAlgn, maxScore, maxBorderScore, quorum, searchSet, extPth.empty(), advIdx, currnumOfBases, extend_modus)){
+					posU--;
+					posQ--;
+					if(maxScore > bestScore){
+						completeAlgn.aSeqG = tempAlgn.aSeqG + completeGlobAlgn.aSeqG;
+						completeAlgn.aSeqQ = tempAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
+						bestScore = maxScore;
+						bestAlgn = completeAlgn;
+					}
+					tempAlgn.aSeqG.clear();
+					tempAlgn.aSeqQ.clear();
 
-				maxScore = maxBorderScore;
-				maxBorderScore = -X;
+					completeGlobAlgn.aSeqG = globAlgn.aSeqG + completeGlobAlgn.aSeqG;
+					completeGlobAlgn.aSeqQ = globAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
+					globAlgn.aSeqG.clear();
+					globAlgn.aSeqQ.clear();
+
+					maxScore = maxBorderScore;
+					maxBorderScore = -X;
+					#ifdef DEBUG
+					cout << "maxPosQ in calcleft: " << maxPosQ << endl;
+					#endif
+
+				}
+				#ifdef DEBUG
+				cout << "maxPosQ after calcleft: " << maxPosQ << endl;
+				#endif
+				if(maxScore > bestScore){
+					completeAlgn.aSeqG = tempAlgn.aSeqG + completeGlobAlgn.aSeqG;
+					completeAlgn.aSeqQ = tempAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
+					bestScore = maxScore;
+					bestAlgn = completeAlgn;
+				}
+				completeGlobAlgn.aSeqG = globAlgn.aSeqG + completeGlobAlgn.aSeqG;
+				completeGlobAlgn.aSeqQ = globAlgn.aSeqQ + completeGlobAlgn.aSeqQ;
 			}
-			if(maxScore > bestScore){
-				completeAlgn.aSeqG = completeGlobAlgn.aSeqG + tempAlgn.aSeqG;
-				completeAlgn.aSeqQ = completeGlobAlgn.aSeqQ + tempAlgn.aSeqQ;
-				bestScore = maxScore;
-				bestAlgn = completeAlgn;
+
+			if(currnumOfBases == -1){
+				currnumOfBases = numCompBases;
+				maxBorderScore = 0;
 			}
-			completeGlobAlgn.aSeqG += globAlgn.aSeqG;
-			completeGlobAlgn.aSeqQ += globAlgn.aSeqQ;
 
 			#ifdef DEBUG
 			cout << "calcSemiGlobAlignment score: " << maxScore << endl;
@@ -558,10 +622,30 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 			cout << "extPth size: " << extPth.size() << endl;
 			#endif
 
-			if(maxBorderScore > -X && posQ < q.length() - 1){
+			uint32_t qAdjustment = 1;
+			uint32_t uValue = 0;
+
+			if(!isRight){
+				qAdjustment = -1;
+			}
+
+			if((maxBorderScore > -X && posQ < q.length() - 1 && isRight) || (maxBorderScore > -X && posQ > 0 && !isRight)){
+
+				shorterTemp nIBegin;
+				shorterTemp nIEnd;
+
+				if(isRight){
+					//	get the successors of the unitig
+					ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
+					nIBegin = sucIter.begin();
+					nIEnd = sucIter.end();
+				} else{
+					BackwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getPredecessors();
+					nIBegin = sucIter.begin();
+					nIEnd = sucIter.end();
+				}
 
 
-				ForwardCDBG<DataAccessor<UnitigInfo>, DataStorage<UnitigInfo>, false> sucIter = currUnitig.getSuccessors();
 
 				int count = 1;
 
@@ -572,26 +656,32 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 					extPth.pop_front();
 				}
 
-				for(shorterTemp nI = sucIter.begin(); nI != sucIter.end(); ++nI){
+				for(shorterTemp nI = nIBegin; nI != nIEnd; ++nI){
+
+					if(!isRight){
+						uValue = (*nI).size - (*nI).getGraph()->getK();
+					}
 
 					if(bestUnitigs.size() <= numOfUnitig){
+
 						if(nextUnitig == count){
-							bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
+							bestUnitigs.push_back(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
 							bestScores.push_back(maxScore);
 							break;
 						} else if(nextUnitig == 5){
-							bestUnitigs.push_back(make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
+							bestUnitigs.push_back(make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU));
 							bestScores.push_back(maxScore);
 						}
 					}else{
 
 						int minElement = *min_element(bestScores.begin(), bestScores.end());
 						if(minElement < maxScore){
+
 							if(nextUnitig == count){
 								for(uint i = 0; i < bestScores.size(); i++){
 										if(bestScores[i] == minElement){
 										bestScores[i] = maxScore;
-										bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
+										bestUnitigs[i] = make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
 										break;
 									}
 								}
@@ -600,7 +690,7 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 								for(uint i = 0; i < bestScores.size(); i++){
 									if(bestScores[i] == minElement){
 										bestScores[i] = maxScore;
-										bestUnitigs[i] = make_tuple(*nI,0,posQ+1,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
+										bestUnitigs[i] = make_tuple(*nI,uValue,posQ+qAdjustment,maxPosQ,completeAlgn,completeGlobAlgn, maxScore, maxBorderScore, 0, maxPosU);
 										break;
 									}
 								}
@@ -609,24 +699,41 @@ void contRightGappedAlignment_BFS_replaceWorst(UnitigColorMap<UnitigInfo> &uni, 
 					}
 					count++;
 				}
-				score = bestScore;
-				algn = bestAlgn;
-				if(score < maxBorderScore){
-					score = maxBorderScore;
-					algn = globAlgn;
-				}
-				if(score < maxScore){
-					score = maxScore;
-					algn = tempAlgn;
-				}
+				
+
+
 			}
+			#ifdef DEBUG
+			cout << "maxPosQ after calcleft: " << maxPosQ << " score: " << score << " maxBorderScore: " << maxBorderScore << " maxScore: " << maxScore << endl;
+			#endif
+
+			//score = bestScore;
+			algn = bestAlgn;
+			if(score < maxBorderScore){
+				score = maxBorderScore;
+				algn = globAlgn;
+				bestPosQ = maxPosQ;
+			}
+			if(score < maxScore){
+				score = maxScore;
+				algn = tempAlgn;
+				bestPosQ = maxPosQ;
+			}
+			#ifdef DEBUG
+			cout << "bestPosQ: " << bestPosQ << endl;
+			#endif
+
 		}
 	}
 	
-	if(score < bestScore) {
-        score = bestScore;
-        algn = bestAlgn;
-    }
+
+    score = bestScore;
+    algn = bestAlgn;
+	posQ = bestPosQ;
+	#ifdef DEBUG
+	cout << "bestPosQ: " << bestPosQ << endl;
+	cout << "posQ end: " << posQ << endl;
+	#endif
 }
 
 
@@ -700,11 +807,12 @@ void contRightGappedAlignment_BFS(UnitigColorMap<UnitigInfo> &uni, list<uint16_t
 	exploration.algn 			= algn;
 	exploration.extPth			= extPth;
 
+	#ifdef DEBUG
 	if(!isRight){
 		cout << "first algn.aSeqQ: " << algn.aSeqQ << " algn.aSeqG: " << algn.aSeqG << endl;
 		cout << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << endl;
 	}
-
+	#endif
 
 	//cout << "before while loop" << endl;
 
@@ -1456,8 +1564,10 @@ void startLeftGappedAlignment(Hit *h, const string &q, const uint16_t &mscore, c
 			explSuc = contGappedOnPredUni(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx);
 		}
 	}else if(extend_modus == 3){
-		contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, false);
-		explSuc = true;
+		if(posQ != 0){
+			contRightGappedAlignment_BFS_replaceWorst(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, false);
+			explSuc = true;
+		}
 	}else{
 		if(posQ != 0){
 			contRightGappedAlignment_BFS(currUni, extPth, q, posQ, posU, mscore, mmscore, X, gOpen, gExt, maxGaps, globAlgn, maxBorderScore, explCount, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases, false);

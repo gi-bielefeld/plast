@@ -451,16 +451,16 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 		bandRadius = (*it)->length / GAP_RATIO;
 
 		
-		#ifdef DEBUG
+		//#ifdef DEBUG
 		cout << (*it)->origUni.mappedSequenceToString() << endl;
 		cout << (*it)->offU << endl;
 		cout << (*it)->offQ << endl;
 		cout << (*it)->score << endl;
-		#endif
+		//#endif
 
 		
 		#ifdef DEBUG
-		//if((*it)->origUni.mappedSequenceToString() != "CGTTTCGCAGCCGATATTTTCTCACGAACACCAAGC"){
+		//if((*it)->origUni.mappedSequenceToString() != "CCTTACTGTTCAACAGGGAATTGTCAGGCAGAAAATAATTTCTGTA"){
 			//continue;
 			/*
 			cout << "extension Path" << endl;
@@ -470,7 +470,7 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 				cout << *ext << endl;
 			}
 			*/
-		//}
+		}
 		#endif
 		
 		
