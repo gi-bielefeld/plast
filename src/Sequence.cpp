@@ -1,7 +1,7 @@
 #include "Sequence.h"
 
 //Function to compute a k-mer's (falling) rank
-const int32_t compRank(const string k, const int32_t &prevRank){
+const int32_t compRank(const std::string k, const int32_t &prevRank){
 	//Rank to be computed
 	int32_t rank;
 
@@ -19,9 +19,9 @@ const int32_t compRank(const string k, const int32_t &prevRank){
 }
 
 //This function calculates the reverse complement of a DNA sequence
-string revComp(const string &seq){
+std::string revComp(const std::string &seq){
 	//The result string
-	string revSeq;
+	std::string revSeq;
 
 	//Go through the query from the end to the beginning
 	for(int32_t i = seq.length() - 1; i >= 0; --i){
@@ -40,7 +40,8 @@ string revComp(const string &seq){
 				revSeq += CMPL_BASE_T;
 				break;
 			default:
-				cerr << "ERROR: Unknown nucleotide base detected in query. Only A,C,G and T are supported" << endl;
+				std::cerr << "ERROR: Unknown nucleotide base detected in " <<
+				"query. Only A,C,G and T are supported" << std::endl;
 				exit(EXIT_FAILURE);
 		}
 	}
