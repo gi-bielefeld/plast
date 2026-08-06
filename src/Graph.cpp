@@ -16,15 +16,18 @@ void genGraph(ColoredCDBG<UnitigInfo> &cdbg, CCDBG_Build_opt &cdbgOpt){
 }
 
 //This function assigns color ids from the graph to color names in the color set
-void mapColorIds(list<pair<string, size_t>>& colorSet, const ColoredCDBG<UnitigInfo>& g){
+void mapColorIds(std::list<std::pair<std::string, std::size_t>>& colorSet, 
+	const ColoredCDBG<UnitigInfo>& g){
 	//Get number of colors in the graph
-	size_t totCol = g.getNbColors();
+	std::size_t totCol = g.getNbColors();
 
 	//Iterate over color ids of the graph
-	for(size_t i = 0; i < totCol; ++i){
+	for(std::size_t i = 0; i < totCol; ++i){
 		//Iterate over color set colors
-		for(list<pair<string, size_t>>::iterator j = colorSet.begin(); j != colorSet.end(); ++j){
-			//Check whether the current color id belongs to the current color name and save the info
+		for(std::list<std::pair<std::string, std::size_t>>::iterator j = 
+			colorSet.begin(); j != colorSet.end(); ++j){
+			//Check whether the current color id belongs to the current color 
+			//name and save the info
 			if(j->first == g.getColorName(i)) j->second = i;
 		}
 	}

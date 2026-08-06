@@ -28,11 +28,13 @@ class ColSet {
 	public:
 
 		//Default constructor
-		ColSet (uint32_t pos, vector<string> cols) { endPos = pos; colNames = cols; }
+		ColSet (uint32_t pos, std::vector<std::string> cols){
+			endPos = pos; colNames = cols;
+		}
 
 		//Alignment position where color set ends
 		uint32_t endPos;
-		vector<string> colNames;
+		std::vector<std::string> colNames;
 
 };
 
@@ -43,7 +45,8 @@ inline uint16_t r(char c){
 		case NUCL_BASE_C: return CHAR_RANK_C;
 		case NUCL_BASE_G: return CHAR_RANK_G;
 		case NUCL_BASE_T: return CHAR_RANK_T;
-		default: cerr << "Invalid nucleotide character detected\nRank of " << c << " cannot be calculated correctly" << endl;
+		default: std::cerr << "Invalid nucleotide character detected\nRank of " 
+			<< c << " cannot be calculated correctly" << std::endl;
 			 return CHAR_RANK_A;
 	}
 }
@@ -55,13 +58,14 @@ inline char rr(const char &c){
 		case CHAR_RANK_C: return NUCL_BASE_C;
 		case CHAR_RANK_G: return NUCL_BASE_G;
 		case CHAR_RANK_T: return NUCL_BASE_T;
-		default: cerr << "Invalid rank detected\nNucleotide of rank " << c << " cannot be calculated correctly" << endl;
+		default: std::cerr << "Invalid rank detected\nNucleotide of rank " << c 
+			<< " cannot be calculated correctly" << std::endl;
 			return NUCL_BASE_A;
 	}
 }
 
 //This function takes a DNA sequence and compresses it s.t. each base is stored using only 2 bit
-inline char* cmprSeq(const string seq, const uint8_t &size){
+inline char* cmprSeq(const std::string seq, const uint8_t &size){
 	char c = 0;
 	uint8_t pos = 0;
 	//Allocate memory
@@ -124,9 +128,9 @@ inline char* decmprSeq(const char* cSeq, const uint8_t seqLen){
 }
 
 //Function to compute a k-mer's (falling) rank
-const int32_t compRank(const string k, const int32_t &prevRank);
+const int32_t compRank(const std::string k, const int32_t &prevRank);
 
 //This function calculates the reverse complement of a DNA sequence
-string revComp(const string &seq);
+std::string revComp(const std::string &seq);
 
 #endif

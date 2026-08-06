@@ -12,6 +12,7 @@
 void genGraph(ColoredCDBG<UnitigInfo> &cdbg, CCDBG_Build_opt &cdbgOpt);
 
 //This function assigns color ids from the graph to color names in the color set
-void mapColorIds(list<pair<string, size_t>>& colorSet, const ColoredCDBG<UnitigInfo>& g);
+void mapColorIds(std::list<std::pair<std::string, std::size_t>>& colorSet, 
+	const ColoredCDBG<UnitigInfo>& g);
 
 #endif

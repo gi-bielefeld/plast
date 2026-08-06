@@ -2,9 +2,10 @@
 #include "Smer.h"
 
 //This function scans through a hit list decreasingly ordered by score and replaces the worst entry by the given hit if it is not the worst one itself
-void replWorseRes(list<Hit*> &hList, Hit* hit){
+void replWorseRes(std::list<Hit*> &hList, Hit* hit){
 	//Go through hit list
-	for(list<class Hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
+	for(std::list<class Hit*>::const_iterator i = hList.begin(); 
+		i != hList.end(); ++i){
 		//Compare current entry with hit to insert
 		if((*i)->score < hit->score){
 			//Insert hit
@@ -20,9 +21,10 @@ void replWorseRes(list<Hit*> &hList, Hit* hit){
 }
 
 //This function scans through a hit list and inserts the given hit right in front of the first entry which score is smaller or equal to the given hit's score
-void insRes(list<Hit*> &hList, Hit* hit){
+void insRes(std::list<Hit*> &hList, Hit* hit){
 	//Go through hit list
-	for(list<class Hit*>::const_iterator i = hList.begin(); i != hList.end(); ++i){
+	for(std::list<class Hit*>::const_iterator i = hList.begin(); 
+		i != hList.end(); ++i){
 		//Compare current entry with hit to insert
 		if((*i)->score < hit->score){
 			//Insert hit
@@ -37,7 +39,7 @@ void insRes(list<Hit*> &hList, Hit* hit){
 }
 
 //This function compresses an extension path of a left or right extension
-struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
+struct ExtPth cmprExtPth(const std::list<uint16_t>& extPth){
 	uint16_t nbBytes, i = 0, shifts = 0;
 	struct ExtPth ePath;
 
@@ -46,9 +48,6 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
 
 	//Check if we have to allocate memory for path compression
 	if(ePath.nbElem){
-		//Testing
-		// cout << "ePath.nbElem: " << ePath.nbElem << endl;
-
 		//Calculate how many bytes we need to save the path
 		nbBytes = (ePath.nbElem / SUCCESSORS_PER_BYTE) + ((ePath.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);
 		//Allocate space for compressed path
@@ -58,7 +57,8 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
 	}
 
 	//Walk through extension path
-	for(list<uint16_t>::const_iterator j = extPth.begin(); j != extPth.end(); ++j){
+	for(std::list<uint16_t>::const_iterator j = extPth.begin(); 
+		j != extPth.end(); ++j){
 		//Check if current byte is full
 		if(shifts == SUCCESSORS_PER_BYTE){
 			//Move to next byte
@@ -84,11 +84,11 @@ struct ExtPth cmprExtPth(const list<uint16_t>& extPth){
 }
 
 //This function decompresses an extension path object
-const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
+const std::list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
 	unsigned char successor;
 	unsigned char *cmpSucs = cmpPth.path;
 	uint16_t nbBytes, shifts, sucLeft = cmpPth.nbElem;
-	list<uint16_t> path;
+	std::list<uint16_t> path;
 
 	//Calculate how many bytes our compressed path consists of
 	nbBytes = cmpPth.nbElem / SUCCESSORS_PER_BYTE + ((cmpPth.nbElem % SUCCESSORS_PER_BYTE) == 0 ? 0 : 1);

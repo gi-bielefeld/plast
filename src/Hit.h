@@ -17,9 +17,9 @@ struct ExtPth{
 //Stores an alignment
 struct Algn{
 	//Alignment sequence from the graph
-	string aSeqG;
+	std::string aSeqG;
 	//Alignment sequence from query
-	string aSeqQ;
+	std::string aSeqQ;
 };
 
 class Hit {
@@ -27,7 +27,7 @@ class Hit {
 	public:
 		
 		//Default constructor
-		Hit () {}
+		Hit (): length(0) {}
 
 		//Copy constructor
 		Hit (const Hit &h) {
@@ -67,19 +67,19 @@ class Hit {
 void insertHit(Hit*& hitToIns, Hit* hitList);
 
 //This function scans through a hit list decreasingly ordered by score and replaces the worst entry by the given hit if it is not the worst one itself
-void replWorseRes(list<Hit*> &hList, Hit* hit);
+void replWorseRes(std::list<Hit*> &hList, Hit* hit);
 
 //This function scans through a hit list and inserts the given hit right in front of the first entry which score is smaller or equal to the given hit's score
-void insRes(list<Hit*> &hList, Hit* hit);
+void insRes(std::list<Hit*> &hList, Hit* hit);
 
 //This function retreats an ungapped extension of a seed on the reverse complementary strand if its right border ends within the k-1 overlap in a unitig sequence's end
-void makeValidBorders(Hit *hit, const string &q);
+void makeValidBorders(Hit *hit, const std::string &q);
 
 //This function compresses the extension paths of left and right extension and returns a merged extension path object
-struct ExtPth cmprExtPth(const list<uint16_t>& extPth);
+struct ExtPth cmprExtPth(const std::list<uint16_t>& extPth);
 
 //This function decompresses an extension path object
-const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);
+const std::list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth);
 
 //This function compares two hits based on their e-values. Returns true if fh is smaller than sh.
 inline bool compEvals(const Hit *fh, const Hit *sh){ return (fh->eval < sh->eval); };

@@ -2,7 +2,8 @@
 #include "Sequence.h"
 
 //This function writes PLAST's q-gram profile to disk
-void saveProfile(ofstream &fStr, const uint32_t &profSize, uint32_t* qProfile){
+void saveProfile(std::ofstream &fStr, const uint32_t &profSize, 
+	uint32_t* qProfile){
 	uint32_t count, shift, i = 0;
 
 	//Iterate over the profile
@@ -28,9 +29,11 @@ void saveProfile(ofstream &fStr, const uint32_t &profSize, uint32_t* qProfile){
 }
 
 //This function loads the q-gram profile from a file and returns it
-uint32_t* loadQProf(ifstream &iFile, const uint32_t size){//TODO: Can we make the ifstream const?
+uint32_t* loadQProf(std::ifstream &iFile, const uint32_t size){//TODO: Can we 
+															   //make the 
+															   //ifstream const?
 	//String to store read in line
-	string l;
+	std::string l;
 	//Allocate space for the array
 	uint32_t *profile = (uint32_t*) malloc(size * sizeof(uint32_t));
 
@@ -38,7 +41,8 @@ uint32_t* loadQProf(ifstream &iFile, const uint32_t size){//TODO: Can we make th
 	for(uint32_t i = 0; i < size; ++i){
 		//Try to read next line
 		if(!getline(iFile, l)){
-			cerr << "An error occured while reading index file. Index might be corrupted!" << endl;
+			std::cerr << "An error occured while reading index file. Index " <<
+			"might be corrupted!" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
@@ -52,17 +56,21 @@ uint32_t* loadQProf(ifstream &iFile, const uint32_t size){//TODO: Can we make th
 }
 
 //This function saves PLAST's index data structures as binary
-void saveIndexBin(const char *filename, const int32_t& sdLen, const uint32_t& profSize, uint32_t* qProfile, const uint32_t numUni, UnitigColorMap<UnitigInfo>* uniArr, struct S_mer_pos*& pos, const size_t &seedNum, const int32_t &k, const bool& advIdx){
+void saveIndexBin(const char *filename, const int32_t& sdLen, 
+	const uint32_t& profSize, uint32_t* qProfile, const uint32_t numUni, 
+	UnitigColorMap<UnitigInfo>* uniArr, struct S_mer_pos*& pos, 
+	const std::size_t &seedNum, const int32_t &k, const bool& advIdx){
 	uint16_t qrm;
-	size_t i;
+	std::size_t i;
 	int32_t brd;
 
 	//Open a file to write
-	ofstream destFile(filename, ios::out | ios::binary);
+	std::ofstream destFile(filename, std::ios::out | std::ios::binary);
 
 	//Check whether the file could be opened
 	if(!destFile.is_open()){
-		cerr << "ERROR: Destination file to save index could not be opened" << endl;
+		std::cerr << "ERROR: Destination file to save index could not be opened"
+		 << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -121,25 +129,28 @@ void saveIndexBin(const char *filename, const int32_t& sdLen, const uint32_t& pr
 }
 
 //This function loads the indices from a binary file
-void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, uint32_t *&qProf, ColoredCDBG<UnitigInfo>& graph, UnitigColorMap<UnitigInfo>*& uniArr, size_t &posSize, struct S_mer_pos*& pos, bool& advIdx){
+void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, 
+	uint32_t *&qProf, ColoredCDBG<UnitigInfo>& graph, 
+	UnitigColorMap<UnitigInfo>*& uniArr, std::size_t &posSize, 
+	struct S_mer_pos*& pos, bool& advIdx){
 	char *memBlock, *qrmBlock = NULL, *brdBlock = NULL;
 	const int32_t kMerSize = graph.getK();
 	//The number of bytes needed to store a k-mer
 	const uint16_t nBytes = (kMerSize / BASES_PER_BYTE) + (kMerSize % BASES_PER_BYTE == 0 ? 0 : 1);
 	uint32_t i, shift;
 	//Open file
-	ifstream idxFile(fName, ios::in|ios::binary|ios::ate);
+	std::ifstream idxFile(fName, std::ios::in|std::ios::binary|std::ios::ate);
 
 	//Check if the file is open
 	if(!idxFile.is_open()){
-		cerr << "ERROR: Index file could not be opened" << endl;
+		std::cerr << "ERROR: Index file could not be opened" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	//Get file's size
-	streampos fSize = idxFile.tellg();
+	std::streampos fSize = idxFile.tellg();
 	//Go to file's beginning
-	idxFile.seekg(0, ios::beg);
+	idxFile.seekg(0, std::ios::beg);
 
 	//Check meta data//
 
@@ -150,7 +161,8 @@ void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, uint
 
 	//Make sure this index is not deprecated
 	if(strcmp(memBlock, INDEX_VERSION)){
-		cerr << "ERROR: Index version is deprecated" << "Please create a new one!" << endl;
+		std::cerr << "ERROR: Index version is deprecated" << "Please create " <<
+		"a new one!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -223,7 +235,8 @@ void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, uint
 
 		//Check whether we couldn't find a unitig
 		if(uniArr[i].isEmpty){
-			cerr << "ERROR: Error while loading unitig array. No corresponding unitig for loaded k-mer found" << endl;
+			std::cerr << "ERROR: Error while loading unitig array. No corre" <<
+			"sponding unitig for loaded k-mer found" << std::endl;
 			exit(EXIT_FAILURE);
 			
 		}
@@ -261,24 +274,25 @@ void loadIndexesBin(const char* fName, int32_t& sdLen, uint32_t &qProfSize, uint
 	//Load pos array//
 
 	//Get current position in read file
-	streampos curPos = idxFile.tellg();
+	std::streampos curPos = idxFile.tellg();
 	//Set pos array size
-	posSize = ((size_t) (fSize - curPos)) / sizeof(struct S_mer_pos);
+	posSize = ((std::size_t) (fSize - curPos)) / sizeof(struct S_mer_pos);
 	//Initialize memory block to be loaded
-	memBlock = (char*) malloc((size_t) (fSize - curPos));
+	memBlock = (char*) malloc((std::size_t) (fSize - curPos));
 	//Load rest of file
 	idxFile.read(memBlock, fSize - curPos);
 	pos = (struct S_mer_pos*) memBlock;
 }
 
 //This function loads the indexes from a file
-void loadIndexes(const string fName, const uint32_t qSize, uint32_t*& prof, CompactedDBG<UnitigInfo> &cdbg, uint32_t &seedNum, struct S_mer_pos*& lArr){
+void loadIndexes(const std::string fName, const uint32_t qSize, uint32_t*& prof,
+ CompactedDBG<UnitigInfo> &cdbg, uint32_t &seedNum, struct S_mer_pos*& lArr){
 	//Open the file
-	ifstream fStr(fName);
+	std::ifstream fStr(fName);
 
 	//Check whether the file is open
 	if(!fStr.is_open()){
-		cerr << "ERROR: Index file could not be opened" << endl;
+		std::cerr << "ERROR: Index file could not be opened" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -289,11 +303,13 @@ void loadIndexes(const string fName, const uint32_t qSize, uint32_t*& prof, Comp
 }
 
 //This function builds all necessary indexes
-void buildIndex(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &minSeedLength, uint32_t* qProf, size_t &numSmers, const uint32_t &profSize, struct S_mer_pos*& linkArr, UnitigColorMap<UnitigInfo>*& uniArray){
+void buildIndex(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &minSeedLength, 
+	uint32_t* qProf, std::size_t &numSmers, const uint32_t &profSize, 
+	struct S_mer_pos*& linkArr, UnitigColorMap<UnitigInfo>*& uniArray){
 	uint32_t seqEnd, i = 0, k = cdbg.getK();
 	int32_t pRank;
 	//String to store the unitig sequence
-	string uSeq;
+	std::string uSeq;
 
 	//Allocate memory for unitig array
 	uniArray = (UnitigColorMap<UnitigInfo>*) malloc(cdbg.size() * sizeof(UnitigMap<UnitigInfo>));
