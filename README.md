@@ -52,8 +52,15 @@ Please note the installation instructions regarding the default maximum *k*-mer 
 E.g., if your Bifrost libraries have been compiled to support a *k*-mer length of up to 63, change the PLAST 
 makefile accordingly (add `-DMAX_KMER_SIZE=64` to CFLAGS).
 
-If during the compilation, the bifrost library files are not found, make sure that the corresponding folder is found as include path by the C++ compiler. You may have to add
+If **during** the compilation, the bifrost library files are not found, make sure that the corresponding folder is found as include path by the C++ compiler. You may have to add
 `-I/usr/local/include` (with the corresponding folder) to CFLAGS in the makefile.
+
+If **after** compilation PLAST cannot find Bifrost's libraries, environment variables may not be set correctly. Assuming Bifrost libraries have been installed to `/usr/local/lib`, set the variables as follows:
+
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
+```
 
 ## Usage:
 

@@ -3,7 +3,13 @@
 #include "IO.h"
 
 //This function parses the program parameters. Returns false if given arguments are not valid.
-const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& filePref, int32_t& s, int32_t& k, int32_t& g,  CCDBG_Build_opt &gOpt, int32_t& t, string& qFile, string& c, uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, bool &advIdx){
+const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, 
+	std::string& filePref, int32_t& s, int32_t& k, int32_t& g,  
+	CCDBG_Build_opt &gOpt, int32_t& t, std::string& qFile, std::string& c, 
+	uint32_t& m, SrchStrd& strd, bool& r, uint16_t &mscore, int16_t &mmscore, 
+	int16_t& X, int32_t &gOpen, int32_t &gExt, uint16_t &nRes, double &lambda, 
+	double &lambdaG, double &C, double &Cgap, double &eValLim, bool &isSim, 
+	bool &advIdx){
 	int option_index = 0, a;
 
 	//Check wheather arguments are given for anything at all
@@ -46,7 +52,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 		//Set preprocessing flag
 		prepros = -1;
 	} else{
-		cerr << "ERROR: Command unknown" << endl;
+		std::cerr << "ERROR: Command unknown" << std::endl;
 		return false;
 	}
 
@@ -74,7 +80,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if minimal seed length is negative
 				if(s < 0){
-					cerr << "ERROR: Minimal seed length should be a positive number" << endl;
+					std::cerr << "ERROR: Minimal seed length should be a " <<
+					"positive number" << std::endl;
 					return false;
 				}
 
@@ -85,7 +92,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if k exceeds maximum
 				if(MAX_KMER_SIZE <= k){
-					cerr << "ERROR: Used k exceeds the maximum value supported by your installation" << endl;
+					std::cerr << "ERROR: Used k exceeds the maximum value " <<
+					"supported by your installation" << std::endl;
 					return false;
 				}
 
@@ -107,7 +115,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'Q':
 				//A quorum has to be positive
 				if(atoi(optarg) <= 0){
-					cerr << "ERROR: Quorum parameter has to be a positive number" << endl;
+					std::cerr << "ERROR: Quorum parameter has to be a posi" <<
+					"tive number" << std::endl;
 					return false;
 				} 
 				
@@ -116,7 +125,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'X':
 				//Check if X is applicable
 				if(atoi(optarg) < 0 || atoi(optarg) > INT16_MAX){
-					cerr << "ERROR: X-dropoff value not applicable" << endl;
+					std::cerr << "ERROR: X-dropoff value not applicable" << 
+					std::endl;
 					return false;
 				}
 
@@ -125,10 +135,12 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 			case 'n':
 				//Check if value is valid
 				if(atoi(optarg) <= 0){
-					cerr << "ERROR: Maximum number of alignments should be a positive number" << endl;
+					std::cerr << "ERROR: Maximum number of alignments should" <<
+					" be a positive number" << std::endl;
 					return false;
 				} else if(atoi(optarg) > UINT16_MAX){
-					cerr << "Maximum number of alignments set to maximum" << endl;
+					std::cerr << "Maximum number of alignments set to maximum" 
+					<< std::endl;
 					nRes = UINT16_MAX;
 				} else{
 					nRes = atoi(optarg);
@@ -144,7 +156,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 				} else if(*optarg == MINUS_STRAND){
 					strd = Minus;
 				} else{
-					cerr << "Unrecognized strand option" <<  endl << "Default is used" << endl;
+					std::cerr << "Unrecognized strand option" <<  std::endl << 
+					"Default is used" << std::endl;
 				}
 
 				break;
@@ -154,7 +167,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || lambda == 0.0){
-					cerr << "ERROR: Invalid lambda value given" << endl;
+					std::cerr << "ERROR: Invalid lambda value given" << 
+					std::endl;
 					return false;
 				}
 
@@ -165,7 +179,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || lambdaG == 0.0){
-					cerr << "ERROR: Invalid gapped lambda value given" << endl;
+					std::cerr << "ERROR: Invalid gapped lambda value given" << 
+					std::endl;
 					return false;
 				}
 
@@ -176,7 +191,7 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || C == 0.0){
-					cerr << "ERROR: Invalid C value given" << endl;
+					std::cerr << "ERROR: Invalid C value given" << std::endl;
 					return false;
 				}
 
@@ -187,7 +202,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || Cgap == 0.0){
-					cerr << "ERROR: Invalid gapped C value given" << endl;
+					std::cerr << "ERROR: Invalid gapped C value given" << 
+					std::endl;
 					return false;
 				}
 
@@ -198,7 +214,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if the given value is out of range
 				if(errno == ERANGE || eValLim == 0.0){
-					cerr << "ERROR: Invalid e-value threshold given" << endl;
+					std::cerr << "ERROR: Invalid e-value threshold given" << 
+					std::endl;
 					return false;
 				}
 
@@ -214,7 +231,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if score is negative
 				if(gOpen >= 0){
-					cerr << "ERROR: Gap open scores should be negative" << endl;
+					std::cerr << "ERROR: Gap open scores should be negative" << 
+					std::endl;
 					return false;
 				}
 
@@ -226,19 +244,22 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				// //Check if score is negative
 				// if(gExt >= 0){
-				// 	cerr << "ERROR Gap extension scores should be negative" << endl;
+				// 	std::cerr << "ERROR Gap extension scores should be negative"
+				//  << std::endl;
 				// 	return false
 				// }
 
 				//TODO: This warning should be removed as soon as affine gap costs are supported
-				cerr << "WARNING: Affine gap scores are not supported yet! Setting this parameter has no effect" << endl;
+				std::cerr << "WARNING: Affine gap scores are not supported " << 
+				"yet! Setting this parameter has no effect" << std::endl;
 				break;
 			case 'M':
 				mscore = atoi(optarg);
 
 				//Check if score is not positive
 				if(atoi(optarg) <= 0){
-					cerr << "ERROR: Match scores should be positive" << endl;
+					std::cerr << "ERROR: Match scores should be positive" << 
+					std::endl;
 					return false;
 				}
 
@@ -248,7 +269,8 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 
 				//Check if score is not negative
 				if(mmscore >= 0){
-					cerr << "ERROR: Mismatch scores should be negative" << endl;
+					std::cerr << "ERROR: Mismatch scores should be negative" << 
+					std::endl;
 					return false;
 				}
 
@@ -270,25 +292,33 @@ const bool parseArgs(int& nb_args, char** argList, int16_t& prepros, string& fil
 	//TODO This has to be inserted into the code as soon as affine gap scores are possible!
 	// //Check if gap open scores are smaller than gap extension scores
 	// if(gOpen < gExt){
-	// 	cerr << "ERROR: Using gap open scores smaller than gap extension scores makes no sense" << endl;
+	// 	std::cerr << "ERROR: Using gap open scores smaller than gap exten" <<
+	//  "sion scores makes no sense" << std::endl;
 	// 	return false;
 	// }
 
 	return true;
 }
 
-//This function reads in a file in which colors are stored the search will be based on
-const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t& nbCols){
-	string line;
-	pair<string, size_t> color("", -1);//Color id is set to -1 here to avoid false results if color from color search set is not present in the graph<-//TODO: Avoid this by mapping the colors directly within this function!
-	list<pair<string, size_t>> colorlist;
+//This function reads in a file in which colors are stored the search will be 
+//based on
+const std::list<std::pair<std::string, std::size_t>> loadSearchColors(
+	const char* filename, uint32_t& nbCols){
+	std::string line;
+	std::pair<std::string, std::size_t> color("", -1);//Color id is set to -1 
+											//here to avoid false results if  
+											//color from color search set is not
+											// present in the graph<-//TODO: 
+											//Avoid this by mapping the colors 
+											//directly within this function!
+	std::list<std::pair<std::string, std::size_t>> colorlist;
 
 	//Open the file
-	ifstream fStr(filename);
+	std::ifstream fStr(filename);
 
 	//Check if the file is open
 	if(!fStr.is_open()){
-		cerr << "ERROR: Color set file could not be opened" << endl;
+		std::cerr << "ERROR: Color set file could not be opened" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -311,15 +341,16 @@ const list<pair<string, size_t>> loadSearchColors(const char* filename, uint32_t
 }
 
 //This function loads query sequences from a file and stores it in a list
-void loadQueries(const string &filename, vector<string> &qList){
-	string line;
+void loadQueries(const std::string &filename, std::vector<std::string> &qList){
+	std::string line;
 
 	//Open the file
-	ifstream fStr(filename);
+	std::ifstream fStr(filename);
 
 	//Check if the file is open
 	if(!fStr.is_open()){
-		cerr << "ERROR: Query sequence file could not be opened" << endl;
+		std::cerr << "ERROR: Query sequence file could not be opened" << 
+		std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -335,7 +366,8 @@ void repAlgn(const Hit *res){
 	uint32_t i = 0, algnCols, gaps = 0, posQ, posAlgn = 0;
 
 	//Output some general info
-	cout << "Score: " << res->score << "\tLength: " << res->gAlgn.aSeqQ.length() << "\tE-value: " << res->eval << endl;
+	std::cout << "Score: " << res->score << "\tLength: " << 
+	res->gAlgn.aSeqQ.length() << "\tE-value: " << res->eval << std::endl;
 	//Initial position in query (we start count from 1 here)
 	posQ = res->offQ + 1;
 
@@ -351,9 +383,10 @@ void repAlgn(const Hit *res){
 		}
 
 		//Upper sequence is the query
-		cout << "Query:    ";
+		std::cout << "Query:    ";
 		//Output position in query
-		cout << posQ << "\t";//We want to start counting from 1 here so we add +1
+		std::cout << posQ << "\t";//We want to start counting from 1 here so we 
+								  //add +1
 
 		if(posQ > 9999999) largeNb = true;
 
@@ -363,26 +396,29 @@ void repAlgn(const Hit *res){
 			if(res->gAlgn.aSeqQ[i] == GAP) ++gaps;
 
 			//Output character
-			cout << res->gAlgn.aSeqQ[i];
+			std::cout << res->gAlgn.aSeqQ[i];
 		}
 
 		//Output position in q at the end of this line
-		cout << "\t" << (posQ += algnCols - gaps) - 1 << endl;
+		std::cout << "\t" << (posQ += algnCols - gaps) - 1 << std::endl;
 		//Output match line
-		cout << "          " << (largeNb ? "\t\t" : "\t");
+		std::cout << "          " << (largeNb ? "\t\t" : "\t");
 		//Reset counter
 		i = posAlgn;
 
 		do{
-			cout << (res->gAlgn.aSeqQ[i] == res->gAlgn.aSeqG[i] ? "|" : " ");
+			std::cout << 
+			(res->gAlgn.aSeqQ[i] == res->gAlgn.aSeqG[i] ? "|" : " ");
 		} while(++i != posAlgn + algnCols);
 
 		//End the match line
-		cout << endl;
+		std::cout << std::endl;
 		//Lower sequence is the graph
-		cout << "Graph:    " << 0 << (largeNb ? "\t\t" : "\t");
+		std::cout << "Graph:    " << 0 << (largeNb ? "\t\t" : "\t");
 		//Output next graph section
-		cout << res->gAlgn.aSeqG.substr(posAlgn, algnCols) << "\t0" << endl << endl;//"\t" << res->lSeedUoff + i + algnCols - 1 << endl << endl;
+		std::cout << res->gAlgn.aSeqG.substr(posAlgn, algnCols) << "\t0" << 
+		std::endl << std::endl;//"\t" << res->lSeedUoff + i + algnCols - 1 << 
+		//std::endl << std::endl;
 		//Increment position in alignment
 		posAlgn += algnCols;
 		gaps = 0;
@@ -392,16 +428,16 @@ void repAlgn(const Hit *res){
 //This function outputs the color sets of a given result
 void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 	bool identical = false;
-	string kmerSeq = string(res->origUni.getGraph()->getK(), 'A');
+	std::string kmerSeq = std::string(res->origUni.getGraph()->getK(), 'A');
 
 	/*Some additional stuff that Roland needs for an experiment*/
 	uint32_t currQpos = res->offQ;
 	/*Some additional stuff that Roland needs for an experiment*/
 
 	int32_t kmerSeqPos = 0;
-	string color;
-	vector<string> colors;
-	vector<string>::iterator colIt;
+	std::string color;
+	std::vector<std::string> colors;
+	std::vector<std::string>::iterator colIt;
 	Kmer currK;
 	UnitigColorMap<UnitigInfo> uni;
 	ColSet curColSet = ColSet(0, colors);
@@ -434,7 +470,8 @@ void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 					identical = false;
 				} else{
 					//Iterate over current k-mer's color set
-					for(vector<string>::iterator j = colors.begin(); j != colors.end(); ++j){
+					for(std::vector<std::string>::iterator j = colors.begin(); 
+						j != colors.end(); ++j){
 						//Compare the current colors
 						if(*colIt == *j){
 							identical = true;
@@ -451,17 +488,21 @@ void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 			//Check outcome of comparison
 			if(!identical && !curColSet.colNames.empty()){
 				//Output color set
-				cout << "Color set ending at alignment position " << curColSet.endPos;
+				std::cout << "Color set ending at alignment position " << 
+				curColSet.endPos;
 
 				/*Some additional stuff that Roland needs for an experiment*/
-				cout << " (position " << currQpos << " in the query sequence)";
+				std::cout << " (position " << currQpos << " in the query se" <<
+				"quence)";
 				/*Some additional stuff that Roland needs for an experiment*/
 
-				for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){
-					cout << " " << *name;
+				for(std::vector<std::string>::iterator name = 
+					curColSet.colNames.begin(); 
+					name != curColSet.colNames.end(); ++name){
+					std::cout << " " << *name;
 				}
 
-				cout << endl;
+				std::cout << std::endl;
 			}
 
 			//Update color set (doesn't do anything if color sets are identical anyways)
@@ -484,10 +525,10 @@ void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 	}
 	
 	//Output color set
-	cout << "Color set ending at alignment position " << curColSet.endPos;
+	std::cout << "Color set ending at alignment position " << curColSet.endPos;
 
 	/*Some additional stuff that Roland needs for an experiment*/
-	cout << " (position " << currQpos << " in the query sequence)";
+	std::cout << " (position " << currQpos << " in the query sequence)";
 	/*Some additional stuff that Roland needs for an experiment*/
 
 	//Check if color set to be outputted is empty which happens if the graph sequence of our alignment is shorter than k
@@ -495,15 +536,16 @@ void outpColSets(ColoredCDBG<UnitigInfo> &cdbg, const Hit *res){
 		//Get the unitig the alignment lies on
 		uni = res->origUni;
 		//Resize unitig so that its color set represents the alignments color set
-		uni.dist = min(res->offU, (uint32_t) uni.len - 1);
+		uni.dist = std::min(res->offU, (uint32_t) uni.len - 1);
 		uni.len = 1;
 		//Get color set
 		curColSet.colNames = formColSet(cdbg, uni);
 	}
 
-	for(vector<string>::iterator name = curColSet.colNames.begin(); name != curColSet.colNames.end(); ++name){
-		cout << " " << *name;
+	for(std::vector<std::string>::iterator name = curColSet.colNames.begin(); 
+		name != curColSet.colNames.end(); ++name){
+		std::cout << " " << *name;
 	}
 
-	cout << endl;
+	std::cout << std::endl;
 }

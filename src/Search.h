@@ -14,7 +14,7 @@ enum SrchStrd {Plus, Minus, Both};
 //This function counts the number of colors present on every k-mer of a unitig
 inline uint32_t cntClrs(const UnitigColorMap<UnitigInfo> &u){
 	uint32_t cnt = 0;
-	size_t curID = SIZE_MAX;
+	std::size_t curID = SIZE_MAX;
 
 	//Iterate over unitig's colors
 	for(UnitigColors::const_iterator i = u.getData()->getUnitigColors(u)->begin(u); curID != i.getColorID(); i.nextColor()){
@@ -32,7 +32,7 @@ inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quo
 	bool fstId = true;
 	uint16_t counter = 0;
 	int32_t allwdToMs;
-	size_t curID = SIZE_MAX, lstID = 0;
+	std::size_t curID = SIZE_MAX, lstID = 0;
 
 	//Calculate how many colors we are allowed to miss before it is clear that we cannot fulfill the quorum anymore
 	allwdToMs = uni.getData()->getUnitigColors(uni)->colorMax(uni) + 1 - quorum;
@@ -72,7 +72,9 @@ inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quo
 }
 
 //This function checks if a unitig fulfills the search criteria completely
-inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, 
+	const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &srchColSet){
 	uint16_t counter = 0;
 	uint32_t allwdToMs;
 
@@ -80,7 +82,9 @@ inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quo
 	allwdToMs = srchColSet.size() - quorum;
 
 	//Go through search color set
-	for(list<pair<string, size_t>>::const_iterator col = srchColSet.begin(); col != srchColSet.end(); ++col){
+	for(std::list<std::pair<std::string, 
+		std::size_t>>::const_iterator col = srchColSet.begin(); 
+		col != srchColSet.end(); ++col){
 		//Check whether the current color is present at our current position
 		if(uni.getData()->getUnitigColors(uni)->contains(uni, col->second)){
 			//Check whether our quorum is already reached
@@ -95,7 +99,9 @@ inline bool isCovered(const UnitigColorMap<UnitigInfo> &uni, const uint32_t &quo
 }
 
 //This functions checks up to which offsets search criteria are fulfilled for a unitig and saves the result in the unitig's unitig info. If even the first k-mer from either side is not covered by the search criteria positions are set to -1 and unitig length respectively
-inline void calcSrchCritBrds(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+inline void calcSrchCritBrds(UnitigColorMap<UnitigInfo> uni, 
+	const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &srchColSet){
 	bool lFix, rFix;
 	int32_t lBrd, rBrd;
 
@@ -237,7 +243,9 @@ inline void calcSrchCritBrds(UnitigColorMap<UnitigInfo> uni, const uint32_t &quo
 }
 
 //This functions checks up to which offsets search criteria are fulfilled for a unitig using precalculated quorum information if possible and saves the result in the unitig's unitig info. If even the first k-mer from either side is not covered by the search criteria, positions are set to -1 and unitig length respectively
-inline void calcBrdsFrmPrecQrms(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet){
+inline void calcBrdsFrmPrecQrms(UnitigColorMap<UnitigInfo> uni, 
+	const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &srchColSet){
 	bool lFix, rFix;
 	int32_t lBrd, rBrd;
 
@@ -402,16 +410,19 @@ inline void calcBrdsFrmPrecQrms(UnitigColorMap<UnitigInfo> uni, const uint32_t &
 }
 
 //ATTENTION: This function only works correctly if a non-empty search color set is given (Why should that be?)
-inline bool quorumFulfilled(UnitigColorMap<UnitigInfo> uni, const uint32_t posU, size_t uniLen, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet){
-	size_t ccount = 0, curID = 0;
+inline bool quorumFulfilled(UnitigColorMap<UnitigInfo> uni, const uint32_t posU,
+ std::size_t uniLen, const uint32_t &quorum, 
+ const std::list<std::pair<std::string, std::size_t>> &searchSet){
+	std::size_t ccount = 0, curID = 0;
 
 	//Check to which side we want to calculate an alignment
 	if(posU > 0){//This can also be false if we want to extend to the right but in that case uniLen is correctly set
 		//If we want to extend to the right adjust unitig start position
-		uni.dist = min((size_t) posU, uni.size - uni.getGraph()->getK());
+		uni.dist = std::min((std::size_t) posU, uni.size - 
+			uni.getGraph()->getK());
 	} else{
 		//If we want to extented to the left adjust unitig length
-		uni.len = min(uniLen, uni.len);
+		uni.len = std::min(uniLen, uni.len);
 	}
 
 	//Check if we have a search set to consider
@@ -435,7 +446,9 @@ inline bool quorumFulfilled(UnitigColorMap<UnitigInfo> uni, const uint32_t posU,
 		}
 	} else{
 		//Go through search color set
-		for(list<pair<string, size_t>>::const_iterator col = searchSet.begin(); col != searchSet.end(); ++col){
+		for(std::list<std::pair<std::string, 
+			std::size_t>>::const_iterator col = searchSet.begin(); 
+			col != searchSet.end(); ++col){
 			//Check whether the current color is present
 			if(uni.getData()->getUnitigColors(uni)->contains(uni, col->second)){
 				//Check whether our quorum is already reached
@@ -448,7 +461,10 @@ inline bool quorumFulfilled(UnitigColorMap<UnitigInfo> uni, const uint32_t posU,
 }
 
 //This function looks up the number of positions which fulfill the search criteria depending at which offset we want to start and into which direction we extend with regard to the reference strand
-inline int32_t getSrchCritCov(UnitigColorMap<UnitigInfo> uni, const uint32_t &quorum, const list<pair<string, size_t>> &srchCols, const uint32_t &offset, const bool &toRightOnRef, const bool& advIdx){
+inline int32_t getSrchCritCov(UnitigColorMap<UnitigInfo> uni, 
+	const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &srchCols, 
+	const uint32_t &offset, const bool &toRightOnRef, const bool& advIdx){
 	int32_t brd;
 
 	//Check if search criteria have already been checked for this unitig and check if necessary
@@ -515,7 +531,10 @@ inline int32_t getSrchCritCov(UnitigColorMap<UnitigInfo> uni, const uint32_t &qu
 void calcQrms(ColoredCDBG<UnitigInfo> &cdbg);
 
 //This function checks if the search criteria are fulfilled for a region on a unitig starting at some offset and having a certain length
-bool vfySrchCrit(UnitigColorMap<UnitigInfo> unitig, const uint32_t &off, const int32_t &len, const uint32_t &quorum, const list<pair<string, size_t>> &srchColSet, const bool& advIdx);
+bool vfySrchCrit(UnitigColorMap<UnitigInfo> unitig, const uint32_t &off, 
+	const int32_t &len, const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &srchColSet, 
+	const bool& advIdx);
 
 //This function calculates the correct offset position depending on which strand we are
 inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const uint32_t &seqLen, const bool &onRefStrand){
@@ -527,21 +546,50 @@ inline uint32_t compOffset(const uint32_t &offset, const int32_t &seedLen, const
 }
 
 //This function performs the seed detection if a search color set is given
-void detectSeeds(const int32_t &k, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, Hit *hitArr, const list<pair<string, size_t>> &searchSet, const bool& isRefSeq, const bool& advIdx);
+void detectSeeds(const int32_t &k, const int32_t &minSeedLength, 
+	const std::size_t &numSmers, const uint32_t &quorum, 
+	const uint32_t &profileSize, const uint32_t *qProfile, const std::string &q,
+	 const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, 
+	 const std::list<std::pair<std::string, std::size_t>> &searchSet, 
+	 const bool& isRefSeq, const bool& advIdx);
 
 //This function extends all seeds found on the queries reference strand considering a quorum and a search color set
-void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const std::string &q, 
+	const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, 
+	const int16_t &X, std::vector<Hit>& hitArr, const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &searchSet, 
+	const bool& advIdx);
 
 //This function extends all seeds found on the queries reverse complement considering a quorum and a search color set
-void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, Hit *hitArr, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx);
+void extendRevCompSeeds(ColoredCDBG<UnitigInfo> &cdbg, const std::string &q, 
+	const int32_t &minSdLen, const uint16_t &mscore, const int16_t &mmscore, 
+	const int16_t &X, std::vector<Hit>& hitArr, const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &searchSet, 
+	const bool& advIdx);
 
 //This function calculates a banded, semi-global, gapped alignment on a list of results considering a quorum and a search color set and outputs the result if demanded
-void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const double &lambda, const double &C, const bool& advIdx);
+void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, 
+	std::list<Hit*> &resList, const std::string &q, const uint16_t &mscore, 
+	const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, 
+	const int32_t &gExt, const uint32_t &quorum, 
+	const std::list<std::pair<std::string, std::size_t>> &searchSet, 
+	const double &lambda, const double &C, const bool& advIdx);
 
 //This function performs the actual graph search for a query
-void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const int32_t &minSeedLength, const size_t &numSmers, const uint32_t &quorum, const uint32_t &profileSize, const uint32_t *qProfile, const string &q, const SrchStrd &strand, const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, const list<pair<string, size_t>> &searchColors, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, uint16_t nRes, const double &lambda, const double &lambdaGap, const double &C, const double &Cgap, const double &eLim, const bool &colOut, const bool &isSim, const bool& advIdx);
+void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, 
+	const int32_t &minSeedLength, const std::size_t &numSmers, 
+	const uint32_t &quorum, const uint32_t &profileSize, 
+	const uint32_t *qProfile, const std::string &q, const SrchStrd &strand, 
+	const UnitigColorMap<UnitigInfo> *uArr, const struct S_mer_pos *posArray, 
+	const std::list<std::pair<std::string, std::size_t>> &searchColors, 
+	const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, 
+	const int32_t &gOpen, const int32_t &gExt, const bool &calcRT, 
+	uint16_t nRes, const double &lambda, const double &lambdaGap, 
+	const double &C, const double &Cgap, const double &eLim, const bool &colOut,
+	 const bool &isSim, const bool& advIdx);//TODO: Tests for this function need
+  											//      to be adjusted!
 
 //This function frees all memory additionally allocated for an hit array
-void freeHitArray(Hit *arr, uint32_t &arrLen);
+void freeHitArray(std::vector<Hit>& arr, uint32_t &arrLen);
 
 #endif

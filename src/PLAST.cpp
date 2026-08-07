@@ -64,7 +64,7 @@ int main(int argc, char **argv){
 	//Number of colors in potential search set
 	uint32_t nbColors;
 	//Number of seeds in the graph
-	size_t numSmers = 0;
+	std::size_t numSmers = 0;
 	//Lambda needed for alignment statistic
 	double lambda = DEFAULT_LAMBDA;
 	//Gapped lambda needed for alignment statistic
@@ -76,21 +76,21 @@ int main(int argc, char **argv){
 	//E-value threshold for a hit to be considered
 	double eBound = DEFAULT_E_LIMIT;
 	//Query file name
-	string qFile;
+	std::string qFile;
 	//List of queries we are searching for
-	vector<string> qList;
+	std::vector<std::string> qList;
 	//The strand we want to consider during search
 	SrchStrd strand = SEARCH_STRAND_DEFAULT;
 	//The file prefices of the graph and index files
-	string graphFilePref;
+	std::string graphFilePref;
 	//The input graph's complete file name
-	string igraph;
+	std::string igraph;
 	//The graph color file's complete name
-	string graphColorFile;
+	std::string graphColorFile;
 	//File name of search color set
-	string sColFile;
+	std::string sColFile;
 	//Color id and name mapping
-	list<pair<string, size_t>> searchColors;
+	std::list<std::pair<std::string, std::size_t>> searchColors;
 	//Pos array
 	struct S_mer_pos *posArray;
 	//Building options for graph building
@@ -120,7 +120,8 @@ int main(int argc, char **argv){
 			//Calculate the time difference
 			tDiff = endTime - startTime;
 			//Output the measured time
-			cout << "Getting the graph took " << tDiff.count() << " s" << endl;
+			std::cout << "Getting the graph took " << tDiff.count() << " s" << 
+			std::endl;
 			//Update start time for next part
 			startTime = std::chrono::system_clock::now();
 		}
@@ -141,8 +142,9 @@ int main(int argc, char **argv){
 		}
 
 		//Load graph
-		if(!cdbg.read(igraph, graphColorFile, nb_threads, BIFROST_VERBOSE_MODE)){
-			cerr << "ERROR: Graph could not be loaded" << endl;
+		if(!cdbg.read(igraph, graphColorFile, nb_threads, BIFROST_VERBOSE_MODE))
+		{
+			std::cerr << "ERROR: Graph could not be loaded" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -150,7 +152,7 @@ int main(int argc, char **argv){
 	//Check whether an index has to be built
 	if(prep > PREPROS_FLAG_DEFAULT){
 		/*Building the q-gram index*/
-		cout << "Building q-gram index" << endl;
+		std::cout << "Building q-gram index" << std::endl;
 
 		//Calculate profile size
 		profileSize = (uint32_t) pow(SIGMAR, minSeedLength);
@@ -169,7 +171,8 @@ int main(int argc, char **argv){
 			//Calculate the time difference
 			std::chrono::duration<double> tDiff = endTime - startTime;
 			//Output the measured time
-			cout << "Index building took " << tDiff.count() << " s" << endl;
+			std::cout << "Index building took " << tDiff.count() << " s" << 
+			std::endl;
 			//Update start time for next part
 			startTime = std::chrono::system_clock::now();
 		}
@@ -189,7 +192,7 @@ int main(int argc, char **argv){
 			//Calculate the time difference
 			std::chrono::duration<double> tDiff = endTime - startTime;
 			//Output the measured time
-			cout << "Loading took " << tDiff.count() << " s" << endl;
+			std::cout << "Loading took " << tDiff.count() << " s" << std::endl;
 			//Update start time for next part
 			startTime = std::chrono::system_clock::now();
 		}
@@ -197,7 +200,8 @@ int main(int argc, char **argv){
 
 	//Check whether set quorum exceeds the number of colors in graph
 	if(quorum > cdbg.getNbColors()){
-		cerr << "WARNING: Quorum exceeds number of colors in the graph. Set to that number instead." << endl;
+		std::cerr << "WARNING: Quorum exceeds number of colors in the graph." <<
+		" Set to that number instead." << std::endl;
 		quorum = cdbg.getNbColors();
 	}
 
@@ -210,7 +214,8 @@ int main(int argc, char **argv){
 
 		//Check whether set quorum exceeds the number of colors in search set
 		if(quorum > nbColors){
-			cerr << "WARNING: Quorum exceeds number of colors in search set. Set to that number instead." << endl;
+			std::cerr << "WARNING: Quorum exceeds number of colors in search" <<
+			" set. Set to that number instead." << std::endl;
 			quorum = nbColors;
 		}
 	}
@@ -219,9 +224,10 @@ int main(int argc, char **argv){
 	loadQueries(qFile, qList);
 
 	//Search each query
-	for(vector<string>::const_iterator q = qList.begin(); q != qList.end(); ++q){
+	for(std::vector<std::string>::const_iterator q = qList.begin(); 
+		q != qList.end(); ++q){
 		//Output which query we are working on
-		cout << "Query " << ++qCounter << ":" << endl;
+		std::cout << "Query " << ++qCounter << ":" << std::endl;
 		//Search for the current query
 		searchQuery(cdbg, kMerLength, minSeedLength, numSmers, quorum, profileSize, qProfile, *q, strand, uArr, posArray, searchColors, mscr, mmscr, X, goscr, gescr, calcRT, nRes, lambda, lambdaGap, C, Cgap, eBound, repCols, isSim, advIdx);
 
@@ -232,7 +238,8 @@ int main(int argc, char **argv){
 			//Calculate the time difference
 			std::chrono::duration<double> tDiff = endTime - startTime;
 			//Output the measured time
-			cout << "Freeing the array took " << tDiff.count() << " s" << endl;
+			std::cout << "Freeing the array took " << tDiff.count() << " s" << 
+			std::endl;
 			//Update start time for next part
 			startTime = std::chrono::system_clock::now();
 		}
