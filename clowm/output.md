@@ -6,3 +6,5 @@ sequences from the pangenome graph. Additionally, respective alignment scores an
 PLAST's default output may be modified using several parameters (see Tab *Parameters* for details).
 
 *TODO: Describe how output changes depending on chosen parameters!*
+
+*TODO: Also add plast.raw.txt, plast.stderr.txt, build.stdout.txt, build.stderr.txt, and the graph files*

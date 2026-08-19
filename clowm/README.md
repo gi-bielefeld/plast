@@ -18,15 +18,9 @@ PLAST may also be downloaded and installed locally from our [git repository](htt
 
 ## Contact
 
-For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/gi-bielefeld/plast) or [contact](mailto:pangenomics-service@cebitec.uni-bielefeld.de) the developers and we will get back to you as soon as possible.
+For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/gi-bielefeld/plast) or [contact the developers](mailto:pangenomics-service@cebitec.uni-bielefeld.de) and we will get back to you as soon as possible.
 
 PLAST is provided as a service of the [German Network for Bioinformatics Infrastructure (de.NBI)](https://www.denbi.de/). We would appriciate if you would participate in the evaluation of PLAST by completing this [very short survey](https://www.surveymonkey.de/r/denbi-service?sc=bigi&tool=plast).
-
-## Publication
-
-If you find PLAST useful, please cite:
-
-Schulz, T., Wittler, R., Rahmann, S., Hach, F., Stoye, J.: [Detecting High Scoring Local Alignments in Pangenome Graphs](https://doi.org/10.1093/bioinformatics/btab077). Bioinformatics. (2021)
 
 ## Licenses
 
