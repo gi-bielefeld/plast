@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/gi-bielefeld/plast"
 #Install build essentials, python and unzip
 RUN apt-get update \
 	&& apt-get install -y build-essential cmake zlib1g-dev git \
-	&& apt-get install -y --no-install-recommends python3 unzip \
+	&& apt-get install -y --no-install-recommends python3 unzip python3-numpy \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 #Install Bifrost and adjust library paths
@@ -20,7 +20,9 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV LIBRARY_PATH=/usr/local/lib
 #Install PLAST
 RUN git clone https://github.com/gi-bielefeld/plast.git \
-	&& cd plast/src \
+	&& cd plast \
+	&& git checkout clowm \
+	&& cd src \
 	&& sed -i 's/march=native/DMAX\_KMER\_SIZE=64/g' makefile \
 	&& make \
 	&& cd /usr/local/bin \
