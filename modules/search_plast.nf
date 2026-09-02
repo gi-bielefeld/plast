@@ -36,65 +36,38 @@ process SEARCH_PLAST {
     )
 
     if [ "${params.strand}" != "both" ]; then
-        #Testing
-        echo PLAST Search is restricted to a single strand
-
         plast_args+=( -o "${params.strand}" )
     fi
 
     if [ "${use_search_color_set}" = "true" ]; then
-        #Testing
-        echo Tests 3 and 7: A search color set is used for the PLAST Search
-
         plast_args+=( -s "${search_color_set_file}" )
     fi
 
     if [ "${params.quorum}" != "null" ]; then
-        #Testing
-        echo Test 7: A quorum is given for the PLAST Search
-
         plast_args+=( -Q ${params.quorum} )
     fi
 
     if [ "${params.x_dropoff}" != "null" ]; then
-        #Testing
-        echo The X-drop parameter is modified for the PLAST Search
-
         plast_args+=( -X ${params.x_dropoff} )
     fi
 
     if [ "${params.lambda_ungapped}" != "null" ]; then
-        #Testing
-        echo Ungapped lambda value is modified for PLAST Search
-
         plast_args+=( -l ${params.lambda_ungapped} )
     fi
 
     if [ "${params.lambda_gapped}" != "null" ]; then
-        #Testing
-        echo Gapped lambda value is modified for PLAST Search
-
         plast_args+=( -L ${params.lambda_gapped} )
     fi
 
     if [ "${params.stat_c_ungapped}" != "null" ]; then
-        #Testing
-        echo Ungapped C value is modified for PLAST Search
-
         plast_args+=( -c ${params.stat_c_ungapped} )
     fi
 
     if [ "${params.stat_c_gapped}" != "null" ]; then
-        #Testing
-        echo Gapped C value is modified for PLAST Search
-
         plast_args+=( -C ${params.stat_c_gapped} )
     fi
 
     if [ "${params.report_colors}" = "true" ]; then
-        #Testing
-        echo Test 4: Color coverage shall be reported in PLAST Search
-
         plast_args+=( -r )
     fi
 

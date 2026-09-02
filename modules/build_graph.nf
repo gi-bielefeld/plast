@@ -28,25 +28,16 @@ process BUILD_GRAPH {
         local resolved_file
 
         if [ -n "\${fof_file}" ]; then
-            #Testing
-            echo A file-of-files file is given
-
             while IFS= read -r file_name || [ -n "\${file_name}" ]; do
                 file_name="\$(echo "\${file_name}" | sed 's/^[[:space:]]*//;s/[[:space:]]*\$//')"
 
                 if [ -z "\${file_name}" ]; then
-                    #Testing
-                    echo An empty line was found in file-of-files file
-
                     continue
                 fi
 
                 resolved_file="\${input_dir}/\${file_name}"
 
                 if [ ! -f "\${resolved_file}" ]; then
-                    #Testing
-                    echo A file listed in a file-of-files file does not exist
-
                     echo "The file listed in \${fof_file} does not exist: \${resolved_file}" >&2
                     exit 1
                 fi
@@ -54,18 +45,6 @@ process BUILD_GRAPH {
                 printf '%s\\n' "\${resolved_file}"
             done < "\${fof_file}"
         else
-            #Testing
-            echo No file-of-files file is given >&2
-            #echo input_dir: "\${input_dir}" >&2
-
-            #find "\${input_dir}" -maxdepth 1 -type f \\
-            #    -name "*.[fFaFaF]a.*" -o -name "*.[fFqQ].*"] \\
-            #    -print | sort
-
-            #find -L "\${input_dir}" -maxdepth 1 -type f -iname "*.fa.gz" -print | sort
-
-            #ls "\${input_dir}"/*.fa.gz
-
             find -L "\${input_dir}" -maxdepth 1 -type f \\
                 \\( -iname "*.fa" -o -iname "*.fna" -o -iname "*.fasta" \\
                 -o -iname "*.fq" -o -iname "*.fastq" \\
@@ -75,16 +54,10 @@ process BUILD_GRAPH {
         fi
     }
 
-    #Testing
-    #echo reference_dir: "${reference_dir}"
-
     mapfile -t reference_files < <(resolve_inputs "${reference_dir}")
     mapfile -t read_files < <(resolve_inputs "${reads_dir}")
 
     if [ "\${#reference_files[@]}" -eq 0 ] && [ "\${#read_files[@]}" -eq 0 ]; then
-        #Testing
-        echo No sequence files were found
-
         echo "No suitable reference or read sequence files were found." >&2
         exit 1
     fi
@@ -98,23 +71,14 @@ process BUILD_GRAPH {
     )
 
     if [ "\${#reference_files[@]}" -gt 0 ]; then
-        #Testing
-        echo Test 8: Found reference sequence file
-
         plast_args+=( -R "\${reference_files[@]}" )
     fi
 
     if [ "\${#read_files[@]}" -gt 0 ]; then
-        #Testing
-        echo Found read sequence file
-
         plast_args+=( -S "\${read_files[@]}" )
     fi
 
     if [ "${params.advanced_index}" = "true" ]; then
-        #Testing
-        echo Advanced index flag was set
-
         plast_args+=( -a )
     fi
 

@@ -6,10 +6,6 @@ process PREPARE_SEQUENCE_DIRS {
     tuple path(refSeqFiles, arity: '0..*'),
           path(rawSeqFiles, arity: '0..*')
 
-    // tuple val(reference_dir_name),
-    //       val(reads_dir_name),
-    //       path(sequence_dirs)
-
     output:
     tuple path('references'),
           path('reads'),
@@ -21,18 +17,12 @@ process PREPARE_SEQUENCE_DIRS {
     mkdir -p reads
 
     if [ "\${#refSeqFiles[@]}" -gt 0 ]; then
-        #Testing
-        echo Copying reference sequence files
-
         for input_file in "\${refSeqFiles[@]}"; do
             cp -a "\${input_file}" references/
         done
     fi
 
     if [ "\${#rawSeqFiles[@]}" -gt 0 ]; then
-        #Testing
-        echo Copying read sequence files
-
         for input_file in "\${rawSeqFiles[@]}"; do
             cp -a "\${input_file}" reads/
         done
