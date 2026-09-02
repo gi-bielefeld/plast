@@ -1,6 +1,4 @@
-<!-- TODO: Bild einbauen! -->
-
-# PLAST
+# PLAST <img src="plast-logo_100.png" style="border:0;" alt="PLAST icon" align="right"/>
 ### Pangenome Local Alignment Search Tool
 
 PLAST is a tool for **fast local alignment search between a nucleotide sequence query and a pangenome graph** consisting of thousands of individual genomes. 
