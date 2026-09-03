@@ -1,7 +1,7 @@
 process RESULT_STATS {
     label 'tiny'
 
-    container 'ghcr.io/gi-bielefeld/plast:dab6678_2026-08-21'
+    container 'ghcr.io/gi-bielefeld/plast:d9fa884_2026-09-03'
 
     publishDir params.outdir, mode: 'copy'
 

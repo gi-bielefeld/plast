@@ -1,6 +1,6 @@
 process PREPARE_ZIP_GRAPH {
     label 'tiny'
-    container "ghcr.io/gi-bielefeld/plast:7dc866f_2026-08-19"
+    container "ghcr.io/gi-bielefeld/plast:d9fa884_2026-09-03"
 
     input:
     path input_zip

@@ -21,7 +21,7 @@ ENV LIBRARY_PATH=/usr/local/lib
 #Install PLAST
 RUN git clone https://github.com/gi-bielefeld/plast.git \
 	&& cd plast \
-	&& git checkout clowm \
+	&& git checkout d9fa8841823c52c62badc3c455652776c0aacfca \
 	&& cd src \
 	&& sed -i 's/march=native/DMAX\_KMER\_SIZE=64/g' makefile \
 	&& make \
