@@ -147,7 +147,7 @@ PLAST [COMMAND] [COMMAND_PARAMETERS]
    PLAST Build -i ebolaPangenome -R *.fa -t 4
    ```
 
-   The above command builds a colored de-Bruijn graph via the Bifrost library using 4 threads (`-t 4`) from all Ebola sequences. Graph, color information and index are saved as *ebolaPangenome.{gfa,bfg_colors,idx}* (`-i ebolaPangenome`). Note that our whole dataset consists of already assembled data. Thus, they are passed to the program using `-R`. Assuming we would deal with raw read data here, you would rather want to use `-S` to allow some quality filtering during graph construction. Even a combination of these two parameters is possible if dealing with both kinds of data.
+   The above command builds a colored de-Bruijn graph via the Bifrost library using 4 threads (`-t 4`) from all Ebola sequences. Graph, color information and index are saved as *ebolaPangenome.{gfa,color.bfg,idx}* (`-i ebolaPangenome`). Note that our whole dataset consists of already assembled data. Thus, they are passed to the program using `-R`. Assuming we would deal with raw read data here, you would rather want to use `-S` to allow some quality filtering during graph construction. Even a combination of these two parameters is possible if dealing with both kinds of data.
 
    The graph is build using default _k_-mer size of 31. This may be changed using option `-k <KMER-LENGTH>`.
 
