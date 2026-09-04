@@ -1,0 +1,273 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/YOUR_PIPELINE/master/nextflow_schema.json",
+    "title": "Nextflow pipeline parameters",
+    "description": "This pipeline uses Nextflow and processes some kind of data. The JSON Schema was built using the nf-core pipeline schema builder.",
+    "type": "object",
+    "$defs": {
+        "workflow_control": {
+            "title": "Workflow Control",
+            "type": "object",
+            "description": "Parameters controlling the workflow mode, graph identification, and PLAST seed length.",
+            "default": "",
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "fa_icon": "fas fa-map-signs",
+                    "description": "Workflow mode",
+                    "help_text": "Select whether to build a pangenome graph or PLAST index, search an existing indexed graph, or build the required graph or index before performing a search.",
+                    "enum": [
+                        "Build",
+                        "Search",
+                        "Build and Search"
+                    ]
+                },
+                "graph_prefix": {
+                    "type": "string",
+                    "description": "Shared filename prefix of an existing graph or name of a newly built graph",
+                    "help_text": "For an existing graph, this is the common prefix of files such as `testgraph.gfa.gz` and `testgraph.color.bfg`. For a newly built graph, the same value is used as output prefix. If omitted while building a new graph, `plast_graph` is used.",
+                    "fa_icon": "fas fa-font",
+                    "pattern": "^[A-Za-z0-9._-]+$"
+                },
+                "seed_length": {
+                    "type": "integer",
+                    "description": "Minimal seed length",
+                    "help_text": "Minimal length of an exact sequence match between query and graph to initiate an extension.",
+                    "default": 11,
+                    "hidden": true,
+                    "enum": [
+                        11,
+                        12,
+                        13,
+                        14,
+                        15
+                    ],
+                    "fa_icon": "fas fa-seedling"
+                }
+            },
+            "help_text": "Use these parameters to select the workflow operation and to define how the graph and PLAST index are identified. The parameters are relevant independently of the selected workflow mode.",
+            "fa_icon": "fas fa-gamepad",
+            "required": [
+                "mode",
+                "graph_prefix"
+            ]
+        },
+        "in_output": {
+            "title": "In-/Output",
+            "type": "object",
+            "description": "Parameters to define input and output",
+            "default": "",
+            "properties": {
+                "input_graph_dir": {
+                    "type": "string",
+                    "fa_icon": "fas fa-folder",
+                    "description": "Directory containing an existing Bifrost graph",
+                    "help_text": "The directory must contain files sharing the prefix given by `--graph_prefix`, such as `graph.gfa.gz`, `graph.color.bfg`.",
+                    "format": "directory-path"
+                },
+                "raw_seq_input_dir": {
+                    "type": "string",
+                    "fa_icon": "fas fa-folder",
+                    "description": "Directory containing raw read sequences",
+                    "help_text": "Select a folder in a CloWM data bucket containing raw sequencing reads. FASTQ and FASTA files, including gzip-compressed files, are supported. Files directly contained in the selected directory are used as input for graph construction. If a `.fof` file is present, only the sequence files listed in that file are used. This parameter is optional if reference sequence input, an input ZIP archive, or an existing graph is provided.",
+                    "format": "directory-path"
+                },
+                "ref_seq_input_dir": {
+                    "type": "string",
+                    "fa_icon": "fas fa-folder",
+                    "description": "Directory containing reference sequences",
+                    "help_text": "Select a folder in a CloWM data bucket containing assembled genomes, contigs, or other reference sequences. FASTA and FASTQ files, including gzip-compressed files, are supported. Files directly contained in the selected directory are used as reference input for graph construction. If a `.fof` file is present, only the sequence files listed in that file are used. This parameter is optional if raw read input, an input ZIP archive, or an existing graph is provided.",
+                    "format": "directory-path"
+                },
+                "input_zip": {
+                    "type": "string",
+                    "description": "ZIP archive containing sequence input",
+                    "fa_icon": "fas fa-file-archive",
+                    "help_text": "Select a ZIP archive uploaded to a CloWM data bucket. The archive must contain at least one of the directories `references` or `reads`. Files in `references` are treated as reference sequences, and files in `reads` are treated as raw read sequences. A `.fof` file may be included in either directory to select a specific subset of sequence files. The archive is extracted automatically before graph construction.",
+                    "pattern": "^\\S+\\.zip$",
+                    "format": "file-path"
+                },
+                "query_fasta": {
+                    "type": "string",
+                    "description": "FASTA file containing query sequences",
+                    "help_text": "Select a FASTA file uploaded to a CloWM data bucket. The file may contain multiple FASTA records. Each record is treated as an individual PLAST query. Before searching, FASTA headers are removed, sequence lines are joined, lowercase bases are converted to uppercase, and valid IUPAC ambiguity characters are replaced by compatible randomly selected bases. Query records containing characters outside the accepted DNA and IUPAC alphabets are discarded. The original headers and all modifications are recorded in the query mapping and normalization log files. This parameter is required for `Search` and `Build and Search` modes.",
+                    "fa_icon": "fas fa-search",
+                    "format": "file-path"
+                },
+                "search_color_set": {
+                    "type": "string",
+                    "description": "Optional file defining the graph colors to search",
+                    "help_text": "Optionally select a text file uploaded to a CloWM data bucket that contains one graph color name per line. The PLAST search is restricted to the listed colors. A color usually corresponds to one reference or read input file that was used during graph construction. If no search color set is selected, all colors in the graph are considered.",
+                    "fa_icon": "fas fa-palette",
+                    "format": "file-path",
+                    "mimetype": "text/plain"
+                },
+                "outdir": {
+                    "type": "string",
+                    "description": "Output directory",
+                    "help_text": "Name of the directory results are written to. If the directory does not exist yet, it is being created.",
+                    "format": "directory-path",
+                    "fa_icon": "fas fa-folder"
+                }
+            },
+            "help_text": "#TODO: Add text!",
+            "fa_icon": "fas fa-exchange-alt",
+            "required": [
+                "outdir"
+            ]
+        },
+        "graph_and_index_construction": {
+            "title": "Graph and Index Construction",
+            "type": "object",
+            "description": "Parameters controlling pangenome graph construction and PLAST index generation.",
+            "default": "",
+            "properties": {
+                "kmer_length": {
+                    "type": "integer",
+                    "description": "Length of k-mers",
+                    "help_text": "Length of the k-mers used when constructing a new compacted colored de Bruijn graph. Larger k-mer lengths can increase specificity, but may require more memory and can reduce sensitivity for short or highly variable sequences. The selected value must be supported by the PLAST/Bifrost installation and must be greater than 8 and no greater than 63.",
+                    "default": 31,
+                    "minimum": 9,
+                    "maximum": 63,
+                    "fa_icon": "fas fa-ruler-horizontal"
+                },
+                "min_length": {
+                    "type": "integer",
+                    "fa_icon": "fas fa-ruler-horizontal",
+                    "description": "Minimizer length",
+                    "help_text": "Length of minimizers in a newly built graph",
+                    "default": 23,
+                    "minimum": 4,
+                    "maximum": 61,
+                    "hidden": true
+                },
+                "advanced_index": {
+                    "type": "boolean",
+                    "description": "Enable \"advanced index\" construction",
+                    "help_text": "This option enables the construction of an *advanced index* allowing faster searches with a quorum.",
+                    "fa_icon": "fas fa-flag"
+                }
+            },
+            "help_text": "These parameters are used when the workflow builds a new pangenome graph or creates a PLAST index. They apply to `Build` mode and to the construction phase of `Build and Search` mode.",
+            "fa_icon": "fas fa-hard-hat"
+        },
+        "alignment_search": {
+            "title": "Alignment Search",
+            "type": "object",
+            "description": "Parameters controlling PLAST alignment searches in an existing or newly constructed pangenome graph.",
+            "default": "",
+            "properties": {
+                "random_seed": {
+                    "type": "integer",
+                    "description": "Random seed for query normalization",
+                    "default": 202608141722,
+                    "hidden": true,
+                    "fa_icon": "fas fa-dice",
+                    "help_text": "Controls deterministic replacement of valid IUPAC ambiguity characters in query sequence if any."
+                },
+                "match": {
+                    "type": "integer",
+                    "description": "Match score",
+                    "help_text": "Match score used for alignment calculations.",
+                    "default": 1,
+                    "hidden": true,
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "fa_icon": "fas fa-check"
+                },
+                "mismatch": {
+                    "type": "integer",
+                    "description": "Mismatch score",
+                    "help_text": "Mismatch score used for alignment calculations.",
+                    "default": -1,
+                    "hidden": true,
+                    "minimum": -32767,
+                    "maximum": -1,
+                    "fa_icon": "fas fa-times"
+                },
+                "gap_score": {
+                    "type": "integer",
+                    "description": "Linear gap score",
+                    "help_text": "Gap score used for gapped alignment calculation.",
+                    "default": -2,
+                    "hidden": true,
+                    "minimum": -2147483647,
+                    "maximum": -1,
+                    "fa_icon": "fas fa-minus"
+                },
+                "x_dropoff": {
+                    "type": "integer",
+                    "description": "X-drop parameter",
+                    "help_text": "Parameter of the so-called *X-drop algorithm* used for alignment extension.",
+                    "default": -3,
+                    "hidden": true,
+                    "minimum": -6,
+                    "maximum": -1,
+                    "fa_icon": "fas fa-ban"
+                },
+                "strand": {
+                    "type": "string",
+                    "description": "Search strand",
+                    "help_text": "DNA strands to consider during search.",
+                    "default": "both",
+                    "hidden": true,
+                    "enum": [
+                        "+",
+                        "-",
+                        "both"
+                    ],
+                    "fa_icon": "fas fa-dna"
+                },
+                "evalue_threshold": {
+                    "type": "number",
+                    "description": "E-value threshold",
+                    "help_text": "Expectation value threshold an alignment must not exceed to be reported.",
+                    "default": 10,
+                    "hidden": true,
+                    "minimum": 0,
+                    "maximum": 1e+37,
+                    "fa_icon": "fas fa-less-than-equal"
+                },
+                "max_results": {
+                    "type": "integer",
+                    "description": "Maximum number of results",
+                    "help_text": "This parameter determines the maximum number of results to be reported for each query sequence. If set to value *n*, only the *n* best alignments are reported.",
+                    "default": 250,
+                    "hidden": true,
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "fa_icon": "fas fa-window-maximize"
+                },
+                "quorum": {
+                    "type": "integer",
+                    "description": "Minimal number of supporting genomes",
+                    "help_text": "The quorum is the number of individual input genomes (,i.e., distinct colors of the input colored de Bruijn graph) each *k*-mer of the aligned graph sequence must be found in. Note the quorum is an absolute value.",
+                    "default": 1,
+                    "fa_icon": "fas fa-braille"
+                },
+                "report_colors": {
+                    "type": "boolean",
+                    "description": "Enable color coverage output",
+                    "help_text": "If this parameter is enabled, all alignments will be reported along with information about which part of the involved graph sequence is supported by which individual input genome (i.e., color of the input colored de Bruijn graph).",
+                    "fa_icon": "fas fa-brush"
+                }
+            },
+            "fa_icon": "fas fa-search",
+            "help_text": "These parameters control the PLAST alignment search. They apply to `Search` mode and to the search phase of `Build and Search` mode."
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/workflow_control"
+        },
+        {
+            "$ref": "#/$defs/in_output"
+        },
+        {
+            "$ref": "#/$defs/graph_and_index_construction"
+        },
+        {
+            "$ref": "#/$defs/alignment_search"
+        }
+    ]
+}
