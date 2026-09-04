@@ -27,7 +27,8 @@
                     "description": "Shared filename prefix of an existing graph or name of a newly built graph",
                     "help_text": "For an existing graph, this is the common prefix of files such as `testgraph.gfa.gz` and `testgraph.color.bfg`. For a newly built graph, the same value is used as output prefix. If omitted while building a new graph, `plast_graph` is used.",
                     "fa_icon": "fas fa-font",
-                    "pattern": "^[A-Za-z0-9._-]+$"
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "default": "plast_graph"
                 },
                 "seed_length": {
                     "type": "integer",
