@@ -91,7 +91,7 @@
                 "query_fasta": {
                     "type": "string",
                     "description": "FASTA file containing query sequences",
-                    "help_text": "Select a FASTA file uploaded to a CloWM data bucket. The file may contain multiple FASTA records. Each record is treated as an individual PLAST query. Before searching, FASTA headers are removed, sequence lines are joined, lowercase bases are converted to uppercase, and valid IUPAC ambiguity characters are replaced by compatible randomly selected bases. Query records containing characters outside the accepted DNA and IUPAC alphabets are discarded. The original headers and all modifications are recorded in the query mapping and normalization log files. This parameter is required for `Search` and `Build and Search` modes.",
+                    "help_text": "Select a FASTA file uploaded to a CloWM data bucket. The file may contain multiple FASTA records. Each record is treated as an individual PLAST query. Before searching, FASTA headers are removed, sequence lines are joined, lowercase bases are converted to uppercase, and valid IUPAC ambiguity characters are replaced by compatible randomly selected bases. Query records containing characters outside the accepted DNA and IUPAC alphabets are discarded. This parameter is required for `Search` and `Build and Search` modes.",
                     "fa_icon": "fas fa-search",
                     "format": "file-path"
                 },
@@ -114,7 +114,8 @@
             "help_text": "#TODO: Add text!",
             "fa_icon": "fas fa-exchange-alt",
             "required": [
-                "outdir"
+                "outdir",
+                "input_graph_dir"
             ]
         },
         "graph_and_index_construction": {
@@ -161,7 +162,7 @@
                 "random_seed": {
                     "type": "integer",
                     "description": "Random seed for query normalization",
-                    "default": 202608141722,
+                    "default": 42,
                     "hidden": true,
                     "fa_icon": "fas fa-dice",
                     "help_text": "Controls deterministic replacement of valid IUPAC ambiguity characters in query sequence if any."
@@ -200,11 +201,11 @@
                     "type": "integer",
                     "description": "X-drop parameter",
                     "help_text": "Parameter of the so-called *X-drop algorithm* used for alignment extension.",
-                    "default": -3,
                     "hidden": true,
-                    "minimum": -6,
-                    "maximum": -1,
-                    "fa_icon": "fas fa-ban"
+                    "minimum": 1,
+                    "maximum": 6,
+                    "fa_icon": "fas fa-ban",
+                    "default": 3
                 },
                 "strand": {
                     "type": "string",
@@ -242,7 +243,7 @@
                 "quorum": {
                     "type": "integer",
                     "description": "Minimal number of supporting genomes",
-                    "help_text": "The quorum is the number of individual input genomes (,i.e., distinct colors of the input colored de Bruijn graph) each *k*-mer of the aligned graph sequence must be found in. Note the quorum is an absolute value.",
+                    "help_text": "The quorum is the number of individual input genomes (,i.e., distinct colors of the input colored de Bruijn graph) each *k*-mer of the aligned graph sequence must be found in. Note that the quorum is an absolute value.",
                     "default": 1,
                     "fa_icon": "fas fa-braille"
                 },
