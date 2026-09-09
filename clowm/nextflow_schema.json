@@ -114,8 +114,7 @@
             "help_text": "#TODO: Add text!",
             "fa_icon": "fas fa-exchange-alt",
             "required": [
-                "outdir",
-                "input_graph_dir"
+                "outdir"
             ]
         },
         "graph_and_index_construction": {

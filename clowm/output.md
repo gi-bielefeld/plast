@@ -53,7 +53,7 @@ Result files are organized into query sections. Each section starts with a line 
 Query <id>:
 ```
 
-In the raw output file *<id>* is simply a number. In the annotated output file, it is the original FASTA header of the corresponding query sequence, e.g.:
+In the raw output file *&lt;id&gt;* is simply a number. In the annotated output file, it is the original FASTA header of the corresponding query sequence, e.g.:
 
 ```text
 Query unknown_sequence_001:
@@ -119,7 +119,7 @@ The three lines contain
 
 The coordinate values refer to positions in the respective query sequence. A hyphen (-) represents a gap introduced by the alignment.
 
-The match line uses characters to show the relationship between aligned positions. In particular, *|* indicates matching bases and spaces indicate mismatches or alignment positions without an identical base.
+The match line uses characters to show the relationship between aligned positions. In particular, "|" indicates matching bases and spaces indicate mismatches or alignment positions without an identical base.
 
 Long alignments are split into several consecutive alignment blocks for readability. The coordinate values allow the blocks to be placed in the context of the complete reported alignment.
 
@@ -127,7 +127,7 @@ Long alignments are split into several consecutive alignment blocks for readabil
 
 ### Color Coverage Information
 
-If the Parameter `--report_colors`` is enabled, PLAST additionally reports the graph colors supporting different parts of an alignment.
+If the Parameter `--report_colors` is enabled, PLAST additionally reports the graph colors supporting different parts of an alignment.
 
 These lines have the following form:
 
@@ -139,7 +139,7 @@ For example:
 
 ```text
 Color set ending at alignment position 639 (position 639 in the query sequence) genome_01.fa
-Color set ending at alignment position 641 (position 639 in the query sequence) genome_01.fa genome_02.fasta
+Color set ending at alignment position 641 (position 640 in the query sequence) genome_01.fa genome_02.fasta
 ```
 
 A color usually corresponds to one input sequence file used to construct the pangenome graph. The line states that the listed colors support the alignment up to the indicated alignment position. To facilitate mappings of color coverage to the query sequence an additional position is given in brackets. This position disregards gaps in the alignments and, thus, may be different from the previously stated position in the alignment.
@@ -183,8 +183,6 @@ All subsequent alignment records belong to this query until the next query heade
 
 ## Result Statistics
 
-After a PLAST search, the workflow runs the script *showPLASTresStats.py* on the PLAST result file.
-
-The generated summary is written to *result_stats.txt*.
+After a PLAST search, the workflow generates a summary of all found results and writes it to *result_stats.txt*.
 
 This file is included in the final workflow output and can also be downloaded from the selected CloWM output bucket.
