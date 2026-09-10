@@ -1,4 +1,5 @@
-# PLAST <img src="plast-logo_100.png" style="border:0;" alt="PLAST icon" align="right"/>
+# PLAST
+
 ### Pangenome Local Alignment Search Tool
 
 PLAST is a tool for **fast local alignment search between a nucleotide sequence query and a pangenome graph** consisting of thousands of individual genomes. 
@@ -16,7 +17,7 @@ PLAST may also be downloaded and installed locally from our [git repository](htt
 
 ## Contact
 
-For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/gi-bielefeld/plast) or [contact the developers](mailto:pangenomics-service@cebitec.uni-bielefeld.de) and we will get back to you as soon as possible.
+For any question, feedback or problem, please feel free to file an issue on [Github](https://github.com/gi-bielefeld/plast) or contact the maintainers (see above) and we will get back to you as soon as possible.
 
 PLAST is provided as a service of the [German Network for Bioinformatics Infrastructure (de.NBI)](https://www.denbi.de/). We would appriciate if you would participate in the evaluation of PLAST by completing this [very short survey](https://www.surveymonkey.de/r/denbi-service?sc=bigi&tool=plast).
 

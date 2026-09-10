@@ -276,26 +276,28 @@ workflow {
             ref_files_ch = channel
                 .fromPath(sequence_pattern(params.ref_seq_input_dir), checkIfExists: true)
                 .filter { sequence_file(it) }
+                .collect()
         } else{
-            ref_files_ch = channel.empty()
+            ref_files_ch = channel.of([])
         }
 
         if( params.raw_seq_input_dir ){
             raw_files_ch = channel
                 .fromPath(sequence_pattern(params.raw_seq_input_dir), checkIfExists: true)
                 .filter { sequence_file(it) }
+                .collect()
         } else{
-            raw_files_ch = channel.empty()
+            raw_files_ch = channel.of([])
         }
 
-        sequence_file_lists_ch = ref_files_ch
-            .collect()
-            .combine(raw_files_ch.collect())
-            .map { reference_files, read_files ->
-                tuple(reference_files, read_files)
-            }
+        // sequence_file_lists_ch = ref_files_ch
+        //     .collect()
+        //     .combine(raw_files_ch.collect())
+        //     .map { reference_files, read_files ->
+        //         tuple(reference_files, read_files)
+        //     }
 
-        sequence_dirs_ch = PREPARE_SEQUENCE_DIRS(sequence_file_lists_ch)
+        sequence_dirs_ch = PREPARE_SEQUENCE_DIRS(ref_files_ch, raw_files_ch)
             .map{ reference_dir, reads_dir ->
                 tuple(
                     build_graph_prefix,
