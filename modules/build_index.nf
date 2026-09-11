@@ -18,7 +18,7 @@ process BUILD_INDEX {
     graph_prefix=\$(cat "${graph_prefix_file}")
 
     mkdir -p indexed_graph
-    cp -a "${graph_dir}/." indexed_graph/
+    cp -r "${graph_dir}/." indexed_graph/
 
     PLAST Build \\
         -i "indexed_graph/\${graph_prefix}" \\

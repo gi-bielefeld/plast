@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+* Changed copy mode in index building workflow process.
+
 ## [v1.0.1]
 
 ### Fix
