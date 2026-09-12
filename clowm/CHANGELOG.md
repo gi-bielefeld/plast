@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v1.0.2]
 
 ### Changed
 
@@ -20,5 +20,6 @@
 
 Initial version
 
+[v1.0.2]: https://github.com/gi-bielefeld/plast/compare/clowm-v1.0.1...clowm-v1.0.2
 [v1.0.1]: https://github.com/gi-bielefeld/plast/compare/clowm-v1.0.0...clowm-v1.0.1
 [v1.0.0]: https://github.com/gi-bielefeld/plast/releases/tag/clowm-v1.0.0
