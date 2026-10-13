@@ -226,8 +226,19 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 		//Get the first seed
 		currSeed = currUni.getData()->getData(currUni)->getSeed(currUni.strand);
 
+		#ifdef DEBUG
+		auto startTime = std::chrono::system_clock::now();
+		auto endTime = std::chrono::system_clock::now();
+		std::chrono::duration<double> tDiff;
+		#endif
+
 		//Iterate over all seeds of a unitig
 		while(currSeed != NULL){
+
+			#ifdef DEBUG
+			startTime = std::chrono::system_clock::now();
+			#endif
+
 			//Extract seed from the list
 			currUni.getData()->getData(currUni)->setSeed(currSeed->nextSeed, currUni.strand);
 			//Setup initial hit infos
@@ -256,6 +267,10 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 
 			startRightX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus, numCompBases, numPushUni);
 
+			#ifdef DEBUG
+			//cout << "after startRightX_Drop" << endl;
+			#endif
+
 			/*
 			if((newHit.offQ == 0 && newHit.offU == 4 && currUni.mappedSequenceToString() == "TCAAATTGCCTACATGCTTACATCTGAGGACAGCCAGTGTGACTTGGATTGGAGATGTGGA")) {
 				exit(0);
@@ -277,7 +292,9 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 			//Note: What we do not consider here is that some seeds might not be extended to the right because search criteria are not fullfilled anymore. This is intended though. We should not miss too much, because a good hit should have more than one seed
 			if(newHit.length - currSeed->len > 0 || newHit.length > (uint32_t) minSdLen || currSeed->offsetQ + currSeed->len == q.length()){
 				
+				#ifdef DEBUG
 				//cout << "startLeftX_Drop" << endl;
+				#endif
 				
 				//Extend hit to the left
 				startLeftX_Drop(&newHit, q, mscore, mmscore, X, quorum, searchSet, advIdx, extend_modus, numCompBases, numPushUni);
@@ -315,7 +332,11 @@ void extendRefSeeds(ColoredCDBG<UnitigInfo> &cdbg, const string &q, const int32_
 				}
 			}
 
-			//cout << newHit.score << endl;
+			#ifdef DEBUG
+			endTime = std::chrono::system_clock::now();
+			tDiff = endTime - startTime;
+			cout << "Seed completed. Time: " << tDiff.count() << endl;
+			#endif
 
 			//Delete the extended seed
 			free(currSeed);

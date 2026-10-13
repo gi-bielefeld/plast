@@ -99,8 +99,10 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 
 	//cout << "isLeft: " << (isLeft?"true":"false") << endl;
 
+	//cout << "tempNumOfBases in stepUnitig before contRightX_Drop_BFS: " << tempNumOfBases << endl;
+
 	if(!isLeft){
-		addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev);
+		addScore = contRightX_Drop_BFS(currUnitig, iniQoff, currHitLen, currextLen, q, mscore, mmscore, X, currtmpScore, curruniPos, tempPath, explCount, quorum, searchSet, advIdx, check, currnumOfBases, compareBases, modeRev);
 	} else{
 		uint32_t uPos = 0;
 		if(modeRev){
@@ -114,7 +116,7 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 		
 		//cout << "current unitig: " << currUnitig.mappedSequenceToString() << " qPos: " << (iniQoff-currHitLen-currextLen) << endl;
 		//cout << "currHitLen: " << currHitLen << " currextLen: " << currextLen << endl;
-		addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, tempNumOfBases, compareBases, modeRev, currextLen, curruniPos);
+		addScore = contLeftX_Drop_BFS(currUnitig, (iniQoff-currHitLen-currextLen), currHitLen, q, mscore, mmscore, X, currtmpScore, tempPath, uPos, explCount, quorum, searchSet, advIdx, check, currnumOfBases, compareBases, modeRev, currextLen, curruniPos);
 
 
 		//cout << "after stepUnitig score after" << endl;
@@ -129,6 +131,8 @@ finishedExploration stepUnitig(searchSettings searchSettings, exploration explor
 
 	}
 	int32_t fullScore = currScore+addScore;
+
+	//cout << "compareBases in stepUnitig: " << compareBases << endl;
 
 	if(!compareBases){
 		//cout << "!compareBases" << endl;
@@ -192,10 +196,20 @@ finishedExploration calcUnitigs(searchSettings searchSettings, exploration explo
 	//	create a priority queue sorted decreasingly by score for all finished extensions
 	shorterPrioQueue unitigsPrioQueue(prioLongest);
 
+	int countTooBig = 0;
+
+	int summe = 0;
+
 	//	process all extensions
 	while(!(extensionQueue.empty())){
 
-		//cout << extensionQueue.size() << endl;
+		//cout << "compareBases: " << compareBases << endl;
+
+
+		#ifdef DEBUG
+		//cout << "extensionQueue.size: " << extensionQueue.size() << endl;
+		#endif
+
 
 		//	get next extension
 		shorterTuple currExtension = extensionQueue.front();
@@ -224,14 +238,31 @@ finishedExploration calcUnitigs(searchSettings searchSettings, exploration explo
 
 		finishedExploration finishedExploration;
 
+		#ifdef DEBUG
+  		//cout << "before if" << endl;
+		//cout << "isLeft: " << (isLeft?"true":"false") << " currextLen: " << currextLen  << " iniQoff: " << iniQoff << " currHitLen: " << currHitLen << " q.length(): " << q.length() << endl;
+		#endif
+
 		//cout << "before if" << endl;
 
 		//cout << "isLeft: " << (isLeft?"true":"false") << " currextLen: " << currextLen  << " iniQoff: " << iniQoff << " currHitLen: " << currHitLen << " q.length(): " << q.length() << endl;
+
+		#ifdef DEBUG
+		if (!(currextLen + iniQoff < q.length())){
+			countTooBig++;
+		}
+		summe += currextLen + iniQoff;
+		#endif
+
 
 		//	stop if we reached the end of the query
 		if((!isLeft && (currextLen + iniQoff < q.length())) || (isLeft && (currHitLen + currextLen < iniQoff))){ //(!isLeft && (currextLen + iniQoff < q.length())) || (isLeft && (hitLen + currextLen > iniQoff))
 
 			//cout << "after if" << endl;
+
+			#ifdef DEBUG
+  			//cout << "after if" << endl;
+			#endif
 
 			uint16_t sucID = 0;
 
@@ -321,6 +352,19 @@ finishedExploration calcUnitigs(searchSettings searchSettings, exploration explo
 			}
 		}
 	}
+
+	#ifdef DEBUG
+	float mittelWert = 0;
+	//cout << "summe: " << summe << endl;
+	//cout << "unitigsPrioQueue.size(): " << unitigsPrioQueue.size() << endl;
+
+	if(unitigsPrioQueue.size() > 0){
+		mittelWert = summe / unitigsPrioQueue.size();
+	}
+	cout << "countTooBig: " << countTooBig << endl;
+	cout << "mittelWert: " << mittelWert << endl;
+	#endif
+
 
 	//	return the best extension and the priority queue
 	finishedExploration p;
@@ -419,6 +463,11 @@ int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> start
 
 		//	transfer element from priority queue to normal queue
 		unitigsQueue = getBestUnitigs(unitigsPrioQueue,unitigsPrioQueue.size());
+
+		#ifdef DEBUG
+		cout << "extendAtNextUnitig_BFS_exhaustive in while loop" << endl;
+		cout << "unitigsPrioQueue size: " << unitigsPrioQueue.size() << endl;
+		#endif
 	}
 
 	//	update path of best extension and return best score
@@ -431,6 +480,10 @@ int32_t extendAtNextUnitig_BFS_exhaustive(const UnitigColorMap<UnitigInfo> start
 //	using a BFS heuristic where each iteration a number of best scoring extensions are pushed to the next iteration 
 int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> startUnitig, const uint32_t &iniQoff, uint32_t &hitLen, const uint32_t extLen, const string &q, const uint16_t &mscore, const int16_t &mmscore, const int16_t &X, const int32_t &lastExtSeedTmpScore, uint32_t &uniPos, list<uint16_t> &extPth, uint32_t &explCount, const uint32_t &quorum, const list<pair<string, size_t>> &searchSet, const bool& advIdx, const int16_t numPushUni, const bool &modeRev, const bool& chooseDirec){
 	
+	#ifdef DEBUG
+	cout << "extendAtNextUnitig_BFS_extendNBest in function" << endl;
+	#endif
+
 	//	best score
 	int32_t maxScore = 0;
 
@@ -473,6 +526,10 @@ int32_t extendAtNextUnitig_BFS_extendNBest(const UnitigColorMap<UnitigInfo> star
 
 	//	repeat BFS extension until no more extensions are possible
 	while(!(bestUnitigs.empty())){
+
+		#ifdef DEBUG
+		cout << "extendAtNextUnitig_BFS_extendNBest in while loop" << endl;
+		#endif
 
 		//	update extension queue and best result found so far
 		exploration.extensionQueue = bestUnitigs;
@@ -681,6 +738,10 @@ int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<Unitig
 
 	exploration exploration;
 
+	#ifdef DEBUG
+	cout << "extendAtNextUnitig_BFS_iterateBasePairChunks before while loop" << endl;
+	#endif
+
 	//	repeat BFS extension until no more extensions are possible
 	while(!(bestUnitigs.empty())){
 
@@ -701,6 +762,11 @@ int32_t extendAtNextUnitig_BFS_iterateBasePairChunks(const UnitigColorMap<Unitig
 
 		//	choose extensions for the next iteration
 		bestUnitigs = getBestUnitigs(bestUnitigsPrioQueue,numOfUnitig);
+
+		#ifdef DEBUG
+		cout << "extendAtNextUnitig_BFS_iterateBasePairChunks in while loop" << endl;
+		cout << "bestUnitigs size: " << bestUnitigs.size() << endl;
+		#endif
 	}
 
 	//	update path of best extension and return best score
@@ -772,6 +838,12 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 
 	//We are done if we have reached the end of the query
 	while(hit->offQ + tmpSeedLen < q.length()){
+
+		#ifdef DEBUG
+		cout << "startRightX_drop in while loop" << endl;
+		cout << "hit->offU: " << hit->offU << " tmpSeedLen: " << tmpSeedLen << " hit->origUni.size: " << hit->origUni.size << " overlap: " << overlap << endl;
+		#endif
+
 		//Check whether we have reached the end of the unitig's sequence
 		if(hit->offU + tmpSeedLen < hit->origUni.size - overlap){
 			//Ensure that search criteria are still fulfilled
@@ -803,6 +875,9 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 				//Explore unitig's successors
 				//cout << "hit->score before:" << hit->score << endl;
 				bool modeRev = false;
+				#ifdef DEBUG
+  				cout << "extend_modus: " << extend_modus << endl;
+				#endif
 				switch(extend_modus) {
 					case 0:
 						hit->score += extendAtNextUnitig(hit->origUni.getSuccessors(), hit->offQ, hit->length, tmpSeedLen, q, mscore, mmscore, X, tmpScore, iniUniPos, extPth, explCount, quorum, searchSet, advIdx);
@@ -821,8 +896,9 @@ void startRightX_Drop(Hit* hit, const string &q, const uint16_t &mscore, const i
 						break;
 				}
 				
-			break;
 			}
+			
+			break;
 		}
 	}
 
@@ -1077,7 +1153,9 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 	string sucUniSeq = sucUnitig.mappedSequenceToString();
 	struct Seed *nearestSeed, *prevSeed;
 
-	//cout << "starttmpScore: " << tmpScore << endl;
+	#ifdef DEBUG
+	//cout << "in contRightX_Drop_BFS" << endl;
+	#endif
 
 	//Save the initial offset in the current unitig which we need for all nearest neighbor calculations
 	iniSeqPos = uniSeqPos;
@@ -1090,12 +1168,17 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 	//We are done if we have reached the end of the query
 	while(iniQoff + extLen + tmpSLen < q.length()){
 		//Testing
+		#ifdef DEBUG
+  		//cout << "Not at query's end" << endl;
+		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
+		#endif
 		//cout << "Not at query's end" << endl;
 		//cout << "nearestSeed is " << (nearestSeed == NULL ? "NULL" : "not NULL") << endl;
 		
 
 		//	stop the extension if the number of considered bases is reached
 		
+		//cout << "numOfBases: " << numOfBases << " compBases: " << compBases << endl;
 		if(numOfBases == 0 && compBases){
 			extLen = extLen + tmpSLen;
 			break;
@@ -1105,6 +1188,9 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 		//Check whether we have reached the next seed
 		if(nearestSeed != NULL && iniQoff + extLen + tmpSLen >= nearestSeed->offsetQ){
 			//Testing
+			#ifdef DEBUG
+  			//cout << "Found seed" << endl;
+			#endif
 			//cout << "Found seed" << endl;
 
 			/*
@@ -1182,6 +1268,11 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 					break;
 				}
 
+				#ifdef DEBUG
+  				//cout << "Compare bases" << endl;
+
+				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << endl;
+				#endif
 				//TEsting
 				//cout << "Compare bases" << endl;
 
@@ -1201,6 +1292,11 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 						break;
 					}
 				}
+				#ifdef DEBUG
+  				//cout << "tmpScore: " << tmpScore << endl;
+				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
+				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
+				#endif
 				//cout << "tmpScore: " << tmpScore << endl;
 				//cout << "sucUniSeq[uniSeqPos]: " << sucUniSeq[uniSeqPos] << "  q[iniQoff + extLen + tmpSLen]: " << q[iniQoff + extLen + tmpSLen] << "  score: " << score << endl;
 				//cout << "iniQoff + extLen + tmpSLen: " << iniQoff + extLen + tmpSLen << ", uniSeqPos: " << uniSeqPos << endl;
@@ -1210,6 +1306,7 @@ int32_t contRightX_Drop_BFS(const UnitigColorMap<UnitigInfo> &sucUnitig, const u
 				++uniSeqPos;
 				--checkedPos;
 				if(compBases){
+					//cout << "-1 numOfBases" << endl;
 					--numOfBases;
 				}
 			} else{
@@ -1879,7 +1976,7 @@ int32_t contLeftX_Drop_BFS(const UnitigColorMap<UnitigInfo> &prevUni, uint32_t q
 		if(nearestSeed != NULL && qPos - tmpExtLen <= nearestSeed->offsetQ + nearestSeed->len - 1){
 
 			#ifdef DEBUG
-			cout << "Found seed" << endl;
+			//cout << "Found seed" << endl;
 			#endif
 
 			//Update the temporary score
@@ -2014,7 +2111,7 @@ int32_t contLeftX_DropOnRevComp(const neighborIterator<DataAccessor<UnitigInfo>,
 		if(nearestSeed != NULL && qPos - tmpExtLen <= nearestSeed->offsetQ + nearestSeed->len - 1){
 
 			#ifdef DEBUG
-			cout << "Found seed" << endl;
+			//cout << "Found seed" << endl;
 			#endif
 
 			//Calculate the progress with have by incorporating the seed

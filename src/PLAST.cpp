@@ -26,7 +26,7 @@ int main(int argc, char **argv){
 	std::chrono::duration<double> tDiff;
 
 	//A flag indicating whether we need to measure run times
-	bool calcRT = false;
+	bool calcRT = true;
 	//A flag indicating whether color coverage should be outputted for each alignment
 	bool repCols = REPORT_COLORS_FLAG_DEFAULT;
 	//A flag indicating whether this run is only a simulation run
@@ -112,6 +112,8 @@ int main(int argc, char **argv){
 
 	//Initialize the graph
 	ColoredCDBG<UnitigInfo> cdbg(kMerLength, miniLength);
+
+	//cout << "calcRT: " << calcRT << endl;
 
 	//Check whether a graph has to be built
 	if(prep > 0){
