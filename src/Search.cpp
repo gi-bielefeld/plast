@@ -463,26 +463,64 @@ void calcGappedAlignment(ColoredCDBG<UnitigInfo> &cdbg, list<Hit*> &resList, con
 	bool isDupl = false;
 	uint32_t bandRadius;
 	list<Hit*>::const_iterator iter;
+	
+	int counterGapped = 0;
 
 	//Go through result list
 	for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 		//Calculate the band width to be used during the gapped extension
 		bandRadius = (*it)->length / GAP_RATIO;
 
-		//cout << (*it)->origUni.mappedSequenceToString() << endl;
-		if((*it)->origUni.mappedSequenceToString() == "ATCATCAACTCCTGTTATGAGTCGTTTTGCAGCCGATATTTTTTCACGTACGCCGAGCGGGAAGCGATTGCAAATTCTA"){
-			uniqueUnitig = true;
-		}
+		
+		//#ifdef DEBUG
+		cout << (*it)->origUni.mappedSequenceToString() << endl;
+		cout << (*it)->offU << endl;
+		cout << (*it)->offQ << endl;
+		cout << (*it)->score << endl;
+		//#endif
 
+		
+		#ifdef DEBUG
+		//if((*it)->origUni.mappedSequenceToString() != "CCTTACTGTTCAACAGGGAATTGTCAGGCAGAAAATAATTTCTGTA"){
+			//continue;
+			/*
+			cout << "extension Path" << endl;
+			list<uint16_t> extenPath = decmprExtPth((*it)->lExt);
+			cout << "between" << endl;
+			for(list<uint16_t>::iterator ext = extenPath.begin(); ext != extenPath.end(); ++ext){
+				cout << *ext << endl;
+			}
+			*/
+		}
+		#endif
+		
+		
+		counterGapped++;
+		
 
 		//Calculate gapped extension to the right
 		startRightGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 		//Calculate gapped extension to the left
-		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx);
+		startLeftGappedAlignment(*it, q, mscore, mmscore, X, gOpen, gExt, bandRadius, quorum, searchSet, advIdx, extend_modus, numPushUni, numCompBases);
 
 		#ifdef DEBUG
 		cout << "resList length: " << resList.size() << endl;
+		if((*it)->gAlgn.aSeqG == "TATTTCACGCTTCTGCAGATCTT-GAAGACGAATTAGTATGTAAA-TGGTTACTT-TCTTCAACGCCCGTGATGAGTCGTTTCGCAGCCGA" && (*it)->gAlgn.aSeqQ == "TATTTCATGCATCAGCTGA-CTTCGAAGACGAACTGGTTTGTA-AGTGGCT-CTTATCATCAACTCCTGTTATGAGTCGTTTCGCAGCCGA"){
+			cout << "This is the wanted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		}
+		if((*it)->gAlgn.aSeqG == "TATTTCACGCTTCTGCAGATCTT-GAAGACGAATTAGTATGTAAATGGTTACTT-TCTTCAACGCCCGTTATGAGCCGTTTCGCAGCCGA" && (*it)->gAlgn.aSeqQ == "TATTTCATGCATCAGCTGA-CTTCGAAGACGAACTGGTTTGTAAGTGGCT-CTTATCATCAACTCCTGTTATGAGTCGTTTCGCAGCCGA"){
+			cout << "This is the wanted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+		}
 		#endif
+
+		/*
+		if((*it)->score == 57){
+			cout << "score found" << endl;
+			cout << (*it)->origUni.mappedSequenceToString() << endl;
+			cout << (*it)->offU << endl;
+			cout << (*it)->offQ << endl;
+		}
+		*/
 
 		//Check whether this is not the first hit in the result list
 		if(it != resList.begin()){
@@ -681,6 +719,11 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 		//Iterate over alignments
 		for(list<Hit*>::const_iterator it = resList.begin(); it != resList.end(); ++it){
 			//Check e-value once again
+			#ifdef DEBUG
+			cout << (*it)->origUni.mappedSequenceToString() << endl;
+			cout << (*it)->offU << endl;
+			cout << (*it)->offQ << endl;
+			#endif
 			if((*it)->eval <= eLim){
 				//Output alignment
 				repAlgn(*it);
@@ -688,6 +731,7 @@ void searchQuery(ColoredCDBG<UnitigInfo> &cdbg, const int32_t &kMerLength, const
 				//Output color sets if demanded
 				if(colOut) outpColSets(cdbg, *it);
 			}
+			//exit(0);
 		}
 	}
 

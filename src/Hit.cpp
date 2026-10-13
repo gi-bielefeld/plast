@@ -114,7 +114,6 @@ const list<uint16_t> decmprExtPth(const struct ExtPth &cmpPth){
 
 		++cmpSucs;
 	}
-
 	//Free memory of compressed path if existing
 	if(nbBytes) free(cmpPth.path);
 	
